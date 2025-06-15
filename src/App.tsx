@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Download, Eye, FileText, List, Plus, Menu, X, Database, Settings, Key } from 'lucide-react';
+import { Download, Eye, FileText, List, Plus, Menu, X, Database, Settings, Key, PlayCircle } from 'lucide-react';
 import { DeploymentForm } from './components/DeploymentForm';
 import { YamlPreview } from './components/YamlPreview';
 import { ResourceSummary } from './components/ResourceSummary';
@@ -14,6 +14,7 @@ import { SEOHead } from './components/SEOHead';
 import { NamespaceManager } from './components/NamespaceManager';
 import { ConfigMapManager } from './components/ConfigMapManager';
 import { SecretManager } from './components/SecretManager';
+import { YouTubePopup } from './components/YouTubePopup';
 import { generateMultiDeploymentYaml } from './utils/yamlGenerator';
 import type { DeploymentConfig, Namespace, ConfigMap, Secret } from './types';
 
@@ -43,6 +44,7 @@ function App() {
   const [showConfigMapManager, setShowConfigMapManager] = useState(false);
   const [showSecretManager, setShowSecretManager] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [showYouTubePopup, setShowYouTubePopup] = useState(false);
 
   const currentConfig = deployments[selectedDeployment] || {
     appName: '',
@@ -421,6 +423,14 @@ function App() {
               
               {/* Action Buttons */}
               <button
+                onClick={() => setShowYouTubePopup(true)}
+                className="inline-flex items-center px-2 sm:px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors duration-200 text-sm font-medium"
+                title="Watch demo video"
+              >
+                <PlayCircle className="w-4 h-4 sm:mr-1" />
+                <span className="hidden sm:inline">Watch a Demo</span>
+              </button>
+              <button
                 onClick={handleAddDeployment}
                 className="inline-flex items-center px-2 sm:px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 text-sm font-medium"
                 title="Add new deployment"
@@ -695,6 +705,13 @@ function App() {
 
       {/* Footer */}
       <Footer />
+
+      {/* YouTube Popup */}
+      <YouTubePopup
+        isOpen={showYouTubePopup}
+        onClose={() => setShowYouTubePopup(false)}
+        videoId="LT-1FZXR62o"
+      />
 
       {/* Deployment Form Modal */}
       {showForm && (

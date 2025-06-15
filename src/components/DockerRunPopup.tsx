@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, Copy, Check, ExternalLink, Download, Play, Terminal, Docker } from 'lucide-react';
+import { X, Copy, Check, ExternalLink, Download, Play, Terminal, Pocket as Docker } from 'lucide-react';
 
 interface DockerRunPopupProps {
   isOpen: boolean;

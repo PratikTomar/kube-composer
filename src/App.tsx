@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Download, Eye, FileText, List, Plus, Menu, X, Database, Settings, Key, PlayCircle, Pocket as Docker } from 'lucide-react';
+import { Download, Eye, FileText, List, Plus, Menu, X, Database, Settings, Key, PlayCircle, Container as Docker } from 'lucide-react';
 import { DeploymentForm } from './components/DeploymentForm';
 import { YamlPreview } from './components/YamlPreview';
 import { ResourceSummary } from './components/ResourceSummary';

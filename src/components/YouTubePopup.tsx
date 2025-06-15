@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { X, PlayCircle, ExternalLink, AlertCircle } from 'lucide-react';
+import { X, PlayCircle, ExternalLink, AlertCircle, RefreshCw } from 'lucide-react';
 
 interface YouTubePopupProps {
   isOpen: boolean;
@@ -9,6 +9,7 @@ interface YouTubePopupProps {
 
 export function YouTubePopup({ isOpen, onClose, videoId }: YouTubePopupProps) {
   const [embedError, setEmbedError] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   // Handle escape key press
   useEffect(() => {
@@ -22,8 +23,9 @@ export function YouTubePopup({ isOpen, onClose, videoId }: YouTubePopupProps) {
       document.addEventListener('keydown', handleEscape);
       // Prevent body scroll when popup is open
       document.body.style.overflow = 'hidden';
-      // Reset embed error when opening
+      // Reset states when opening
       setEmbedError(false);
+      setLoading(true);
     }
 
     return () => {
@@ -32,15 +34,40 @@ export function YouTubePopup({ isOpen, onClose, videoId }: YouTubePopupProps) {
     };
   }, [isOpen, onClose]);
 
+  const handleIframeLoad = () => {
+    setLoading(false);
+  };
+
   const handleIframeError = () => {
     setEmbedError(true);
+    setLoading(false);
   };
 
   const openYouTubeDirectly = () => {
     window.open(`https://www.youtube.com/watch?v=${videoId}`, '_blank', 'noopener,noreferrer');
   };
 
+  const retryEmbed = () => {
+    setEmbedError(false);
+    setLoading(true);
+  };
+
   if (!isOpen) return null;
+
+  // Enhanced embed URL with better parameters
+  const embedUrl = `https://www.youtube-nocookie.com/embed/${videoId}?` + 
+    new URLSearchParams({
+      autoplay: '1',
+      rel: '0',
+      modestbranding: '1',
+      fs: '1',
+      cc_load_policy: '0',
+      iv_load_policy: '3',
+      autohide: '0',
+      enablejsapi: '1',
+      origin: window.location.origin,
+      widget_referrer: window.location.href
+    }).toString();
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
@@ -75,35 +102,67 @@ export function YouTubePopup({ isOpen, onClose, videoId }: YouTubePopupProps) {
 
         {/* Video Content */}
         <div className="relative w-full" style={{ paddingBottom: '56.25%' /* 16:9 aspect ratio */ }}>
-          {!embedError ? (
+          {/* Loading State */}
+          {loading && !embedError && (
+            <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center bg-gray-100">
+              <div className="text-center">
+                <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                <p className="text-gray-600">Loading video...</p>
+              </div>
+            </div>
+          )}
+
+          {/* Iframe Embed */}
+          {!embedError && (
             <iframe
               className="absolute top-0 left-0 w-full h-full"
-              src={`https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&origin=${window.location.origin}`}
+              src={embedUrl}
               title="Kube Composer Demo Video"
               frameBorder="0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
               allowFullScreen
+              onLoad={handleIframeLoad}
               onError={handleIframeError}
               referrerPolicy="strict-origin-when-cross-origin"
+              sandbox="allow-scripts allow-same-origin allow-presentation"
             />
-          ) : (
-            // Fallback content when embed fails
-            <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center bg-gray-100">
-              <div className="text-center p-8">
-                <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <AlertCircle className="w-8 h-8 text-red-600" />
+          )}
+
+          {/* Fallback content when embed fails */}
+          {embedError && (
+            <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
+              <div className="text-center p-8 max-w-md">
+                <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <AlertCircle className="w-10 h-10 text-red-600" />
                 </div>
-                <h4 className="text-lg font-semibold text-gray-900 mb-2">Video Unavailable</h4>
-                <p className="text-gray-600 mb-4">
-                  The video cannot be embedded due to restrictions.
+                <h4 className="text-xl font-semibold text-gray-900 mb-3">Video Cannot Be Embedded</h4>
+                <p className="text-gray-600 mb-6 leading-relaxed">
+                  This video has embedding restrictions. Don't worry - you can still watch it directly on YouTube!
                 </p>
-                <button
-                  onClick={openYouTubeDirectly}
-                  className="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200 font-medium"
-                >
-                  <ExternalLink className="w-4 h-4 mr-2" />
-                  Watch on YouTube
-                </button>
+                
+                <div className="space-y-3">
+                  <button
+                    onClick={openYouTubeDirectly}
+                    className="w-full inline-flex items-center justify-center px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200 font-medium shadow-lg"
+                  >
+                    <ExternalLink className="w-5 h-5 mr-2" />
+                    Watch on YouTube
+                  </button>
+                  
+                  <button
+                    onClick={retryEmbed}
+                    className="w-full inline-flex items-center justify-center px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors duration-200 font-medium"
+                  >
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    Try Again
+                  </button>
+                </div>
+
+                <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <p className="text-sm text-blue-800">
+                    <strong>💡 Tip:</strong> The video will open in a new tab where you can watch it in full quality.
+                  </p>
+                </div>
               </div>
             </div>
           )}
@@ -113,7 +172,10 @@ export function YouTubePopup({ isOpen, onClose, videoId }: YouTubePopupProps) {
         <div className="p-4 bg-gray-50 border-t border-gray-200">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
             <div className="text-sm text-gray-600">
-              <p>🎯 Learn how to create Kubernetes deployments visually</p>
+              <p className="flex items-center">
+                <span className="mr-2">🎯</span>
+                Learn how to create Kubernetes deployments visually
+              </p>
             </div>
             <div className="flex items-center space-x-4">
               <button
@@ -121,7 +183,7 @@ export function YouTubePopup({ isOpen, onClose, videoId }: YouTubePopupProps) {
                 className="inline-flex items-center text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors duration-200"
               >
                 <ExternalLink className="w-3 h-3 mr-1" />
-                Watch on YouTube
+                Open in YouTube
               </button>
               <button
                 onClick={onClose}

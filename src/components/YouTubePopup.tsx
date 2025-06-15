@@ -64,7 +64,7 @@ export function YouTubePopup({ isOpen, onClose, videoId }: YouTubePopupProps) {
           setEmbedError(true);
           setLoading(false);
         }
-      }, [loading, embedError, retryCount]);
+      }, 5000); // Fixed: Use 5000ms instead of dependency array
 
       return () => clearTimeout(timer);
     }

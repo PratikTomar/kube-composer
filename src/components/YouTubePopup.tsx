@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { X, PlayCircle, ExternalLink, AlertCircle, RefreshCw, Youtube } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { X, RefreshCw, Youtube } from 'lucide-react';
 
 interface YouTubePopupProps {
   isOpen: boolean;
@@ -64,7 +64,7 @@ export function YouTubePopup({ isOpen, onClose, videoId }: YouTubePopupProps) {
           setEmbedError(true);
           setLoading(false);
         }
-      }, 5000);
+      }, [loading, embedError, retryCount]);
 
       return () => clearTimeout(timer);
     }

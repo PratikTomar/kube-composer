@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { X, PlayCircle } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { X, PlayCircle, ExternalLink, AlertCircle } from 'lucide-react';
 
 interface YouTubePopupProps {
   isOpen: boolean;
@@ -8,6 +8,8 @@ interface YouTubePopupProps {
 }
 
 export function YouTubePopup({ isOpen, onClose, videoId }: YouTubePopupProps) {
+  const [embedError, setEmbedError] = useState(false);
+
   // Handle escape key press
   useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {
@@ -20,6 +22,8 @@ export function YouTubePopup({ isOpen, onClose, videoId }: YouTubePopupProps) {
       document.addEventListener('keydown', handleEscape);
       // Prevent body scroll when popup is open
       document.body.style.overflow = 'hidden';
+      // Reset embed error when opening
+      setEmbedError(false);
     }
 
     return () => {
@@ -27,6 +31,14 @@ export function YouTubePopup({ isOpen, onClose, videoId }: YouTubePopupProps) {
       document.body.style.overflow = 'unset';
     };
   }, [isOpen, onClose]);
+
+  const handleIframeError = () => {
+    setEmbedError(true);
+  };
+
+  const openYouTubeDirectly = () => {
+    window.open(`https://www.youtube.com/watch?v=${videoId}`, '_blank', 'noopener,noreferrer');
+  };
 
   if (!isOpen) return null;
 
@@ -63,14 +75,38 @@ export function YouTubePopup({ isOpen, onClose, videoId }: YouTubePopupProps) {
 
         {/* Video Content */}
         <div className="relative w-full" style={{ paddingBottom: '56.25%' /* 16:9 aspect ratio */ }}>
-          <iframe
-            className="absolute top-0 left-0 w-full h-full"
-            src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`}
-            title="Kube Composer Demo Video"
-            frameBorder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            allowFullScreen
-          />
+          {!embedError ? (
+            <iframe
+              className="absolute top-0 left-0 w-full h-full"
+              src={`https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&origin=${window.location.origin}`}
+              title="Kube Composer Demo Video"
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+              onError={handleIframeError}
+              referrerPolicy="strict-origin-when-cross-origin"
+            />
+          ) : (
+            // Fallback content when embed fails
+            <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center bg-gray-100">
+              <div className="text-center p-8">
+                <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <AlertCircle className="w-8 h-8 text-red-600" />
+                </div>
+                <h4 className="text-lg font-semibold text-gray-900 mb-2">Video Unavailable</h4>
+                <p className="text-gray-600 mb-4">
+                  The video cannot be embedded due to restrictions.
+                </p>
+                <button
+                  onClick={openYouTubeDirectly}
+                  className="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200 font-medium"
+                >
+                  <ExternalLink className="w-4 h-4 mr-2" />
+                  Watch on YouTube
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Footer */}
@@ -80,14 +116,13 @@ export function YouTubePopup({ isOpen, onClose, videoId }: YouTubePopupProps) {
               <p>🎯 Learn how to create Kubernetes deployments visually</p>
             </div>
             <div className="flex items-center space-x-4">
-              <a
-                href={`https://www.youtube.com/watch?v=${videoId}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+              <button
+                onClick={openYouTubeDirectly}
+                className="inline-flex items-center text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors duration-200"
               >
-                Watch on YouTube →
-              </a>
+                <ExternalLink className="w-3 h-3 mr-1" />
+                Watch on YouTube
+              </button>
               <button
                 onClick={onClose}
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 text-sm font-medium"

@@ -50,6 +50,16 @@ A modern, intuitive **Kubernetes YAML generator** that simplifies deployment con
 
 Generate your first Kubernetes deployment in under 2 minutes!
 
+## 🐳 Quick Start with Docker
+
+Run Kube Composer locally in seconds:
+
+```bash
+docker pull same7ammar/kube-composer && docker run -d -p 8080:80 same7ammar/kube-composer
+```
+
+Then open [http://localhost:8080](http://localhost:8080) in your browser.
+
 ## 🎯 Perfect For
 
 - **Developers** learning Kubernetes and container orchestration

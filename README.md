@@ -2,6 +2,22 @@
 
 A modern, intuitive **Kubernetes YAML generator** that simplifies deployment configuration for developers and DevOps teams.
 
+## 🌐 Live Demo
+
+**🔗 [Try Kube Composer Now](https://kube-composer.com)**
+
+Generate your first Kubernetes deployment in under 2 minutes!
+
+## 🐳 Quick Start with Docker
+
+Run Kube Composer locally in seconds:
+
+```bash
+docker pull same7ammar/kube-composer && docker run -d -p 8080:80 same7ammar/kube-composer
+```
+
+Then open [http://localhost:8080](http://localhost:8080) in your browser.
+
 ## 🚀 Features
 
 ### 🎨 **Visual Deployment Editor**
@@ -43,22 +59,6 @@ A modern, intuitive **Kubernetes YAML generator** that simplifies deployment con
 - **No Registration Required** - Start using immediately, no sign-up needed
 - **Export & Download** - Production-ready YAML files
 - **Social Sharing** - Share your configurations with the community
-
-## 🌐 Live Demo
-
-**🔗 [Try Kube Composer Now](https://kube-composer.com)**
-
-Generate your first Kubernetes deployment in under 2 minutes!
-
-## 🐳 Quick Start with Docker
-
-Run Kube Composer locally in seconds:
-
-```bash
-docker pull same7ammar/kube-composer && docker run -d -p 8080:80 same7ammar/kube-composer
-```
-
-Then open [http://localhost:8080](http://localhost:8080) in your browser.
 
 ## 🎯 Perfect For
 

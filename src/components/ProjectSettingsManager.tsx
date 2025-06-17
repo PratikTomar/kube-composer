@@ -94,8 +94,8 @@ export function ProjectSettingsManager({
   const commonLabels = [
     { key: 'environment', value: 'development', description: 'Environment (dev, staging, prod)' },
     { key: 'team', value: 'backend', description: 'Team responsible for the resources' },
-    { key: 'version', value: 'v1.0.0', description: 'Application version' },
-    { key: 'component', value: 'api', description: 'Component type (api, frontend, database)' },
+    { key: 'app.kubernetes.io/version', value: 'v1.0.0', description: 'Application version' },
+    { key: 'app.kubernetes.io/component', value: 'api', description: 'Component type (api, frontend, database)' },
     { key: 'owner', value: 'platform-team', description: 'Resource owner' },
     { key: 'cost-center', value: 'engineering', description: 'Cost allocation' }
   ];

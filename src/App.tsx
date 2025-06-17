@@ -97,21 +97,32 @@ function App() {
     ...deployments.map(d => d.namespace).filter(Boolean)
   ])];
 
-  // Merge global labels with resource-specific labels
-  const mergeLabelsWithGlobal = (resourceLabels: Record<string, string>) => {
+  // Helper function to remove old global labels and apply new ones
+  const cleanAndMergeLabels = (resourceLabels: Record<string, string>, oldGlobalLabels: Record<string, string> = {}) => {
+    // Remove old global labels and project label from resource labels
+    const cleanedLabels = { ...resourceLabels };
+    
+    // Remove old global labels
+    Object.keys(oldGlobalLabels).forEach(key => {
+      delete cleanedLabels[key];
+    });
+    
+    // Remove old project label
+    delete cleanedLabels.project;
+    
+    // Apply new global labels and project label
     return {
       ...projectSettings.globalLabels,
-      ...resourceLabels,
-      // Always include project name as a label
+      ...cleanedLabels,
       project: projectSettings.name
     };
   };
 
   const handleConfigChange = (newConfig: DeploymentConfig) => {
-    // Merge global labels with deployment labels
+    // Apply global labels to the new config
     const configWithGlobalLabels = {
       ...newConfig,
-      labels: mergeLabelsWithGlobal(newConfig.labels)
+      labels: cleanAndMergeLabels(newConfig.labels)
     };
 
     const newDeployments = [...deployments];
@@ -142,7 +153,7 @@ function App() {
       targetPort: 8080,
       serviceType: 'ClusterIP',
       namespace: 'default',
-      labels: mergeLabelsWithGlobal({}),
+      labels: cleanAndMergeLabels({}),
       annotations: {},
       volumes: [],
       configMaps: [],
@@ -189,7 +200,7 @@ function App() {
         ...container,
         name: container.name ? `${container.name}-copy` : ''
       })),
-      labels: mergeLabelsWithGlobal(deploymentToDuplicate.labels),
+      labels: cleanAndMergeLabels(deploymentToDuplicate.labels),
       ingress: {
         ...deploymentToDuplicate.ingress,
         rules: deploymentToDuplicate.ingress.rules.map(rule => ({
@@ -209,7 +220,7 @@ function App() {
   const handleAddNamespace = (namespace: Namespace) => {
     const namespaceWithGlobalLabels = {
       ...namespace,
-      labels: mergeLabelsWithGlobal(namespace.labels)
+      labels: cleanAndMergeLabels(namespace.labels)
     };
     setNamespaces([...namespaces, namespaceWithGlobalLabels]);
     setShowNamespaceManager(false);
@@ -254,7 +265,7 @@ function App() {
     const duplicatedNamespace: Namespace = {
       ...namespaceToDuplicate,
       name: `${namespaceToDuplicate.name}-copy`,
-      labels: mergeLabelsWithGlobal(namespaceToDuplicate.labels),
+      labels: cleanAndMergeLabels(namespaceToDuplicate.labels),
       createdAt: new Date().toISOString()
     };
     
@@ -268,7 +279,7 @@ function App() {
   const handleAddConfigMap = (configMap: ConfigMap) => {
     const configMapWithGlobalLabels = {
       ...configMap,
-      labels: mergeLabelsWithGlobal(configMap.labels)
+      labels: cleanAndMergeLabels(configMap.labels)
     };
     setConfigMaps([...configMaps, configMapWithGlobalLabels]);
     setShowConfigMapManager(false);
@@ -299,7 +310,7 @@ function App() {
     const duplicatedConfigMap: ConfigMap = {
       ...configMapToDuplicate,
       name: `${configMapToDuplicate.name}-copy`,
-      labels: mergeLabelsWithGlobal(configMapToDuplicate.labels),
+      labels: cleanAndMergeLabels(configMapToDuplicate.labels),
       createdAt: new Date().toISOString()
     };
     
@@ -313,7 +324,7 @@ function App() {
   const handleAddSecret = (secret: Secret) => {
     const secretWithGlobalLabels = {
       ...secret,
-      labels: mergeLabelsWithGlobal(secret.labels)
+      labels: cleanAndMergeLabels(secret.labels)
     };
     setSecrets([...secrets, secretWithGlobalLabels]);
     setShowSecretManager(false);
@@ -348,7 +359,7 @@ function App() {
     const duplicatedSecret: Secret = {
       ...secretToDuplicate,
       name: `${secretToDuplicate.name}-copy`,
-      labels: mergeLabelsWithGlobal(secretToDuplicate.labels),
+      labels: cleanAndMergeLabels(secretToDuplicate.labels),
       createdAt: new Date().toISOString()
     };
     
@@ -360,30 +371,31 @@ function App() {
 
   // Project settings management
   const handleUpdateProjectSettings = (newSettings: ProjectSettings) => {
+    const oldGlobalLabels = projectSettings.globalLabels;
     setProjectSettings(newSettings);
     
     // Update all existing resources with new global labels
     const updatedDeployments = deployments.map(deployment => ({
       ...deployment,
-      labels: mergeLabelsWithGlobal(deployment.labels)
+      labels: cleanAndMergeLabels(deployment.labels, oldGlobalLabels)
     }));
     setDeployments(updatedDeployments);
 
     const updatedNamespaces = namespaces.map(namespace => ({
       ...namespace,
-      labels: mergeLabelsWithGlobal(namespace.labels)
+      labels: cleanAndMergeLabels(namespace.labels, oldGlobalLabels)
     }));
     setNamespaces(updatedNamespaces);
 
     const updatedConfigMaps = configMaps.map(configMap => ({
       ...configMap,
-      labels: mergeLabelsWithGlobal(configMap.labels)
+      labels: cleanAndMergeLabels(configMap.labels, oldGlobalLabels)
     }));
     setConfigMaps(updatedConfigMaps);
 
     const updatedSecrets = secrets.map(secret => ({
       ...secret,
-      labels: mergeLabelsWithGlobal(secret.labels)
+      labels: cleanAndMergeLabels(secret.labels, oldGlobalLabels)
     }));
     setSecrets(updatedSecrets);
   };

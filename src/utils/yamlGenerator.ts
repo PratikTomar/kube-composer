@@ -22,7 +22,7 @@ export function generateKubernetesYaml(config: DeploymentConfig, projectSettings
       name: config.appName,
       namespace: config.namespace,
       labels: {
-        app: config.appName,
+        'app.kubernetes.io/name': config.appName,
         ...mergedLabels
       },
       ...(Object.keys(config.annotations).length > 0 && { annotations: config.annotations })
@@ -31,13 +31,13 @@ export function generateKubernetesYaml(config: DeploymentConfig, projectSettings
       replicas: config.replicas,
       selector: {
         matchLabels: {
-          app: config.appName
+          'app.kubernetes.io/name': config.appName
         }
       },
       template: {
         metadata: {
           labels: {
-            app: config.appName,
+            'app.kubernetes.io/name': config.appName,
             ...mergedLabels
           }
         },
@@ -66,13 +66,13 @@ export function generateKubernetesYaml(config: DeploymentConfig, projectSettings
       name: `${config.appName}-service`,
       namespace: config.namespace,
       labels: {
-        app: config.appName,
+        'app.kubernetes.io/name': config.appName,
         ...mergedLabels
       }
     },
     spec: {
       selector: {
-        app: config.appName
+        'app.kubernetes.io/name': config.appName
       },
       ports: generateServicePorts(config),
       type: config.serviceType
@@ -90,7 +90,7 @@ export function generateKubernetesYaml(config: DeploymentConfig, projectSettings
         name: `${config.appName}-ingress`,
         namespace: config.namespace,
         labels: {
-          app: config.appName,
+          'app.kubernetes.io/name': config.appName,
           ...mergedLabels
         },
         ...(Object.keys(config.ingress.annotations).length > 0 && {
@@ -111,6 +111,8 @@ export function generateKubernetesYaml(config: DeploymentConfig, projectSettings
             paths: [{
               path: rule.path,
               pathType: rule.pathType,
+              serviceName: rule.serviceName,
+              servicePort: rule.servicePort,
               backend: {
                 service: {
                   name: rule.serviceName,
@@ -137,7 +139,7 @@ export function generateKubernetesYaml(config: DeploymentConfig, projectSettings
         name: cm.name,
         namespace: config.namespace,
         labels: {
-          app: config.appName,
+          'app.kubernetes.io/name': config.appName,
           ...mergedLabels
         }
       },
@@ -155,7 +157,7 @@ export function generateKubernetesYaml(config: DeploymentConfig, projectSettings
         name: secret.name,
         namespace: config.namespace,
         labels: {
-          app: config.appName,
+          'app.kubernetes.io/name': config.appName,
           ...mergedLabels
         }
       },
@@ -510,7 +512,7 @@ metadata:
   name: getting-started
   namespace: default
   labels:
-    app: getting-started
+    app.kubernetes.io/name: getting-started
     ${projectSettings ? `project: ${projectSettings.name}` : 'project: my-project'}
     created-by: kube-composer
 data:

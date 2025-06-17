@@ -14,6 +14,12 @@ export function generateKubernetesYaml(config: DeploymentConfig, projectSettings
     project: projectSettings.name
   } : config.labels;
 
+  // Create selector labels that include the project label
+  const selectorLabels = {
+    'app.kubernetes.io/name': config.appName,
+    ...(projectSettings && { project: projectSettings.name })
+  };
+
   // Generate Deployment
   const deployment: KubernetesResource = {
     apiVersion: 'apps/v1',
@@ -30,9 +36,7 @@ export function generateKubernetesYaml(config: DeploymentConfig, projectSettings
     spec: {
       replicas: config.replicas,
       selector: {
-        matchLabels: {
-          'app.kubernetes.io/name': config.appName
-        }
+        matchLabels: selectorLabels
       },
       template: {
         metadata: {
@@ -71,9 +75,7 @@ export function generateKubernetesYaml(config: DeploymentConfig, projectSettings
       }
     },
     spec: {
-      selector: {
-        'app.kubernetes.io/name': config.appName
-      },
+      selector: selectorLabels, // Use the same selector labels as the deployment
       ports: generateServicePorts(config),
       type: config.serviceType
     }

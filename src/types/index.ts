@@ -58,6 +58,14 @@ export interface Secret {
   createdAt: string;
 }
 
+export interface ProjectSettings {
+  name: string;
+  description?: string;
+  globalLabels: Record<string, string>;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface DeploymentConfig {
   appName: string;
   containers: Container[];

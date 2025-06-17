@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Download, Eye, FileText, List, Plus, Menu, X, Database, Settings, Key, PlayCircle, Container as Docker } from 'lucide-react';
+import { Download, Eye, FileText, List, Plus, Menu, X, Database, Settings, Key, PlayCircle, Container as Docker, FolderOpen } from 'lucide-react';
 import { DeploymentForm } from './components/DeploymentForm';
 import { YamlPreview } from './components/YamlPreview';
 import { ResourceSummary } from './components/ResourceSummary';
@@ -14,15 +14,23 @@ import { SEOHead } from './components/SEOHead';
 import { NamespaceManager } from './components/NamespaceManager';
 import { ConfigMapManager } from './components/ConfigMapManager';
 import { SecretManager } from './components/SecretManager';
+import { ProjectSettingsManager } from './components/ProjectSettingsManager';
 import { YouTubePopup } from './components/YouTubePopup';
 import { DockerRunPopup } from './components/DockerRunPopup';
 import { generateMultiDeploymentYaml } from './utils/yamlGenerator';
-import type { DeploymentConfig, Namespace, ConfigMap, Secret } from './types';
+import type { DeploymentConfig, Namespace, ConfigMap, Secret, ProjectSettings } from './types';
 
 type PreviewMode = 'visual' | 'yaml' | 'summary';
 type SidebarTab = 'deployments' | 'namespaces' | 'configmaps' | 'secrets';
 
 function App() {
+  const [projectSettings, setProjectSettings] = useState<ProjectSettings>({
+    name: 'my-project',
+    description: '',
+    globalLabels: {},
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  });
   const [deployments, setDeployments] = useState<DeploymentConfig[]>([]);
   const [namespaces, setNamespaces] = useState<Namespace[]>([
     {
@@ -44,6 +52,7 @@ function App() {
   const [showNamespaceManager, setShowNamespaceManager] = useState(false);
   const [showConfigMapManager, setShowConfigMapManager] = useState(false);
   const [showSecretManager, setShowSecretManager] = useState(false);
+  const [showProjectSettings, setShowProjectSettings] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showYouTubePopup, setShowYouTubePopup] = useState(false);
   const [showDockerPopup, setShowDockerPopup] = useState(false);
@@ -88,12 +97,44 @@ function App() {
     ...deployments.map(d => d.namespace).filter(Boolean)
   ])];
 
+  // Helper function to remove old global labels and apply new ones
+  const cleanAndMergeLabels = (
+    resourceLabels: Record<string, string>, 
+    oldGlobalLabels: Record<string, string> = {},
+    newGlobalLabels: Record<string, string> = projectSettings.globalLabels,
+    projectName: string = projectSettings.name
+  ) => {
+    // Start with a copy of resource labels
+    const cleanedLabels = { ...resourceLabels };
+    
+    // Remove ALL old global labels (including the old project label)
+    Object.keys(oldGlobalLabels).forEach(key => {
+      delete cleanedLabels[key];
+    });
+    
+    // Remove old project label specifically (in case it wasn't in oldGlobalLabels)
+    delete cleanedLabels.project;
+    
+    // Apply new global labels first, then resource-specific labels, then project label
+    return {
+      ...newGlobalLabels,
+      ...cleanedLabels,
+      project: projectName
+    };
+  };
+
   const handleConfigChange = (newConfig: DeploymentConfig) => {
+    // Apply global labels to the new config
+    const configWithGlobalLabels = {
+      ...newConfig,
+      labels: cleanAndMergeLabels(newConfig.labels)
+    };
+
     const newDeployments = [...deployments];
     if (selectedDeployment < deployments.length) {
-      newDeployments[selectedDeployment] = newConfig;
+      newDeployments[selectedDeployment] = configWithGlobalLabels;
     } else {
-      newDeployments.push(newConfig);
+      newDeployments.push(configWithGlobalLabels);
     }
     setDeployments(newDeployments);
   };
@@ -117,7 +158,7 @@ function App() {
       targetPort: 8080,
       serviceType: 'ClusterIP',
       namespace: 'default',
-      labels: {},
+      labels: cleanAndMergeLabels({}),
       annotations: {},
       volumes: [],
       configMaps: [],
@@ -164,6 +205,7 @@ function App() {
         ...container,
         name: container.name ? `${container.name}-copy` : ''
       })),
+      labels: cleanAndMergeLabels(deploymentToDuplicate.labels),
       ingress: {
         ...deploymentToDuplicate.ingress,
         rules: deploymentToDuplicate.ingress.rules.map(rule => ({
@@ -181,7 +223,11 @@ function App() {
 
   // Namespace management
   const handleAddNamespace = (namespace: Namespace) => {
-    setNamespaces([...namespaces, namespace]);
+    const namespaceWithGlobalLabels = {
+      ...namespace,
+      labels: cleanAndMergeLabels(namespace.labels)
+    };
+    setNamespaces([...namespaces, namespaceWithGlobalLabels]);
     setShowNamespaceManager(false);
     setSidebarTab('namespaces');
     setSelectedNamespace(namespaces.length);
@@ -224,6 +270,7 @@ function App() {
     const duplicatedNamespace: Namespace = {
       ...namespaceToDuplicate,
       name: `${namespaceToDuplicate.name}-copy`,
+      labels: cleanAndMergeLabels(namespaceToDuplicate.labels),
       createdAt: new Date().toISOString()
     };
     
@@ -235,7 +282,11 @@ function App() {
 
   // ConfigMap management
   const handleAddConfigMap = (configMap: ConfigMap) => {
-    setConfigMaps([...configMaps, configMap]);
+    const configMapWithGlobalLabels = {
+      ...configMap,
+      labels: cleanAndMergeLabels(configMap.labels)
+    };
+    setConfigMaps([...configMaps, configMapWithGlobalLabels]);
     setShowConfigMapManager(false);
     setSidebarTab('configmaps');
     setSelectedConfigMap(configMaps.length);
@@ -264,6 +315,7 @@ function App() {
     const duplicatedConfigMap: ConfigMap = {
       ...configMapToDuplicate,
       name: `${configMapToDuplicate.name}-copy`,
+      labels: cleanAndMergeLabels(configMapToDuplicate.labels),
       createdAt: new Date().toISOString()
     };
     
@@ -275,7 +327,11 @@ function App() {
 
   // Secret management
   const handleAddSecret = (secret: Secret) => {
-    setSecrets([...secrets, secret]);
+    const secretWithGlobalLabels = {
+      ...secret,
+      labels: cleanAndMergeLabels(secret.labels)
+    };
+    setSecrets([...secrets, secretWithGlobalLabels]);
     setShowSecretManager(false);
     setSidebarTab('secrets');
     setSelectedSecret(secrets.length);
@@ -308,6 +364,7 @@ function App() {
     const duplicatedSecret: Secret = {
       ...secretToDuplicate,
       name: `${secretToDuplicate.name}-copy`,
+      labels: cleanAndMergeLabels(secretToDuplicate.labels),
       createdAt: new Date().toISOString()
     };
     
@@ -315,6 +372,37 @@ function App() {
     newSecrets.splice(index + 1, 0, duplicatedSecret);
     setSecrets(newSecrets);
     setSelectedSecret(index + 1);
+  };
+
+  // Project settings management
+  const handleUpdateProjectSettings = (newSettings: ProjectSettings) => {
+    const oldGlobalLabels = projectSettings.globalLabels;
+    setProjectSettings(newSettings);
+    
+    // Update all existing resources with new global labels, properly removing old ones
+    const updatedDeployments = deployments.map(deployment => ({
+      ...deployment,
+      labels: cleanAndMergeLabels(deployment.labels, oldGlobalLabels, newSettings.globalLabels, newSettings.name)
+    }));
+    setDeployments(updatedDeployments);
+
+    const updatedNamespaces = namespaces.map(namespace => ({
+      ...namespace,
+      labels: cleanAndMergeLabels(namespace.labels, oldGlobalLabels, newSettings.globalLabels, newSettings.name)
+    }));
+    setNamespaces(updatedNamespaces);
+
+    const updatedConfigMaps = configMaps.map(configMap => ({
+      ...configMap,
+      labels: cleanAndMergeLabels(configMap.labels, oldGlobalLabels, newSettings.globalLabels, newSettings.name)
+    }));
+    setConfigMaps(updatedConfigMaps);
+
+    const updatedSecrets = secrets.map(secret => ({
+      ...secret,
+      labels: cleanAndMergeLabels(secret.labels, oldGlobalLabels, newSettings.globalLabels, newSettings.name)
+    }));
+    setSecrets(updatedSecrets);
   };
 
   const handleDownload = async () => {
@@ -328,16 +416,16 @@ function App() {
       return;
     }
     
-    const yaml = generateMultiDeploymentYaml(validDeployments, namespaces, configMaps, secrets);
+    const yaml = generateMultiDeploymentYaml(validDeployments, namespaces, configMaps, secrets, projectSettings);
     const blob = new Blob([yaml], { type: 'text/yaml' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     
-    // Create filename based on number of deployments
+    // Create filename based on project name and number of deployments
     const filename = validDeployments.length === 1 
-      ? `${validDeployments[0].appName}-deployment.yaml`
-      : `kubernetes-deployments-${validDeployments.length}.yaml`;
+      ? `${projectSettings.name}-${validDeployments[0].appName}-deployment.yaml`
+      : `${projectSettings.name}-kubernetes-deployments-${validDeployments.length}.yaml`;
     
     a.download = filename;
     document.body.appendChild(a);
@@ -353,7 +441,7 @@ function App() {
     }
     
     const validDeployments = deployments.filter(d => d.appName);
-    return generateMultiDeploymentYaml(validDeployments, namespaces, configMaps, secrets);
+    return generateMultiDeploymentYaml(validDeployments, namespaces, configMaps, secrets, projectSettings);
   };
 
   const previewModes = [
@@ -397,7 +485,9 @@ function App() {
                 >
                   Kube Composer
                 </a>
-                <p className="text-xs sm:text-sm text-gray-500 hidden sm:block">Kubernetes YAML Generator for developers</p>
+                <p className="text-xs sm:text-sm text-gray-500 hidden sm:block">
+                  {projectSettings.name ? `Project: ${projectSettings.name}` : 'Kubernetes YAML Generator for developers'}
+                </p>
               </div>
             </div>
             
@@ -503,6 +593,22 @@ function App() {
           transition-transform duration-300 ease-in-out lg:transition-none
           flex flex-col
         `}>
+          {/* Project Settings Button */}
+          <div className="p-4 border-b border-gray-200 flex-shrink-0">
+            <button
+              onClick={() => setShowProjectSettings(true)}
+              className="w-full inline-flex items-center justify-center px-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 text-sm font-medium shadow-md hover:shadow-lg transform hover:scale-105"
+            >
+              <FolderOpen className="w-4 h-4 mr-2" />
+              <span>Project Settings</span>
+            </button>
+            {Object.keys(projectSettings.globalLabels).length > 0 && (
+              <div className="mt-2 text-xs text-gray-600 text-center">
+                {Object.keys(projectSettings.globalLabels).length} global label{Object.keys(projectSettings.globalLabels).length !== 1 ? 's' : ''} active
+              </div>
+            )}
+          </div>
+
           {/* Tab Headers */}
           <div className="p-4 border-b border-gray-200 flex-shrink-0">
             <div className="grid grid-cols-2 gap-1 bg-gray-100 rounded-lg p-1">
@@ -728,6 +834,15 @@ function App() {
         isOpen={showDockerPopup}
         onClose={() => setShowDockerPopup(false)}
       />
+
+      {/* Project Settings Modal */}
+      {showProjectSettings && (
+        <ProjectSettingsManager
+          projectSettings={projectSettings}
+          onUpdateProjectSettings={handleUpdateProjectSettings}
+          onClose={() => setShowProjectSettings(false)}
+        />
+      )}
 
       {/* Deployment Form Modal */}
       {showForm && (

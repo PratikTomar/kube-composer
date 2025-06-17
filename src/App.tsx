@@ -98,23 +98,28 @@ function App() {
   ])];
 
   // Helper function to remove old global labels and apply new ones
-  const cleanAndMergeLabels = (resourceLabels: Record<string, string>, oldGlobalLabels: Record<string, string> = {}) => {
-    // Remove old global labels and project label from resource labels
+  const cleanAndMergeLabels = (
+    resourceLabels: Record<string, string>, 
+    oldGlobalLabels: Record<string, string> = {},
+    newGlobalLabels: Record<string, string> = projectSettings.globalLabels,
+    projectName: string = projectSettings.name
+  ) => {
+    // Start with a copy of resource labels
     const cleanedLabels = { ...resourceLabels };
     
-    // Remove old global labels
+    // Remove ALL old global labels (including the old project label)
     Object.keys(oldGlobalLabels).forEach(key => {
       delete cleanedLabels[key];
     });
     
-    // Remove old project label
+    // Remove old project label specifically (in case it wasn't in oldGlobalLabels)
     delete cleanedLabels.project;
     
-    // Apply new global labels and project label
+    // Apply new global labels first, then resource-specific labels, then project label
     return {
-      ...projectSettings.globalLabels,
+      ...newGlobalLabels,
       ...cleanedLabels,
-      project: projectSettings.name
+      project: projectName
     };
   };
 
@@ -374,28 +379,28 @@ function App() {
     const oldGlobalLabels = projectSettings.globalLabels;
     setProjectSettings(newSettings);
     
-    // Update all existing resources with new global labels
+    // Update all existing resources with new global labels, properly removing old ones
     const updatedDeployments = deployments.map(deployment => ({
       ...deployment,
-      labels: cleanAndMergeLabels(deployment.labels, oldGlobalLabels)
+      labels: cleanAndMergeLabels(deployment.labels, oldGlobalLabels, newSettings.globalLabels, newSettings.name)
     }));
     setDeployments(updatedDeployments);
 
     const updatedNamespaces = namespaces.map(namespace => ({
       ...namespace,
-      labels: cleanAndMergeLabels(namespace.labels, oldGlobalLabels)
+      labels: cleanAndMergeLabels(namespace.labels, oldGlobalLabels, newSettings.globalLabels, newSettings.name)
     }));
     setNamespaces(updatedNamespaces);
 
     const updatedConfigMaps = configMaps.map(configMap => ({
       ...configMap,
-      labels: cleanAndMergeLabels(configMap.labels, oldGlobalLabels)
+      labels: cleanAndMergeLabels(configMap.labels, oldGlobalLabels, newSettings.globalLabels, newSettings.name)
     }));
     setConfigMaps(updatedConfigMaps);
 
     const updatedSecrets = secrets.map(secret => ({
       ...secret,
-      labels: cleanAndMergeLabels(secret.labels, oldGlobalLabels)
+      labels: cleanAndMergeLabels(secret.labels, oldGlobalLabels, newSettings.globalLabels, newSettings.name)
     }));
     setSecrets(updatedSecrets);
   };

@@ -47,9 +47,15 @@ export function ProjectSettingsManager({
 
   const addGlobalLabel = () => {
     if (newLabel.key && newLabel.value) {
-      // Validate label key
-      if (!/^[a-z0-9A-Z]([a-z0-9A-Z\-_.]*[a-z0-9A-Z])?$/.test(newLabel.key)) {
-        setErrors(['Label key must start and end with alphanumeric characters']);
+      // Updated validation for Kubernetes label keys
+      // Kubernetes label keys can contain:
+      // - alphanumeric characters
+      // - dots (.)
+      // - hyphens (-)
+      // - underscores (_)
+      // - forward slashes (/) for namespaced labels like app.kubernetes.io/component
+      if (!/^[a-zA-Z0-9]([a-zA-Z0-9\-_.\/]*[a-zA-Z0-9])?$/.test(newLabel.key)) {
+        setErrors(['Label key must start and end with alphanumeric characters and can contain letters, numbers, dots, hyphens, underscores, and forward slashes']);
         return;
       }
       
@@ -94,8 +100,8 @@ export function ProjectSettingsManager({
   const commonLabels = [
     { key: 'environment', value: 'development', description: 'Environment (dev, staging, prod)' },
     { key: 'team', value: 'backend', description: 'Team responsible for the resources' },
-    { key: 'version', value: 'v1.0.0', description: 'Application version' },
-    { key: 'component', value: 'api', description: 'Component type (api, frontend, database)' },
+    { key: 'app.kubernetes.io/version', value: '1.0.0', description: 'Application version' },
+    { key: 'app.kubernetes.io/component', value: 'api', description: 'Component type (api, frontend, database)' },
     { key: 'owner', value: 'platform-team', description: 'Resource owner' },
     { key: 'cost-center', value: 'engineering', description: 'Cost allocation' }
   ];
@@ -222,7 +228,7 @@ export function ProjectSettingsManager({
                   onChange={(e) => setNewLabel(prev => ({ ...prev, key: e.target.value }))}
                   onKeyPress={(e) => handleKeyPress(e, addGlobalLabel)}
                   className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  placeholder="Label key (e.g., environment)"
+                  placeholder="Label key (e.g., app.kubernetes.io/component)"
                 />
                 <input
                   type="text"
@@ -230,7 +236,7 @@ export function ProjectSettingsManager({
                   onChange={(e) => setNewLabel(prev => ({ ...prev, value: e.target.value }))}
                   onKeyPress={(e) => handleKeyPress(e, addGlobalLabel)}
                   className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  placeholder="Label value (e.g., production)"
+                  placeholder="Label value (e.g., api)"
                 />
               </div>
             </div>

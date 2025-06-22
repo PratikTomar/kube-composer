@@ -492,27 +492,8 @@ function App() {
             </div>
             
             <div className="flex items-center space-x-2">
-              {/* Stats - Hidden on mobile */}
-              <div className="hidden lg:flex items-center space-x-4">
-                <div className="flex items-center space-x-2 text-sm text-gray-600">
-                  <FileText className="w-4 h-4" />
-                  <span>{deployments.length} deployment{deployments.length !== 1 ? 's' : ''}</span>
-                </div>
-                <div className="flex items-center space-x-2 text-sm text-gray-600">
-                  <Database className="w-4 h-4" />
-                  <span>{namespaces.length} namespace{namespaces.length !== 1 ? 's' : ''}</span>
-                </div>
-                <div className="flex items-center space-x-2 text-sm text-gray-600">
-                  <Settings className="w-4 h-4" />
-                  <span>{configMaps.length} configmap{configMaps.length !== 1 ? 's' : ''}</span>
-                </div>
-                <div className="flex items-center space-x-2 text-sm text-gray-600">
-                  <Key className="w-4 h-4" />
-                  <span>{secrets.length} secret{secrets.length !== 1 ? 's' : ''}</span>
-                </div>
-                <SocialShare />
-              </div>
-              
+              {/* Social and GitHub Star Buttons */}
+              <SocialShare />
               {/* Action Buttons */}
               <button
                 onClick={handleAddDeployment}
@@ -548,29 +529,6 @@ function App() {
                 <span className="hidden sm:inline">Download YAML</span>
               </button>
             </div>
-          </div>
-          
-          {/* Mobile Stats Row */}
-          <div className="lg:hidden mt-3 flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2 text-sm text-gray-600">
-                <FileText className="w-4 h-4" />
-                <span>{deployments.length}</span>
-              </div>
-              <div className="flex items-center space-x-2 text-sm text-gray-600">
-                <Database className="w-4 h-4" />
-                <span>{namespaces.length}</span>
-              </div>
-              <div className="flex items-center space-x-2 text-sm text-gray-600">
-                <Settings className="w-4 h-4" />
-                <span>{configMaps.length}</span>
-              </div>
-              <div className="flex items-center space-x-2 text-sm text-gray-600">
-                <Key className="w-4 h-4" />
-                <span>{secrets.length}</span>
-              </div>
-            </div>
-            <SocialShare />
           </div>
         </div>
       </header>
@@ -776,14 +734,39 @@ function App() {
           {/* Preview Header */}
           <div className="bg-white border-b border-gray-200 p-4 flex-shrink-0">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
-              <h2 className="text-lg font-semibold text-gray-900">
-                Preview
-                {previewMode === 'yaml' && deployments.length > 1 && (
-                  <span className="ml-2 text-sm font-normal text-gray-500">
-                    (All {deployments.filter(d => d.appName).length} deployments)
-                  </span>
-                )}
-              </h2>
+              <div className="flex items-center w-full">
+                <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+                  Preview
+                  {previewMode === 'yaml' && deployments.length > 1 && (
+                    <span className="ml-2 text-sm font-normal text-gray-500">
+                      (All {deployments.filter(d => d.appName).length} deployments)
+                    </span>
+                  )}
+                </h2>
+                {/* Resource Stats Row - now directly next to Preview */}
+                <div className="hidden md:flex items-center space-x-4 ml-6 px-4 py-1 bg-gray-50 border border-gray-200 rounded-lg shadow-sm">
+                  <div className="flex items-center space-x-1 text-sm text-gray-700 font-medium">
+                    <FileText className="w-5 h-5 text-blue-500" />
+                    <span className="font-bold">{deployments.length}</span>
+                    <span className="text-gray-500">deployment{deployments.length !== 1 ? 's' : ''}</span>
+                  </div>
+                  <div className="flex items-center space-x-1 text-sm text-gray-700 font-medium">
+                    <Database className="w-5 h-5 text-purple-500" />
+                    <span className="font-bold">{namespaces.length}</span>
+                    <span className="text-gray-500">namespace{namespaces.length !== 1 ? 's' : ''}</span>
+                  </div>
+                  <div className="flex items-center space-x-1 text-sm text-gray-700 font-medium">
+                    <Settings className="w-5 h-5 text-green-500" />
+                    <span className="font-bold">{configMaps.length}</span>
+                    <span className="text-gray-500">configmap{configMaps.length !== 1 ? 's' : ''}</span>
+                  </div>
+                  <div className="flex items-center space-x-1 text-sm text-gray-700 font-medium">
+                    <Key className="w-5 h-5 text-orange-500" />
+                    <span className="font-bold">{secrets.length}</span>
+                    <span className="text-gray-500">secret{secrets.length !== 1 ? 's' : ''}</span>
+                  </div>
+                </div>
+              </div>
               <div className="flex items-center justify-between sm:justify-end">
                 <div className="flex items-center space-x-1">
                   {previewModes.map((mode) => {

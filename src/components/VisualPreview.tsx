@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useMemo } from 'react';
 import { 
   CheckCircle, 
   XCircle, 
@@ -12,25 +12,12 @@ import {
   Globe, 
   Network, 
   HardDrive,
-  ArrowRight,
-  ArrowDown,
   Users,
-  Activity,
-  Zap,
-  Shield,
-  Lock,
-  Eye,
-  EyeOff,
-  ChevronDown,
-  ChevronUp,
   Info,
   ExternalLink,
   GitBranch,
   GitCommit,
-  GitPullRequest,
-  X,
-  Download,
-  Copy
+  X
 } from 'lucide-react';
 import type { DeploymentConfig, Namespace, ConfigMap, Secret } from '../types';
 import { generateKubernetesYaml, generateConfigMapYaml, generateSecretYaml, generateNamespaceYaml } from '../utils/yamlGenerator';
@@ -73,12 +60,8 @@ export function VisualPreview({
   secrets, 
   containerRef
 }: VisualPreviewProps) {
-  const [selectedNode, setSelectedNode] = useState<string | null>(null);
-  const [showDetails, setShowDetails] = useState(true);
-  const [autoLayout, setAutoLayout] = useState(true);
-  const [filterNamespace, setFilterNamespace] = useState<string | null>(null);
+  const showDetails = true;
   const [yamlModal, setYamlModal] = useState<{ open: boolean, title: string, yaml: string } | null>(null);
-  const [copied, setCopied] = useState(false);
 
   const validDeployments = deployments.filter(d => d.appName);
 
@@ -112,7 +95,7 @@ export function VisualPreview({
       group.secrets.length > 0
     );
 
-    namespaceGroups.forEach((group, groupIndex) => {
+    namespaceGroups.forEach((group) => {
       group.deployments.forEach((deployment, depIndex) => {
         const baseY = currentY;
         const colorIdx = depIndex % colorPalette.length;
@@ -336,7 +319,7 @@ export function VisualPreview({
       case 'external':
         return <ExternalLink className="w-4 h-4 text-blue-600" />;
       default:
-        return <Activity className="w-4 h-4 text-gray-400" />;
+        return <Info className="w-4 h-4 text-gray-400" />;
     }
   };
 
@@ -369,12 +352,6 @@ export function VisualPreview({
         return 'text-gray-600 bg-gray-100';
     }
   };
-
-  const filteredNodes = filterNamespace 
-    ? flowNodes.filter(node => node.namespace === filterNamespace)
-    : flowNodes;
-
-  const selectedNodeData = selectedNode ? flowNodes.find(n => n.id === selectedNode) : null;
 
   // Helper to generate YAML for a single resource node
   function getYamlForNode(node: any) {

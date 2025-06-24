@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Download, Eye, FileText, List, Plus, Menu, X, Database, Settings, Key, PlayCircle, Container as Docker, FolderOpen, Activity, GitBranch } from 'lucide-react';
+import { Download, FileText, List, Plus, Menu, X, Database, Settings, Key, PlayCircle, Container as Docker, FolderOpen, GitBranch } from 'lucide-react';
 import { DeploymentForm } from './components/DeploymentForm';
 import { YamlPreview } from './components/YamlPreview';
 import { ResourceSummary } from './components/ResourceSummary';
@@ -460,17 +460,6 @@ function App() {
       containerRef.current.scrollLeft = 0; // or center calculation
     }
   }, []);
-
-  const rowHeight = 180; // or whatever fits your compactness
-  let currentY = 0;
-
-  deployments.forEach((deployment, i) => {
-    // Place deployment node at (0, currentY)
-    // Place service at (x, currentY)
-    // Place pods at (x, currentY + podOffset)
-    // etc.
-    currentY += rowHeight; // move to next row for next deployment
-  });
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">

@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Download, Eye, FileText, List, Plus, Menu, X, Database, Settings, Key, PlayCircle, Container as Docker, FolderOpen } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { Download, Eye, FileText, List, Plus, Menu, X, Database, Settings, Key, PlayCircle, Container as Docker, FolderOpen, Activity, GitBranch } from 'lucide-react';
 import { DeploymentForm } from './components/DeploymentForm';
 import { YamlPreview } from './components/YamlPreview';
 import { ResourceSummary } from './components/ResourceSummary';
@@ -7,7 +7,7 @@ import { DeploymentsList } from './components/DeploymentsList';
 import { NamespacesList } from './components/NamespacesList';
 import { ConfigMapsList } from './components/ConfigMapsList';
 import { SecretsList } from './components/SecretsList';
-import { ArchitecturePreview } from './components/ArchitecturePreview';
+import { VisualPreview } from './components/VisualPreview';
 import { Footer } from './components/Footer';
 import { SocialShare } from './components/SocialShare';
 import { SEOHead } from './components/SEOHead';
@@ -20,7 +20,7 @@ import { DockerRunPopup } from './components/DockerRunPopup';
 import { generateMultiDeploymentYaml } from './utils/yamlGenerator';
 import type { DeploymentConfig, Namespace, ConfigMap, Secret, ProjectSettings } from './types';
 
-type PreviewMode = 'visual' | 'yaml' | 'summary';
+type PreviewMode = 'visual' | 'yaml' | 'summary' | 'argocd' | 'flow';
 type SidebarTab = 'deployments' | 'namespaces' | 'configmaps' | 'secrets';
 
 function App() {
@@ -46,7 +46,7 @@ function App() {
   const [selectedNamespace, setSelectedNamespace] = useState<number>(0);
   const [selectedConfigMap, setSelectedConfigMap] = useState<number>(0);
   const [selectedSecret, setSelectedSecret] = useState<number>(0);
-  const [previewMode, setPreviewMode] = useState<PreviewMode>('visual');
+  const [previewMode, setPreviewMode] = useState<PreviewMode>('flow');
   const [sidebarTab, setSidebarTab] = useState<SidebarTab>('deployments');
   const [showForm, setShowForm] = useState(false);
   const [showNamespaceManager, setShowNamespaceManager] = useState(false);
@@ -445,13 +445,32 @@ function App() {
   };
 
   const previewModes = [
-    { id: 'visual' as const, label: 'Visual', icon: Eye },
+    { id: 'flow' as const, label: 'Visual', icon: GitBranch },
     { id: 'summary' as const, label: 'Summary', icon: List },
-    { id: 'yaml' as const, label: 'YAML', icon: FileText }
+    { id: 'yaml' as const, label: 'YAML', icon: FileText },
   ];
 
   // Check if download should be enabled
   const hasValidDeployments = deployments.some(d => d.appName);
+
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (containerRef.current) {
+      containerRef.current.scrollLeft = 0; // or center calculation
+    }
+  }, []);
+
+  const rowHeight = 180; // or whatever fits your compactness
+  let currentY = 0;
+
+  deployments.forEach((deployment, i) => {
+    // Place deployment node at (0, currentY)
+    // Place service at (x, currentY)
+    // Place pods at (x, currentY + podOffset)
+    // etc.
+    currentY += rowHeight; // move to next row for next deployment
+  });
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -461,9 +480,9 @@ function App() {
       {/* Header */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
         <div className="px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
+            {/* Top row: Logo, Title, Menu */}
             <div className="flex items-center space-x-3">
-              {/* Mobile menu button */}
               <button
                 onClick={() => setSidebarOpen(!sidebarOpen)}
                 className="lg:hidden p-2 text-gray-400 hover:text-gray-600 rounded-lg"
@@ -474,59 +493,99 @@ function App() {
                   <Menu className="w-5 h-5" />
                 )}
               </button>
-              
               <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
                 <FileText className="w-5 h-5 text-white" />
               </div>
-              <div>
+              <div className="flex flex-col">
                 <a 
                   href="https://kube-composer.com" 
                   className="text-lg sm:text-xl font-semibold text-gray-900 hover:text-blue-600 transition-colors duration-200"
                 >
                   Kube Composer
                 </a>
-                <p className="text-xs sm:text-sm text-gray-500 hidden sm:block">
+                <p className="block text-sm text-gray-500">
                   {projectSettings.name ? `Project: ${projectSettings.name}` : 'Kubernetes YAML Generator for developers'}
                 </p>
               </div>
             </div>
-            
-            <div className="flex items-center space-x-2">
-              {/* Social and GitHub Star Buttons */}
+            {/* Mobile: Social + Actions grouped and centered, Desktop: inline */}
+            <div className="flex flex-col items-center w-full sm:hidden">
+              <div className="w-full max-w-sm bg-gray-50 rounded-xl py-2 px-2 shadow-sm mt-2">
+                <div className="flex items-center justify-center space-x-2 mb-2">
+                  <SocialShare />
+                </div>
+                <div className="flex flex-col space-y-2 w-full">
+                  <button
+                    onClick={handleAddDeployment}
+                    className="inline-flex items-center justify-center px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 text-sm font-medium w-full max-w-sm mx-auto"
+                    title="Add new deployment"
+                  >
+                    <Plus className="w-4 h-4 mr-1" />
+                    <span>Add Deployment</span>
+                  </button>
+                  <button
+                    onClick={() => setShowDockerPopup(true)}
+                    className="inline-flex items-center justify-center px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 text-sm font-medium w-full max-w-sm mx-auto"
+                    title="Run locally with Docker"
+                  >
+                    <Docker className="w-4 h-4 mr-1" />
+                    <span>Run Locally</span>
+                  </button>
+                  <button
+                    onClick={() => setShowYouTubePopup(true)}
+                    className="inline-flex items-center justify-center px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors duration-200 text-sm font-medium w-full max-w-sm mx-auto"
+                    title="Watch demo video"
+                  >
+                    <PlayCircle className="w-4 h-4 mr-1" />
+                    <span>Watch a Demo</span>
+                  </button>
+                  <button
+                    onClick={handleDownload}
+                    disabled={!hasValidDeployments}
+                    className="inline-flex items-center justify-center px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 text-sm font-medium w-full max-w-sm mx-auto"
+                    title={hasValidDeployments ? 'Download all deployments as YAML' : 'No valid deployments to download'}
+                  >
+                    <Download className="w-4 h-4 mr-1" />
+                    <span>Download YAML</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+            {/* Desktop: SocialShare inline + actions inline */}
+            <div className="hidden sm:flex flex-row items-center space-x-2">
               <SocialShare />
-              {/* Action Buttons */}
               <button
                 onClick={handleAddDeployment}
-                className="inline-flex items-center px-2 sm:px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 text-sm font-medium"
+                className="inline-flex items-center justify-center px-2 sm:px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 text-sm font-medium"
                 title="Add new deployment"
               >
-                <Plus className="w-4 h-4 sm:mr-1" />
-                <span className="hidden sm:inline">Add Deployment</span>
+                <Plus className="w-4 h-4 mr-1" />
+                <span>Add Deployment</span>
               </button>
               <button
                 onClick={() => setShowDockerPopup(true)}
-                className="inline-flex items-center px-2 sm:px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 text-sm font-medium"
+                className="inline-flex items-center justify-center px-2 sm:px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 text-sm font-medium"
                 title="Run locally with Docker"
               >
-                <Docker className="w-4 h-4 sm:mr-1" />
-                <span className="hidden sm:inline">Run Locally</span>
+                <Docker className="w-4 h-4 mr-1" />
+                <span>Run Locally</span>
               </button>
               <button
                 onClick={() => setShowYouTubePopup(true)}
-                className="inline-flex items-center px-2 sm:px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors duration-200 text-sm font-medium"
+                className="inline-flex items-center justify-center px-2 sm:px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors duration-200 text-sm font-medium"
                 title="Watch demo video"
               >
-                <PlayCircle className="w-4 h-4 sm:mr-1" />
-                <span className="hidden sm:inline">Watch a Demo</span>
+                <PlayCircle className="w-4 h-4 mr-1" />
+                <span>Watch a Demo</span>
               </button>
               <button
                 onClick={handleDownload}
                 disabled={!hasValidDeployments}
-                className="inline-flex items-center px-2 sm:px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 text-sm font-medium"
+                className="inline-flex items-center justify-center px-2 sm:px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 text-sm font-medium"
                 title={hasValidDeployments ? 'Download all deployments as YAML' : 'No valid deployments to download'}
               >
-                <Download className="w-4 h-4 sm:mr-1" />
-                <span className="hidden sm:inline">Download YAML</span>
+                <Download className="w-4 h-4 mr-1" />
+                <span>Download YAML</span>
               </button>
             </div>
           </div>
@@ -534,7 +593,7 @@ function App() {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 flex overflow-hidden">
+      <main className="flex-1 flex min-h-0 overflow-hidden">
         {/* Mobile Sidebar Overlay */}
         {sidebarOpen && (
           <div 
@@ -549,7 +608,7 @@ function App() {
           lg:translate-x-0 fixed lg:relative inset-y-0 left-0 z-50 lg:z-auto
           w-80 lg:w-1/4 xl:w-1/5 bg-white border-r border-gray-200 
           transition-transform duration-300 ease-in-out lg:transition-none
-          flex flex-col
+          flex flex-col min-h-0
         `}>
           {/* Project Settings Button */}
           <div className="p-4 border-b border-gray-200 flex-shrink-0">
@@ -618,7 +677,7 @@ function App() {
           </div>
 
           {/* Tab Content */}
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 min-h-0 overflow-y-auto">
             {sidebarTab === 'deployments' && (
               deployments.length > 0 ? (
                 <DeploymentsList
@@ -730,73 +789,71 @@ function App() {
         </div>
 
         {/* Right Content - Preview */}
-        <div className="flex-1 flex flex-col min-w-0">
-          {/* Preview Header */}
-          <div className="bg-white border-b border-gray-200 p-4 flex-shrink-0">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
-              <div className="flex items-center w-full">
-                <h2 className="text-lg font-semibold text-gray-900 flex items-center">
-                  Preview
-                  {previewMode === 'yaml' && deployments.length > 1 && (
-                    <span className="ml-2 text-sm font-normal text-gray-500">
-                      (All {deployments.filter(d => d.appName).length} deployments)
-                    </span>
-                  )}
-                </h2>
-                {/* Resource Stats Row - now directly next to Preview */}
-                <div className="hidden md:flex items-center space-x-4 ml-6 px-4 py-1 bg-gray-50 border border-gray-200 rounded-lg shadow-sm">
-                  <div className="flex items-center space-x-1 text-sm text-gray-700 font-medium">
-                    <FileText className="w-5 h-5 text-blue-500" />
-                    <span className="font-bold">{deployments.length}</span>
-                    <span className="text-gray-500">deployment{deployments.length !== 1 ? 's' : ''}</span>
-                  </div>
-                  <div className="flex items-center space-x-1 text-sm text-gray-700 font-medium">
-                    <Database className="w-5 h-5 text-purple-500" />
-                    <span className="font-bold">{namespaces.length}</span>
-                    <span className="text-gray-500">namespace{namespaces.length !== 1 ? 's' : ''}</span>
-                  </div>
-                  <div className="flex items-center space-x-1 text-sm text-gray-700 font-medium">
-                    <Settings className="w-5 h-5 text-green-500" />
-                    <span className="font-bold">{configMaps.length}</span>
-                    <span className="text-gray-500">configmap{configMaps.length !== 1 ? 's' : ''}</span>
-                  </div>
-                  <div className="flex items-center space-x-1 text-sm text-gray-700 font-medium">
-                    <Key className="w-5 h-5 text-orange-500" />
-                    <span className="font-bold">{secrets.length}</span>
-                    <span className="text-gray-500">secret{secrets.length !== 1 ? 's' : ''}</span>
+        <div className="flex-1 flex flex-col min-w-0 min-h-0">
+          {/* Preview Content with Sticky Header */}
+          <div className="flex-1 min-h-0 overflow-y-auto bg-gray-50">
+            <div className="sticky top-0 z-10 bg-white border-b border-gray-200 p-4">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
+                <div className="flex items-center w-full">
+                  <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+                    Preview
+                    {previewMode === 'yaml' && deployments.length > 1 && (
+                      <span className="ml-2 text-sm font-normal text-gray-500">
+                        (All {deployments.filter(d => d.appName).length} deployments)
+                      </span>
+                    )}
+                  </h2>
+                  {/* Resource Stats Row - now directly next to Preview */}
+                  <div className="hidden md:flex items-center space-x-4 ml-6 px-4 py-1 bg-gray-50 border border-gray-200 rounded-lg shadow-sm">
+                    <div className="flex items-center space-x-1 text-sm text-gray-700 font-medium">
+                      <FileText className="w-5 h-5 text-blue-500" />
+                      <span className="font-bold">{deployments.length}</span>
+                      <span className="text-gray-500">deployment{deployments.length !== 1 ? 's' : ''}</span>
+                    </div>
+                    <div className="flex items-center space-x-1 text-sm text-gray-700 font-medium">
+                      <Database className="w-5 h-5 text-purple-500" />
+                      <span className="font-bold">{namespaces.length}</span>
+                      <span className="text-gray-500">namespace{namespaces.length !== 1 ? 's' : ''}</span>
+                    </div>
+                    <div className="flex items-center space-x-1 text-sm text-gray-700 font-medium">
+                      <Settings className="w-5 h-5 text-green-500" />
+                      <span className="font-bold">{configMaps.length}</span>
+                      <span className="text-gray-500">configmap{configMaps.length !== 1 ? 's' : ''}</span>
+                    </div>
+                    <div className="flex items-center space-x-1 text-sm text-gray-700 font-medium">
+                      <Key className="w-5 h-5 text-orange-500" />
+                      <span className="font-bold">{secrets.length}</span>
+                      <span className="text-gray-500">secret{secrets.length !== 1 ? 's' : ''}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div className="flex items-center justify-between sm:justify-end">
-                <div className="flex items-center space-x-1">
-                  {previewModes.map((mode) => {
-                    const Icon = mode.icon;
-                    return (
-                      <button
-                        key={mode.id}
-                        onClick={() => setPreviewMode(mode.id)}
-                        className={`${
-                          previewMode === mode.id
-                            ? 'bg-blue-100 text-blue-700'
-                            : 'text-gray-500 hover:text-gray-700'
-                        } px-2 sm:px-3 py-2 rounded-lg text-xs sm:text-sm font-medium flex items-center space-x-1 transition-colors duration-200`}
-                      >
-                        <Icon className="w-4 h-4" />
-                        <span className="hidden sm:inline">{mode.label}</span>
-                      </button>
-                    );
-                  })}
+                <div className="flex items-center justify-between sm:justify-end">
+                  <div className="flex items-center space-x-1">
+                    {previewModes.map((mode) => {
+                      const Icon = mode.icon;
+                      return (
+                        <button
+                          key={mode.id}
+                          onClick={() => setPreviewMode(mode.id)}
+                          className={`${
+                            previewMode === mode.id
+                              ? 'bg-blue-100 text-blue-700'
+                              : 'text-gray-500 hover:text-gray-700'
+                          } px-2 sm:px-3 py-2 rounded-lg text-xs sm:text-sm font-medium flex items-center space-x-1 transition-colors duration-200`}
+                        >
+                          <Icon className="w-4 h-4" />
+                          <span className="hidden sm:inline">{mode.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-
-          {/* Preview Content */}
-          <div className="flex-1 overflow-y-auto bg-gray-50">
             <div className="p-4 sm:p-6 pb-8">
-              {previewMode === 'visual' && <ArchitecturePreview deployments={deployments} />}
-              {previewMode === 'yaml' && <YamlPreview yaml={getPreviewYaml()} />}
+              {previewMode === 'flow' && <VisualPreview deployments={deployments} namespaces={namespaces} configMaps={configMaps} secrets={secrets} containerRef={containerRef} />}
               {previewMode === 'summary' && <ResourceSummary config={currentConfig} />}
+              {previewMode === 'yaml' && <YamlPreview yaml={getPreviewYaml()} />}
             </div>
           </div>
         </div>

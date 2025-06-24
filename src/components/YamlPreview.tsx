@@ -3,9 +3,10 @@ import { Copy, Check, Download, Eye, EyeOff } from 'lucide-react';
 
 interface YamlPreviewProps {
   yaml: string;
+  name?: string;
 }
 
-export function YamlPreview({ yaml }: YamlPreviewProps) {
+export function YamlPreview({ yaml, name }: YamlPreviewProps) {
   const [copied, setCopied] = useState(false);
   const [showLineNumbers, setShowLineNumbers] = useState(true);
   const [wordWrap, setWordWrap] = useState(false);
@@ -156,7 +157,9 @@ export function YamlPreview({ yaml }: YamlPreviewProps) {
     <div className="space-y-4">
       {/* Header with controls */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
-        <h3 className="text-lg font-semibold text-gray-900">Generated YAML</h3>
+        <h3 className="text-lg font-semibold text-gray-900">
+          Generated YAML{name ? ` for ${name}` : ''}
+        </h3>
         
         <div className="flex items-center space-x-2">
           {/* View options */}
@@ -262,23 +265,6 @@ export function YamlPreview({ yaml }: YamlPreviewProps) {
           <div className="flex items-center justify-between text-xs text-gray-400">
             <span>{yamlLines.length} lines • {yaml.length} characters</span>
             <span>YAML • UTF-8</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Help text */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-        <div className="flex items-start space-x-2">
-          <div className="w-5 h-5 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-            <span className="text-blue-600 text-xs font-bold">i</span>
-          </div>
-          <div className="text-sm text-blue-800">
-            <p className="font-medium mb-1">Ready to deploy!</p>
-            <p>
-              Save this YAML to a file (e.g., <code className="bg-blue-100 px-1 rounded">deployment.yaml</code>) 
-              and apply it to your Kubernetes cluster with: 
-              <code className="bg-blue-100 px-1 rounded ml-1">kubectl apply -f deployment.yaml</code>
-            </p>
           </div>
         </div>
       </div>

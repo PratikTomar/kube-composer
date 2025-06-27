@@ -22,9 +22,20 @@ import { JobManager, Job } from './components/JobManager';
 import { JobList } from './components/jobs/JobList';
 import { CronJobList } from './components/jobs/CronJobList';
 import type { DeploymentConfig, Namespace, ConfigMap, Secret, ProjectSettings, JobConfig, CronJobConfig } from './types';
+import {
+  K8sDeploymentIcon,
+  K8sNamespaceIcon,
+  K8sConfigMapIcon,
+  K8sSecretIcon,
+  K8sJobIcon,
+  K8sCronJobIcon,
+  K8sStorageIcon,
+  K8sDaemonSetIcon,
+  K8sPodIcon
+} from './components/KubernetesIcons';
 
 type PreviewMode = 'visual' | 'yaml' | 'summary' | 'argocd' | 'flow';
-type SidebarTab = 'deployments' | 'namespaces' | 'storage' | 'jobs';
+type SidebarTab = 'deployments' | 'namespaces' | 'storage' | 'jobs' | 'configmaps' | 'secrets';
 
 function App() {
   const [projectSettings, setProjectSettings] = useState<ProjectSettings>({
@@ -554,22 +565,14 @@ function App() {
     }
   }, []);
 
-  // Placeholder SVG icon components (replace with official K8s SVGs)
-  const DeploymentIcon = () => (
-    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" /><path d="M12 6v6l4 2" stroke="currentColor" /></svg>
-  );
-  const ConfigMapIcon = () => (
-    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2" stroke="currentColor" /><path d="M16 3v4M8 3v4" stroke="currentColor" /></svg>
-  );
-  const SecretIcon = () => (
-    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" /><path d="M12 16v-4M12 8h.01" stroke="currentColor" /></svg>
-  );
-  const StorageIcon = () => (
-    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><ellipse cx="12" cy="6" rx="9" ry="3" stroke="currentColor" /><path d="M3 6v6c0 1.657 4.03 3 9 3s9-1.343 9-3V6" stroke="currentColor" /><path d="M3 12v6c0 1.657 4.03 3 9 3s9-1.343 9-3v-6" stroke="currentColor" /></svg>
-  );
-  const JobsIcon = ({ className = "w-4 h-4" }: { className?: string }) => (
-    <svg className={className} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2" stroke="currentColor" /><path d="M16 3v4M8 3v4M2 13h20" stroke="currentColor" /></svg>
-  );
+  useEffect(() => {
+    // Ensure the correct group is open based on the selected tab
+    if (sidebarTab === 'storage' || sidebarTab === 'configmaps' || sidebarTab === 'secrets') {
+      setOpenGroup('storage');
+    } else {
+      setOpenGroup('workloads');
+    }
+  }, [sidebarTab]);
 
   // Helper: Map Job (JobManager) to JobConfig (for JobList)
   function jobToJobConfig(job: Job): JobConfig {
@@ -760,39 +763,89 @@ function App() {
             {openGroup === 'workloads' && (
               <div className="pl-6 space-y-1">
                 <button
-                  onClick={() => { setSidebarTab('deployments'); setOpenGroup('workloads'); }}
-                  className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${sidebarTab === 'deployments' ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300 shadow-sm border border-blue-200 dark:border-blue-800' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:text-gray-900 dark:hover:text-white'}`}
+                  onClick={() => {
+                    setOpenGroup('workloads');
+                    setSidebarTab('deployments');
+                  }}
+                  className={`flex items-center w-full px-2 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+                    sidebarTab === 'deployments' 
+                      ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300 shadow-sm border border-blue-100 dark:border-blue-800' 
+                      : 'text-gray-700 dark:text-gray-200 hover:bg-blue-50/50 dark:hover:bg-blue-900/10 hover:text-blue-600 dark:hover:text-blue-300'
+                  }`}
                 >
-                  <DeploymentIcon />
-                  <span>Deployments</span>
+                  <K8sDeploymentIcon className={`mr-3 flex-shrink-0 h-6 w-6 ${
+                    sidebarTab === 'deployments' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'
+                  }`} />
+                  Deployments
                 </button>
+
                 <button
-                  onClick={() => { setSidebarTab('jobs'); setJobsSubTab('jobs'); setOpenGroup('workloads'); }}
-                  className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${sidebarTab === 'jobs' && jobsSubTab === 'jobs' ? 'bg-pink-50 text-pink-700 dark:bg-pink-900/20 dark:text-pink-300 shadow-sm border border-pink-200 dark:border-pink-800' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:text-gray-900 dark:hover:text-white'}`}
+                  onClick={() => {
+                    setOpenGroup('workloads');
+                    setSidebarTab('namespaces');
+                  }}
+                  className={`flex items-center w-full px-2 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+                    sidebarTab === 'namespaces' 
+                      ? 'bg-purple-50 text-purple-700 dark:bg-purple-900/20 dark:text-purple-300 shadow-sm border border-purple-100 dark:border-purple-800' 
+                      : 'text-gray-700 dark:text-gray-200 hover:bg-purple-50/50 dark:hover:bg-purple-900/10 hover:text-purple-600 dark:hover:text-purple-300'
+                  }`}
                 >
-                  <JobsIcon className="w-4 h-4" />
-                  <span>Jobs</span>
+                  <K8sNamespaceIcon className={`mr-3 flex-shrink-0 h-6 w-6 ${
+                    sidebarTab === 'namespaces' ? 'text-purple-600 dark:text-purple-400' : 'text-gray-500 dark:text-gray-400'
+                  }`} />
+                  Namespaces
                 </button>
-                <button
-                  onClick={() => { setSidebarTab('jobs'); setJobsSubTab('cronjobs'); setOpenGroup('workloads'); }}
-                  className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${sidebarTab === 'jobs' && jobsSubTab === 'cronjobs' ? 'bg-yellow-50 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-300 shadow-sm border border-yellow-200 dark:border-yellow-800' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:text-gray-900 dark:hover:text-white'}`}
-                >
-                  <JobsIcon className="w-4 h-4" />
-                  <span>CronJobs</span>
-                </button>
+
                 <button
                   disabled
-                  className="w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium text-gray-400 cursor-not-allowed bg-gray-50 dark:bg-gray-800"
+                  className="flex items-center w-full px-2 py-2 text-sm font-medium rounded-md text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-50"
                 >
-                  <JobsIcon className="w-4 h-4" />
-                  <span>DaemonSets</span>
+                  <K8sDaemonSetIcon className="mr-3 flex-shrink-0 h-6 w-6 text-gray-400 dark:text-gray-600" />
+                  DaemonSets
                 </button>
+
+                <button
+                  onClick={() => {
+                    setOpenGroup('workloads');
+                    setSidebarTab('jobs');
+                    setJobsSubTab('jobs');
+                  }}
+                  className={`flex items-center w-full px-2 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+                    sidebarTab === 'jobs' && jobsSubTab === 'jobs'
+                      ? 'bg-pink-50 text-pink-700 dark:bg-pink-900/20 dark:text-pink-300 shadow-sm border border-pink-100 dark:border-pink-800' 
+                      : 'text-gray-700 dark:text-gray-200 hover:bg-pink-50/50 dark:hover:bg-pink-900/10 hover:text-pink-600 dark:hover:text-pink-300'
+                  }`}
+                >
+                  <K8sJobIcon className={`mr-3 flex-shrink-0 h-6 w-6 ${
+                    sidebarTab === 'jobs' && jobsSubTab === 'jobs' ? 'text-pink-600 dark:text-pink-400' : 'text-gray-500 dark:text-gray-400'
+                  }`} />
+                  Jobs
+                </button>
+
+                <button
+                  onClick={() => {
+                    setOpenGroup('workloads');
+                    setSidebarTab('jobs');
+                    setJobsSubTab('cronjobs');
+                  }}
+                  className={`flex items-center w-full px-2 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+                    sidebarTab === 'jobs' && jobsSubTab === 'cronjobs'
+                      ? 'bg-yellow-50 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-300 shadow-sm border border-yellow-100 dark:border-yellow-800' 
+                      : 'text-gray-700 dark:text-gray-200 hover:bg-yellow-50/50 dark:hover:bg-yellow-900/10 hover:text-yellow-600 dark:hover:text-yellow-300'
+                  }`}
+                >
+                  <K8sCronJobIcon className={`mr-3 flex-shrink-0 h-6 w-6 ${
+                    sidebarTab === 'jobs' && jobsSubTab === 'cronjobs' ? 'text-yellow-600 dark:text-yellow-400' : 'text-gray-500 dark:text-gray-400'
+                  }`} />
+                  CronJobs
+                </button>
+
                 <button
                   disabled
-                  className="w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium text-gray-400 cursor-not-allowed bg-gray-50 dark:bg-gray-800"
+                  className="flex items-center w-full px-2 py-2 text-sm font-medium rounded-md text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-50"
                 >
-                  <JobsIcon className="w-4 h-4" />
-                  <span>Pods</span>
+                  <K8sPodIcon className="mr-3 flex-shrink-0 h-6 w-6 text-gray-400 dark:text-gray-600" />
+                  Pods
                 </button>
               </div>
             )}
@@ -803,7 +856,7 @@ function App() {
               aria-expanded={openGroup === 'storage'}
             >
               <span className="flex items-center gap-2">
-                <StorageIcon />
+                <K8sStorageIcon className="w-4 h-4 text-blue-600" />
                 Storage
               </span>
               <span>{openGroup === 'storage' ? '▾' : '▸'}</span>
@@ -811,42 +864,61 @@ function App() {
             {openGroup === 'storage' && (
               <div className="pl-6 space-y-1">
                 <button
-                  onClick={() => { setSidebarTab('storage'); setStorageSubTab('configmaps'); setOpenGroup('storage'); }}
-                  className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${sidebarTab === 'storage' && storageSubTab === 'configmaps' ? 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-300 shadow-sm border border-green-200 dark:border-green-800' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:text-gray-900 dark:hover:text-white'}`}
+                  onClick={() => {
+                    setSidebarTab('storage');
+                    setStorageSubTab('configmaps');
+                  }}
+                  className={`flex items-center w-full px-2 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+                    sidebarTab === 'storage' && storageSubTab === 'configmaps'
+                      ? 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-300 shadow-sm border border-green-100 dark:border-green-800' 
+                      : 'text-gray-700 dark:text-gray-200 hover:bg-green-50/50 dark:hover:bg-green-900/10 hover:text-green-600 dark:hover:text-green-300'
+                  }`}
                 >
-                  <ConfigMapIcon />
-                  <span>ConfigMaps</span>
+                  <K8sConfigMapIcon className={`mr-3 flex-shrink-0 h-6 w-6 ${
+                    sidebarTab === 'storage' && storageSubTab === 'configmaps' ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'
+                  }`} />
+                  ConfigMaps
                 </button>
                 <button
-                  onClick={() => { setSidebarTab('storage'); setStorageSubTab('secrets'); setOpenGroup('storage'); }}
-                  className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${sidebarTab === 'storage' && storageSubTab === 'secrets' ? 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-300 shadow-sm border border-green-200 dark:border-green-800' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:text-gray-900 dark:hover:text-white'}`}
+                  onClick={() => {
+                    setSidebarTab('storage');
+                    setStorageSubTab('secrets');
+                  }}
+                  className={`flex items-center w-full px-2 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+                    sidebarTab === 'storage' && storageSubTab === 'secrets'
+                      ? 'bg-orange-50 text-orange-700 dark:bg-orange-900/20 dark:text-orange-300 shadow-sm border border-orange-100 dark:border-orange-800' 
+                      : 'text-gray-700 dark:text-gray-200 hover:bg-orange-50/50 dark:hover:bg-orange-900/10 hover:text-orange-600 dark:hover:text-orange-300'
+                  }`}
                 >
-                  <SecretIcon />
-                  <span>Secrets</span>
+                  <K8sSecretIcon className={`mr-3 flex-shrink-0 h-6 w-6 ${
+                    sidebarTab === 'storage' && storageSubTab === 'secrets' ? 'text-orange-600 dark:text-orange-400' : 'text-gray-500 dark:text-gray-400'
+                  }`} />
+                  Secrets
                 </button>
+
+                {/* Add back the disabled storage items */}
                 <button
-                  className="w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium text-gray-400 dark:text-gray-600 cursor-not-allowed"
                   disabled
-                  aria-disabled="true"
+                  className="flex items-center w-full px-2 py-2 text-sm font-medium rounded-md text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-50"
                 >
-                  <StorageIcon />
-                  <span>PersistentVolumes</span>
+                  <K8sStorageIcon className="mr-3 flex-shrink-0 h-6 w-6 text-gray-400 dark:text-gray-600" />
+                  PersistentVolumes
                 </button>
+
                 <button
-                  className="w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium text-gray-400 dark:text-gray-600 cursor-not-allowed"
                   disabled
-                  aria-disabled="true"
+                  className="flex items-center w-full px-2 py-2 text-sm font-medium rounded-md text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-50"
                 >
-                  <StorageIcon />
-                  <span>PersistentVolumeClaims</span>
+                  <K8sStorageIcon className="mr-3 flex-shrink-0 h-6 w-6 text-gray-400 dark:text-gray-600" />
+                  PersistentVolumeClaims
                 </button>
+
                 <button
-                  className="w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium text-gray-400 dark:text-gray-600 cursor-not-allowed"
                   disabled
-                  aria-disabled="true"
+                  className="flex items-center w-full px-2 py-2 text-sm font-medium rounded-md text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-50"
                 >
-                  <StorageIcon />
-                  <span>StorageClasses</span>
+                  <K8sStorageIcon className="mr-3 flex-shrink-0 h-6 w-6 text-gray-400 dark:text-gray-600" />
+                  StorageClasses
                 </button>
               </div>
             )}
@@ -1072,7 +1144,7 @@ function App() {
                       <span className="text-gray-500">secret{secrets.length !== 1 ? 's' : ''}</span>
                     </div>
                     <div className="flex items-center space-x-1 text-sm text-gray-700 font-medium">
-                      <JobsIcon className="w-5 h-5 text-pink-500" />
+                      <K8sJobIcon className="w-5 h-5 text-pink-500" />
                       <span className="font-bold">{jobs.filter(j => j.type === 'job').length}</span>
                       <span className="text-gray-500">job{jobs.filter(j => j.type === 'job').length !== 1 ? 's' : ''}</span>
                     </div>

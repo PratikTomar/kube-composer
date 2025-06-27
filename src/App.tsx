@@ -61,7 +61,7 @@ function App() {
   const [selectedNamespace, setSelectedNamespace] = useState<number>(0);
   const [selectedConfigMap, setSelectedConfigMap] = useState<number>(0);
   const [selectedSecret, setSelectedSecret] = useState<number>(0);
-  const [previewMode, setPreviewMode] = useState<PreviewMode>('yaml');
+  const [previewMode, setPreviewMode] = useState<PreviewMode>('flow');
   const [sidebarTab, setSidebarTab] = useState<SidebarTab>('deployments');
   const [storageSubTab, setStorageSubTab] = useState<'configmaps' | 'secrets'>('configmaps');
   const [jobsSubTab, setJobsSubTab] = useState<'jobs' | 'cronjobs'>('jobs');
@@ -76,9 +76,7 @@ function App() {
   const [showYouTubePopup, setShowYouTubePopup] = useState(false);
   const [showDockerPopup, setShowDockerPopup] = useState(false);
   // Only one group open at a time: 'workloads' | 'storage'
-  const [openGroup, setOpenGroup] = useState<'workloads' | 'storage'>(
-    sidebarTab === 'storage' ? 'storage' : 'workloads'
-  );
+  const [openGroup, setOpenGroup] = useState<'workloads' | 'storage'>('workloads');
   const [jobToEdit, setJobToEdit] = useState<Job | undefined>(undefined);
   const [selectedJob, setSelectedJob] = useState<number>(-1);
   const [selectedCronJob, setSelectedCronJob] = useState<number>(-1);
@@ -608,6 +606,29 @@ function App() {
     };
   }
 
+  // Function to handle menu item clicks and set appropriate preview mode
+  const handleMenuClick = (tab: SidebarTab, subTab?: string) => {
+    setSidebarTab(tab);
+    
+    // Set preview mode based on the selected tab
+    if (tab === 'deployments') {
+      setPreviewMode('flow');
+    } else {
+      setPreviewMode('yaml');
+    }
+    
+    // Handle sub-tabs
+    if (subTab === 'configmaps') {
+      setStorageSubTab('configmaps');
+    } else if (subTab === 'secrets') {
+      setStorageSubTab('secrets');
+    } else if (subTab === 'jobs') {
+      setJobsSubTab('jobs');
+    } else if (subTab === 'cronjobs') {
+      setJobsSubTab('cronjobs');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* SEO Head Component */}
@@ -763,10 +784,7 @@ function App() {
             {openGroup === 'workloads' && (
               <div className="pl-6 space-y-1">
                 <button
-                  onClick={() => {
-                    setOpenGroup('workloads');
-                    setSidebarTab('deployments');
-                  }}
+                  onClick={() => handleMenuClick('deployments')}
                   className={`flex items-center w-full px-2 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
                     sidebarTab === 'deployments' 
                       ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300 shadow-sm border border-blue-100 dark:border-blue-800' 
@@ -780,10 +798,7 @@ function App() {
                 </button>
 
                 <button
-                  onClick={() => {
-                    setOpenGroup('workloads');
-                    setSidebarTab('namespaces');
-                  }}
+                  onClick={() => handleMenuClick('namespaces')}
                   className={`flex items-center w-full px-2 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
                     sidebarTab === 'namespaces' 
                       ? 'bg-purple-50 text-purple-700 dark:bg-purple-900/20 dark:text-purple-300 shadow-sm border border-purple-100 dark:border-purple-800' 
@@ -805,11 +820,7 @@ function App() {
                 </button>
 
                 <button
-                  onClick={() => {
-                    setOpenGroup('workloads');
-                    setSidebarTab('jobs');
-                    setJobsSubTab('jobs');
-                  }}
+                  onClick={() => handleMenuClick('jobs', 'jobs')}
                   className={`flex items-center w-full px-2 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
                     sidebarTab === 'jobs' && jobsSubTab === 'jobs'
                       ? 'bg-pink-50 text-pink-700 dark:bg-pink-900/20 dark:text-pink-300 shadow-sm border border-pink-100 dark:border-pink-800' 
@@ -823,11 +834,7 @@ function App() {
                 </button>
 
                 <button
-                  onClick={() => {
-                    setOpenGroup('workloads');
-                    setSidebarTab('jobs');
-                    setJobsSubTab('cronjobs');
-                  }}
+                  onClick={() => handleMenuClick('jobs', 'cronjobs')}
                   className={`flex items-center w-full px-2 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
                     sidebarTab === 'jobs' && jobsSubTab === 'cronjobs'
                       ? 'bg-yellow-50 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-300 shadow-sm border border-yellow-100 dark:border-yellow-800' 
@@ -864,10 +871,7 @@ function App() {
             {openGroup === 'storage' && (
               <div className="pl-6 space-y-1">
                 <button
-                  onClick={() => {
-                    setSidebarTab('storage');
-                    setStorageSubTab('configmaps');
-                  }}
+                  onClick={() => handleMenuClick('storage', 'configmaps')}
                   className={`flex items-center w-full px-2 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
                     sidebarTab === 'storage' && storageSubTab === 'configmaps'
                       ? 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-300 shadow-sm border border-green-100 dark:border-green-800' 
@@ -880,10 +884,7 @@ function App() {
                   ConfigMaps
                 </button>
                 <button
-                  onClick={() => {
-                    setSidebarTab('storage');
-                    setStorageSubTab('secrets');
-                  }}
+                  onClick={() => handleMenuClick('storage', 'secrets')}
                   className={`flex items-center w-full px-2 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
                     sidebarTab === 'storage' && storageSubTab === 'secrets'
                       ? 'bg-orange-50 text-orange-700 dark:bg-orange-900/20 dark:text-orange-300 shadow-sm border border-orange-100 dark:border-orange-800' 

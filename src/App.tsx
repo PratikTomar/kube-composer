@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Download, FileText, List, Plus, Menu, X, Database, Settings, Key, PlayCircle, Container as Docker, FolderOpen, GitBranch } from 'lucide-react';
+import { Download, FileText, List, Plus, Menu, X, Database, Settings, Key, PlayCircle, Container as Docker, FolderOpen, GitBranch, Clock } from 'lucide-react';
 import { DeploymentForm } from './components/DeploymentForm';
 import { YamlPreview } from './components/YamlPreview';
 import { ResourceSummary } from './components/ResourceSummary';
@@ -1073,8 +1073,13 @@ function App() {
                     </div>
                     <div className="flex items-center space-x-1 text-sm text-gray-700 font-medium">
                       <JobsIcon className="w-5 h-5 text-pink-500" />
-                      <span className="font-bold">{jobs.length}</span>
-                      <span className="text-gray-500">job{jobs.length !== 1 ? 's' : ''}</span>
+                      <span className="font-bold">{jobs.filter(j => j.type === 'job').length}</span>
+                      <span className="text-gray-500">job{jobs.filter(j => j.type === 'job').length !== 1 ? 's' : ''}</span>
+                    </div>
+                    <div className="flex items-center space-x-1 text-sm text-gray-700 font-medium">
+                      <Clock className="w-5 h-5 text-yellow-500" />
+                      <span className="font-bold">{jobs.filter(j => j.type === 'cronjob').length}</span>
+                      <span className="text-gray-500">cronjob{jobs.filter(j => j.type === 'cronjob').length !== 1 ? 's' : ''}</span>
                     </div>
                   </div>
                 </div>

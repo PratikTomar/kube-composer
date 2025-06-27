@@ -574,6 +574,12 @@ data:
         allResources.push(`# Ingress Resources: ${ingressCount}`);
       }
     }
+    if (jobs.length > 0) {
+      allResources.push(`# Jobs: ${jobs.length}`);
+    }
+    if (cronjobs.length > 0) {
+      allResources.push(`# CronJobs: ${cronjobs.length}`);
+    }
     allResources.push('');
   }
 

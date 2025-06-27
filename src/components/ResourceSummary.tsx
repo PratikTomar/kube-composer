@@ -26,7 +26,7 @@ export function ResourceSummary({ config }: ResourceSummaryProps) {
       config.containers.forEach((container, index) => {
         if (!container.name) issues.push(`Container ${index + 1}: Name is required`);
         if (!container.image) issues.push(`Container ${index + 1}: Image is required`);
-        if (container.port <= 0) issues.push(`Container ${index + 1}: Port must be greater than 0`);
+        if (container.port && container.port <= 0) issues.push(`Container ${index + 1}: Port must be greater than 0`);
       });
     }
     

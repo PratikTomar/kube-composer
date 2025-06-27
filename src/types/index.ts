@@ -11,13 +11,15 @@ export interface EnvVar {
 export interface Container {
   name: string;
   image: string;
-  port: number;
+  port?: number;
   env: EnvVar[];
   resources: {
     requests: { cpu: string; memory: string };
     limits: { cpu: string; memory: string };
   };
   volumeMounts: Array<{ name: string; mountPath: string }>;
+  command?: string;
+  args?: string;
 }
 
 export interface IngressRule {
@@ -110,4 +112,32 @@ export interface KubernetesResource {
   spec?: any;
   data?: Record<string, string>;
   type?: string;
+}
+
+export interface JobConfig {
+  name: string;
+  namespace: string;
+  labels: Record<string, string>;
+  annotations: Record<string, string>;
+  containers: Container[];
+  restartPolicy: 'Never' | 'OnFailure';
+  completions?: number;
+  parallelism?: number;
+  backoffLimit?: number;
+  activeDeadlineSeconds?: number;
+  createdAt?: string;
+}
+
+export interface CronJobConfig {
+  name: string;
+  namespace: string;
+  labels: Record<string, string>;
+  annotations: Record<string, string>;
+  schedule: string;
+  concurrencyPolicy?: 'Allow' | 'Forbid' | 'Replace';
+  startingDeadlineSeconds?: number;
+  successfulJobsHistoryLimit?: number;
+  failedJobsHistoryLimit?: number;
+  jobTemplate: JobConfig;
+  createdAt?: string;
 }

@@ -1,4 +1,4 @@
-import type { DeploymentConfig, KubernetesResource, Namespace, ConfigMap, Secret, ProjectSettings } from '../types';
+import type { DeploymentConfig, KubernetesResource, Namespace, ConfigMap, Secret, ProjectSettings, JobConfig, CronJobConfig } from '../types';
 
 export function generateKubernetesYaml(config: DeploymentConfig, projectSettings?: ProjectSettings): string {
   if (!config.appName) {
@@ -480,9 +480,18 @@ export function generateMultiDeploymentYaml(
   namespaces: Namespace[] = [], 
   configMaps: ConfigMap[] = [], 
   secrets: Secret[] = [],
-  projectSettings?: ProjectSettings
+  projectSettings?: ProjectSettings,
+  jobs: JobConfig[] = [],
+  cronjobs: CronJobConfig[] = []
 ): string {
-  if (deployments.length === 0 && namespaces.length <= 1 && configMaps.length === 0 && secrets.length === 0) {
+  if (
+    deployments.length === 0 &&
+    jobs.length === 0 &&
+    cronjobs.length === 0 &&
+    namespaces.length <= 1 &&
+    configMaps.length === 0 &&
+    secrets.length === 0
+  ) {
     return `# Welcome to Kube Composer!
 # 
 # This is a free Kubernetes YAML generator that helps you create
@@ -564,6 +573,12 @@ data:
       if (ingressCount > 0) {
         allResources.push(`# Ingress Resources: ${ingressCount}`);
       }
+    }
+    if (jobs.length > 0) {
+      allResources.push(`# Jobs: ${jobs.length}`);
+    }
+    if (cronjobs.length > 0) {
+      allResources.push(`# CronJobs: ${cronjobs.length}`);
     }
     allResources.push('');
   }
@@ -717,6 +732,105 @@ data:
         allResources.push(deploymentYaml);
       });
     }
+  }
+
+  // === JOBS ===
+  if (jobs.length > 0) {
+    if (customNamespaces.length > 0 || configMaps.length > 0 || secrets.length > 0 || deployments.length > 0) {
+      allResources.push('---');
+      allResources.push('');
+    }
+    allResources.push('# === JOBS ===');
+    jobs.forEach((job, index) => {
+      if (index > 0) {
+        allResources.push('---');
+        allResources.push('');
+      }
+      
+      // Merge global labels with job labels
+      const mergedLabels = projectSettings ? {
+        ...projectSettings.globalLabels,
+        ...job.labels,
+        project: projectSettings.name
+      } : job.labels;
+      
+      allResources.push(objectToYaml({
+        apiVersion: 'batch/v1',
+        kind: 'Job',
+        metadata: {
+          name: job.name,
+          namespace: job.namespace,
+          ...(Object.keys(mergedLabels).length > 0 && { labels: mergedLabels }),
+          ...(Object.keys(job.annotations).length > 0 && { annotations: job.annotations })
+        },
+        spec: {
+          completions: job.completions,
+          parallelism: job.parallelism,
+          backoffLimit: job.backoffLimit,
+          activeDeadlineSeconds: job.activeDeadlineSeconds,
+          template: {
+            spec: {
+              restartPolicy: job.restartPolicy,
+              containers: job.containers
+            }
+          }
+        }
+      }));
+    });
+  }
+
+  // === CRONJOBS ===
+  if (cronjobs.length > 0) {
+    if (customNamespaces.length > 0 || configMaps.length > 0 || secrets.length > 0 || deployments.length > 0 || jobs.length > 0) {
+      allResources.push('---');
+      allResources.push('');
+    }
+    allResources.push('# === CRONJOBS ===');
+    cronjobs.forEach((cronjob, index) => {
+      if (index > 0) {
+        allResources.push('---');
+        allResources.push('');
+      }
+      
+      // Merge global labels with cronjob labels
+      const mergedLabels = projectSettings ? {
+        ...projectSettings.globalLabels,
+        ...cronjob.labels,
+        project: projectSettings.name
+      } : cronjob.labels;
+      
+      allResources.push(objectToYaml({
+        apiVersion: 'batch/v1',
+        kind: 'CronJob',
+        metadata: {
+          name: cronjob.name,
+          namespace: cronjob.namespace,
+          ...(Object.keys(mergedLabels).length > 0 && { labels: mergedLabels }),
+          ...(Object.keys(cronjob.annotations).length > 0 && { annotations: cronjob.annotations })
+        },
+        spec: {
+          schedule: cronjob.schedule,
+          concurrencyPolicy: cronjob.concurrencyPolicy,
+          startingDeadlineSeconds: cronjob.startingDeadlineSeconds,
+          successfulJobsHistoryLimit: cronjob.successfulJobsHistoryLimit,
+          failedJobsHistoryLimit: cronjob.failedJobsHistoryLimit,
+          jobTemplate: {
+            spec: {
+              completions: cronjob.jobTemplate.completions,
+              parallelism: cronjob.jobTemplate.parallelism,
+              backoffLimit: cronjob.jobTemplate.backoffLimit,
+              activeDeadlineSeconds: cronjob.jobTemplate.activeDeadlineSeconds,
+              template: {
+                spec: {
+                  restartPolicy: cronjob.jobTemplate.restartPolicy,
+                  containers: cronjob.jobTemplate.containers
+                }
+              }
+            }
+          }
+        }
+      }));
+    });
   }
 
   return allResources.join('\n');

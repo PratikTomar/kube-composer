@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Download, FileText, List, Plus, Menu, X, Database, Settings, Key, PlayCircle, Container as Docker, FolderOpen, GitBranch } from 'lucide-react';
+import { Download, FileText, List, Plus, Menu, X, Database, Settings, Key, PlayCircle, Container as Docker, FolderOpen, GitBranch, Clock } from 'lucide-react';
 import { DeploymentForm } from './components/DeploymentForm';
 import { YamlPreview } from './components/YamlPreview';
 import { ResourceSummary } from './components/ResourceSummary';
@@ -18,10 +18,24 @@ import { ProjectSettingsManager } from './components/ProjectSettingsManager';
 import { YouTubePopup } from './components/YouTubePopup';
 import { DockerRunPopup } from './components/DockerRunPopup';
 import { generateMultiDeploymentYaml } from './utils/yamlGenerator';
-import type { DeploymentConfig, Namespace, ConfigMap, Secret, ProjectSettings } from './types';
+import { JobManager, Job } from './components/JobManager';
+import { JobList } from './components/jobs/JobList';
+import { CronJobList } from './components/jobs/CronJobList';
+import type { DeploymentConfig, Namespace, ConfigMap, Secret, ProjectSettings, JobConfig, CronJobConfig } from './types';
+import {
+  K8sDeploymentIcon,
+  K8sNamespaceIcon,
+  K8sConfigMapIcon,
+  K8sSecretIcon,
+  K8sJobIcon,
+  K8sCronJobIcon,
+  K8sStorageIcon,
+  K8sDaemonSetIcon,
+  K8sPodIcon
+} from './components/KubernetesIcons';
 
 type PreviewMode = 'visual' | 'yaml' | 'summary' | 'argocd' | 'flow';
-type SidebarTab = 'deployments' | 'namespaces' | 'configmaps' | 'secrets';
+type SidebarTab = 'deployments' | 'namespaces' | 'storage' | 'jobs' | 'configmaps' | 'secrets';
 
 function App() {
   const [projectSettings, setProjectSettings] = useState<ProjectSettings>({
@@ -42,20 +56,30 @@ function App() {
   ]);
   const [configMaps, setConfigMaps] = useState<ConfigMap[]>([]);
   const [secrets, setSecrets] = useState<Secret[]>([]);
+  const [jobs, setJobs] = useState<Job[]>([]);
   const [selectedDeployment, setSelectedDeployment] = useState<number>(0);
   const [selectedNamespace, setSelectedNamespace] = useState<number>(0);
   const [selectedConfigMap, setSelectedConfigMap] = useState<number>(0);
   const [selectedSecret, setSelectedSecret] = useState<number>(0);
   const [previewMode, setPreviewMode] = useState<PreviewMode>('flow');
   const [sidebarTab, setSidebarTab] = useState<SidebarTab>('deployments');
+  const [storageSubTab, setStorageSubTab] = useState<'configmaps' | 'secrets'>('configmaps');
+  const [jobsSubTab, setJobsSubTab] = useState<'jobs' | 'cronjobs'>('jobs');
   const [showForm, setShowForm] = useState(false);
   const [showNamespaceManager, setShowNamespaceManager] = useState(false);
   const [showConfigMapManager, setShowConfigMapManager] = useState(false);
   const [showSecretManager, setShowSecretManager] = useState(false);
+  const [showJobManager, setShowJobManager] = useState(false);
+  const [jobTypeToCreate, setJobTypeToCreate] = useState<'job' | 'cronjob'>('job');
   const [showProjectSettings, setShowProjectSettings] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showYouTubePopup, setShowYouTubePopup] = useState(false);
   const [showDockerPopup, setShowDockerPopup] = useState(false);
+  // Only one group open at a time: 'workloads' | 'storage'
+  const [openGroup, setOpenGroup] = useState<'workloads' | 'storage'>('workloads');
+  const [jobToEdit, setJobToEdit] = useState<Job | undefined>(undefined);
+  const [selectedJob, setSelectedJob] = useState<number>(-1);
+  const [selectedCronJob, setSelectedCronJob] = useState<number>(-1);
 
   const currentConfig = deployments[selectedDeployment] || {
     appName: '',
@@ -288,7 +312,8 @@ function App() {
     };
     setConfigMaps([...configMaps, configMapWithGlobalLabels]);
     setShowConfigMapManager(false);
-    setSidebarTab('configmaps');
+    setSidebarTab('storage');
+    setStorageSubTab('configmaps');
     setSelectedConfigMap(configMaps.length);
   };
 
@@ -333,7 +358,8 @@ function App() {
     };
     setSecrets([...secrets, secretWithGlobalLabels]);
     setShowSecretManager(false);
-    setSidebarTab('secrets');
+    setSidebarTab('storage');
+    setStorageSubTab('secrets');
     setSelectedSecret(secrets.length);
   };
 
@@ -364,14 +390,61 @@ function App() {
     const duplicatedSecret: Secret = {
       ...secretToDuplicate,
       name: `${secretToDuplicate.name}-copy`,
-      labels: cleanAndMergeLabels(secretToDuplicate.labels),
       createdAt: new Date().toISOString()
     };
+    setSecrets([...secrets, duplicatedSecret]);
+    setSelectedSecret(secrets.length);
+  };
+
+  // Job management functions
+  const handleAddJob = (job: Job) => {
+    // Convert job labels from array to object format for global label merging
+    const jobLabelsAsObject = job.labels.reduce((acc, label) => {
+      if (label.key) acc[label.key] = label.value;
+      return acc;
+    }, {} as Record<string, string>);
     
-    const newSecrets = [...secrets];
-    newSecrets.splice(index + 1, 0, duplicatedSecret);
-    setSecrets(newSecrets);
-    setSelectedSecret(index + 1);
+    // Apply global labels
+    const mergedLabels = cleanAndMergeLabels(jobLabelsAsObject);
+    
+    // Convert back to array format for Job interface
+    const jobWithGlobalLabels = {
+      ...job,
+      labels: Object.entries(mergedLabels).map(([key, value]) => ({ key, value }))
+    };
+    setJobs(prev => [...prev, jobWithGlobalLabels]);
+  };
+
+  const handleDeleteJob = (jobId: string) => {
+    setJobs(jobs.filter(j => j.id !== jobId));
+  };
+
+  const handleEditJob = (jobId: string) => {
+    const job = jobs.find(j => j.id === jobId);
+    if (job) {
+      setJobToEdit(job);
+      setShowJobManager(true);
+    }
+  };
+
+  const handleUpdateJob = (jobId: string, updatedJob: Job) => {
+    // Convert job labels from array to object format for global label merging
+    const jobLabelsAsObject = updatedJob.labels.reduce((acc, label) => {
+      if (label.key) acc[label.key] = label.value;
+      return acc;
+    }, {} as Record<string, string>);
+    
+    // Apply global labels
+    const mergedLabels = cleanAndMergeLabels(jobLabelsAsObject);
+    
+    // Convert back to array format for Job interface
+    const jobWithGlobalLabels = {
+      ...updatedJob,
+      labels: Object.entries(mergedLabels).map(([key, value]) => ({ key, value }))
+    };
+    setJobs(jobs.map(j => j.id === jobId ? jobWithGlobalLabels : j));
+    setJobToEdit(undefined);
+    setShowJobManager(false);
   };
 
   // Project settings management
@@ -403,6 +476,25 @@ function App() {
       labels: cleanAndMergeLabels(secret.labels, oldGlobalLabels, newSettings.globalLabels, newSettings.name)
     }));
     setSecrets(updatedSecrets);
+
+    // Update jobs with new global labels
+    const updatedJobs = jobs.map(job => {
+      // Convert job labels from array to object format
+      const jobLabelsAsObject = job.labels.reduce((acc, label) => {
+        if (label.key) acc[label.key] = label.value;
+        return acc;
+      }, {} as Record<string, string>);
+      
+      // Apply new global labels
+      const mergedLabels = cleanAndMergeLabels(jobLabelsAsObject, oldGlobalLabels, newSettings.globalLabels, newSettings.name);
+      
+      // Convert back to array format
+      return {
+        ...job,
+        labels: Object.entries(mergedLabels).map(([key, value]) => ({ key, value }))
+      };
+    });
+    setJobs(updatedJobs);
   };
 
   const handleDownload = async () => {
@@ -436,12 +528,22 @@ function App() {
 
   // Generate YAML for preview based on mode
   const getPreviewYaml = () => {
-    if (deployments.length === 0 && namespaces.length <= 1 && configMaps.length === 0 && secrets.length === 0) {
-      return '# No deployments configured\n# Create your first deployment to see the generated YAML';
-    }
-    
     const validDeployments = deployments.filter(d => d.appName);
-    return generateMultiDeploymentYaml(validDeployments, namespaces, configMaps, secrets, projectSettings);
+    // Fix: Only map regular jobs to jobConfigs, not cronjobs
+    const jobConfigs = jobs.filter(j => j.type === 'job').map(jobToJobConfig);
+    const cronJobConfigs = jobs.filter(j => j.type === 'cronjob').map(jobToCronJobConfig);
+    const yaml = generateMultiDeploymentYaml(validDeployments, namespaces, configMaps, secrets, projectSettings, jobConfigs, cronJobConfigs);
+    if (
+      validDeployments.length === 0 &&
+      jobConfigs.length === 0 &&
+      cronJobConfigs.length === 0 &&
+      namespaces.length <= 1 &&
+      configMaps.length === 0 &&
+      secrets.length === 0
+    ) {
+      return '# No deployments or jobs configured\n# Create your first deployment or job to see the generated YAML';
+    }
+    return yaml;
   };
 
   const previewModes = [
@@ -460,6 +562,72 @@ function App() {
       containerRef.current.scrollLeft = 0; // or center calculation
     }
   }, []);
+
+  useEffect(() => {
+    // Ensure the correct group is open based on the selected tab
+    if (sidebarTab === 'storage' || sidebarTab === 'configmaps' || sidebarTab === 'secrets') {
+      setOpenGroup('storage');
+    } else {
+      setOpenGroup('workloads');
+    }
+  }, [sidebarTab]);
+
+  // Helper: Map Job (JobManager) to JobConfig (for JobList)
+  function jobToJobConfig(job: Job): JobConfig {
+    return {
+      name: job.name || 'unnamed-job',
+      namespace: job.namespace || 'default',
+      labels: job.labels && Array.isArray(job.labels)
+        ? job.labels.reduce((acc, l) => l.key ? { ...acc, [l.key]: l.value } : acc, {})
+        : (job.labels || {}),
+      annotations: {},
+      containers: job.containers && job.containers.length > 0 ? job.containers : [{ name: 'main', image: 'nginx', resources: { requests: { cpu: '100m', memory: '128Mi' }, limits: { cpu: '', memory: '' } }, env: [], volumeMounts: [] }],
+      restartPolicy: job.restartPolicy || 'Never',
+      completions: job.completions || 1,
+      parallelism: job.replicas || 1,
+      backoffLimit: job.backoffLimit || 6,
+      activeDeadlineSeconds: job.activeDeadlineSeconds,
+    };
+  }
+  // Helper: Map Job (JobManager) to CronJobConfig (for CronJobList)
+  function jobToCronJobConfig(job: Job): CronJobConfig {
+    return {
+      name: job.name,
+      namespace: job.namespace,
+      labels: {},
+      annotations: {},
+      schedule: job.schedule || '',
+      concurrencyPolicy: job.concurrencyPolicy,
+      startingDeadlineSeconds: job.startingDeadline ? parseInt(job.startingDeadline) : undefined,
+      successfulJobsHistoryLimit: job.historySuccess ? parseInt(job.historySuccess) : undefined,
+      failedJobsHistoryLimit: job.historyFailure ? parseInt(job.historyFailure) : undefined,
+      jobTemplate: jobToJobConfig(job),
+      createdAt: undefined,
+    };
+  }
+
+  // Function to handle menu item clicks and set appropriate preview mode
+  const handleMenuClick = (tab: SidebarTab, subTab?: string) => {
+    setSidebarTab(tab);
+    
+    // Set preview mode based on the selected tab
+    if (tab === 'deployments') {
+      setPreviewMode('flow');
+    } else {
+      setPreviewMode('yaml');
+    }
+    
+    // Handle sub-tabs
+    if (subTab === 'configmaps') {
+      setStorageSubTab('configmaps');
+    } else if (subTab === 'secrets') {
+      setStorageSubTab('secrets');
+    } else if (subTab === 'jobs') {
+      setJobsSubTab('jobs');
+    } else if (subTab === 'cronjobs') {
+      setJobsSubTab('cronjobs');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -505,14 +673,6 @@ function App() {
                 </div>
                 <div className="flex flex-col space-y-2 w-full">
                   <button
-                    onClick={handleAddDeployment}
-                    className="inline-flex items-center justify-center px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 text-sm font-medium w-full max-w-sm mx-auto"
-                    title="Add new deployment"
-                  >
-                    <Plus className="w-4 h-4 mr-1" />
-                    <span>Add Deployment</span>
-                  </button>
-                  <button
                     onClick={() => setShowDockerPopup(true)}
                     className="inline-flex items-center justify-center px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 text-sm font-medium w-full max-w-sm mx-auto"
                     title="Run locally with Docker"
@@ -543,14 +703,6 @@ function App() {
             {/* Desktop: SocialShare inline + actions inline */}
             <div className="hidden sm:flex flex-row items-center space-x-2">
               <SocialShare />
-              <button
-                onClick={handleAddDeployment}
-                className="inline-flex items-center justify-center px-2 sm:px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 text-sm font-medium"
-                title="Add new deployment"
-              >
-                <Plus className="w-4 h-4 mr-1" />
-                <span>Add Deployment</span>
-              </button>
               <button
                 onClick={() => setShowDockerPopup(true)}
                 className="inline-flex items-center justify-center px-2 sm:px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 text-sm font-medium"
@@ -615,89 +767,201 @@ function App() {
             )}
           </div>
 
-          {/* Tab Headers */}
-          <div className="p-4 border-b border-gray-200 flex-shrink-0">
-            <div className="grid grid-cols-2 gap-1 bg-gray-100 rounded-lg p-1">
-              <button
-                onClick={() => setSidebarTab('deployments')}
-                className={`flex items-center justify-center space-x-1 px-2 py-2 rounded-md text-xs font-medium transition-all duration-200 ${
-                  sidebarTab === 'deployments'
-                    ? 'bg-white text-blue-600 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                <FileText className="w-3 h-3" />
-                <span>Deployments</span>
-              </button>
-              <button
-                onClick={() => setSidebarTab('namespaces')}
-                className={`flex items-center justify-center space-x-1 px-2 py-2 rounded-md text-xs font-medium transition-all duration-200 ${
-                  sidebarTab === 'namespaces'
-                    ? 'bg-white text-purple-600 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                <Database className="w-3 h-3" />
-                <span>Namespaces</span>
-              </button>
-              <button
-                onClick={() => setSidebarTab('configmaps')}
-                className={`flex items-center justify-center space-x-1 px-2 py-2 rounded-md text-xs font-medium transition-all duration-200 ${
-                  sidebarTab === 'configmaps'
-                    ? 'bg-white text-green-600 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                <Settings className="w-3 h-3" />
-                <span>ConfigMaps</span>
-              </button>
-              <button
-                onClick={() => setSidebarTab('secrets')}
-                className={`flex items-center justify-center space-x-1 px-2 py-2 rounded-md text-xs font-medium transition-all duration-200 ${
-                  sidebarTab === 'secrets'
-                    ? 'bg-white text-orange-600 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                <Key className="w-3 h-3" />
-                <span>Secrets</span>
-              </button>
-            </div>
+          {/* Grouped Sidebar Menu */}
+          <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0 space-y-2">
+            {/* Workloads Group */}
+            <button
+              className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-semibold text-gray-700 dark:text-gray-200 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200"
+              onClick={() => setOpenGroup('workloads')}
+              aria-expanded={openGroup === 'workloads'}
+            >
+              <span className="flex items-center gap-2">
+                <Database className="w-4 h-4 text-blue-600" />
+                Workloads
+              </span>
+              <span>{openGroup === 'workloads' ? '▾' : '▸'}</span>
+            </button>
+            {openGroup === 'workloads' && (
+              <div className="pl-6 space-y-1">
+                <button
+                  onClick={() => handleMenuClick('deployments')}
+                  className={`flex items-center w-full px-2 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+                    sidebarTab === 'deployments' 
+                      ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300 shadow-sm border border-blue-100 dark:border-blue-800' 
+                      : 'text-gray-700 dark:text-gray-200 hover:bg-blue-50/50 dark:hover:bg-blue-900/10 hover:text-blue-600 dark:hover:text-blue-300'
+                  }`}
+                >
+                  <K8sDeploymentIcon className={`mr-3 flex-shrink-0 h-6 w-6 ${
+                    sidebarTab === 'deployments' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'
+                  }`} />
+                  Deployments
+                </button>
+
+                <button
+                  onClick={() => handleMenuClick('namespaces')}
+                  className={`flex items-center w-full px-2 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+                    sidebarTab === 'namespaces' 
+                      ? 'bg-purple-50 text-purple-700 dark:bg-purple-900/20 dark:text-purple-300 shadow-sm border border-purple-100 dark:border-purple-800' 
+                      : 'text-gray-700 dark:text-gray-200 hover:bg-purple-50/50 dark:hover:bg-purple-900/10 hover:text-purple-600 dark:hover:text-purple-300'
+                  }`}
+                >
+                  <K8sNamespaceIcon className={`mr-3 flex-shrink-0 h-6 w-6 ${
+                    sidebarTab === 'namespaces' ? 'text-purple-600 dark:text-purple-400' : 'text-gray-500 dark:text-gray-400'
+                  }`} />
+                  Namespaces
+                </button>
+
+                <button
+                  disabled
+                  className="flex items-center w-full px-2 py-2 text-sm font-medium rounded-md text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-50"
+                >
+                  <K8sDaemonSetIcon className="mr-3 flex-shrink-0 h-6 w-6 text-gray-400 dark:text-gray-600" />
+                  DaemonSets
+                </button>
+
+                <button
+                  onClick={() => handleMenuClick('jobs', 'jobs')}
+                  className={`flex items-center w-full px-2 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+                    sidebarTab === 'jobs' && jobsSubTab === 'jobs'
+                      ? 'bg-pink-50 text-pink-700 dark:bg-pink-900/20 dark:text-pink-300 shadow-sm border border-pink-100 dark:border-pink-800' 
+                      : 'text-gray-700 dark:text-gray-200 hover:bg-pink-50/50 dark:hover:bg-pink-900/10 hover:text-pink-600 dark:hover:text-pink-300'
+                  }`}
+                >
+                  <K8sJobIcon className={`mr-3 flex-shrink-0 h-6 w-6 ${
+                    sidebarTab === 'jobs' && jobsSubTab === 'jobs' ? 'text-pink-600 dark:text-pink-400' : 'text-gray-500 dark:text-gray-400'
+                  }`} />
+                  Jobs
+                </button>
+
+                <button
+                  onClick={() => handleMenuClick('jobs', 'cronjobs')}
+                  className={`flex items-center w-full px-2 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+                    sidebarTab === 'jobs' && jobsSubTab === 'cronjobs'
+                      ? 'bg-yellow-50 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-300 shadow-sm border border-yellow-100 dark:border-yellow-800' 
+                      : 'text-gray-700 dark:text-gray-200 hover:bg-yellow-50/50 dark:hover:bg-yellow-900/10 hover:text-yellow-600 dark:hover:text-yellow-300'
+                  }`}
+                >
+                  <K8sCronJobIcon className={`mr-3 flex-shrink-0 h-6 w-6 ${
+                    sidebarTab === 'jobs' && jobsSubTab === 'cronjobs' ? 'text-yellow-600 dark:text-yellow-400' : 'text-gray-500 dark:text-gray-400'
+                  }`} />
+                  CronJobs
+                </button>
+
+                <button
+                  disabled
+                  className="flex items-center w-full px-2 py-2 text-sm font-medium rounded-md text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-50"
+                >
+                  <K8sPodIcon className="mr-3 flex-shrink-0 h-6 w-6 text-gray-400 dark:text-gray-600" />
+                  Pods
+                </button>
+              </div>
+            )}
+            {/* Storage Group */}
+            <button
+              className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-semibold text-gray-700 dark:text-gray-200 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200"
+              onClick={() => setOpenGroup('storage')}
+              aria-expanded={openGroup === 'storage'}
+            >
+              <span className="flex items-center gap-2">
+                <K8sStorageIcon className="w-4 h-4 text-blue-600" />
+                Storage
+              </span>
+              <span>{openGroup === 'storage' ? '▾' : '▸'}</span>
+            </button>
+            {openGroup === 'storage' && (
+              <div className="pl-6 space-y-1">
+                <button
+                  onClick={() => handleMenuClick('storage', 'configmaps')}
+                  className={`flex items-center w-full px-2 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+                    sidebarTab === 'storage' && storageSubTab === 'configmaps'
+                      ? 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-300 shadow-sm border border-green-100 dark:border-green-800' 
+                      : 'text-gray-700 dark:text-gray-200 hover:bg-green-50/50 dark:hover:bg-green-900/10 hover:text-green-600 dark:hover:text-green-300'
+                  }`}
+                >
+                  <K8sConfigMapIcon className={`mr-3 flex-shrink-0 h-6 w-6 ${
+                    sidebarTab === 'storage' && storageSubTab === 'configmaps' ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'
+                  }`} />
+                  ConfigMaps
+                </button>
+                <button
+                  onClick={() => handleMenuClick('storage', 'secrets')}
+                  className={`flex items-center w-full px-2 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+                    sidebarTab === 'storage' && storageSubTab === 'secrets'
+                      ? 'bg-orange-50 text-orange-700 dark:bg-orange-900/20 dark:text-orange-300 shadow-sm border border-orange-100 dark:border-orange-800' 
+                      : 'text-gray-700 dark:text-gray-200 hover:bg-orange-50/50 dark:hover:bg-orange-900/10 hover:text-orange-600 dark:hover:text-orange-300'
+                  }`}
+                >
+                  <K8sSecretIcon className={`mr-3 flex-shrink-0 h-6 w-6 ${
+                    sidebarTab === 'storage' && storageSubTab === 'secrets' ? 'text-orange-600 dark:text-orange-400' : 'text-gray-500 dark:text-gray-400'
+                  }`} />
+                  Secrets
+                </button>
+
+                {/* Add back the disabled storage items */}
+                <button
+                  disabled
+                  className="flex items-center w-full px-2 py-2 text-sm font-medium rounded-md text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-50"
+                >
+                  <K8sStorageIcon className="mr-3 flex-shrink-0 h-6 w-6 text-gray-400 dark:text-gray-600" />
+                  PersistentVolumes
+                </button>
+
+                <button
+                  disabled
+                  className="flex items-center w-full px-2 py-2 text-sm font-medium rounded-md text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-50"
+                >
+                  <K8sStorageIcon className="mr-3 flex-shrink-0 h-6 w-6 text-gray-400 dark:text-gray-600" />
+                  PersistentVolumeClaims
+                </button>
+
+                <button
+                  disabled
+                  className="flex items-center w-full px-2 py-2 text-sm font-medium rounded-md text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-50"
+                >
+                  <K8sStorageIcon className="mr-3 flex-shrink-0 h-6 w-6 text-gray-400 dark:text-gray-600" />
+                  StorageClasses
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Tab Content */}
           <div className="flex-1 min-h-0 overflow-y-auto">
             {sidebarTab === 'deployments' && (
-              deployments.length > 0 ? (
-                <DeploymentsList
-                  deployments={deployments}
-                  selectedIndex={selectedDeployment}
-                  onSelect={(index) => {
-                    setSelectedDeployment(index);
-                    setSidebarOpen(false);
-                  }}
-                  onEdit={() => setShowForm(true)}
-                  onDelete={handleDeleteDeployment}
-                  onDuplicate={handleDuplicateDeployment}
-                />
-              ) : (
-                <div className="p-6 text-center">
-                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <FileText className="w-8 h-8 text-gray-400" />
-                  </div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Deployments</h3>
-                  <p className="text-sm text-gray-500 mb-4">
-                    Get started by creating your first Kubernetes deployment
-                  </p>
+              <div>
+                <div className="p-4 border-b border-gray-200 dark:border-gray-700">
                   <button
                     onClick={handleAddDeployment}
-                    className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 text-sm font-medium"
+                    className="w-full inline-flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 text-sm font-medium"
                   >
                     <Plus className="w-4 h-4 mr-2" />
-                    Create Deployment
+                    Add Deployment
                   </button>
                 </div>
-              )
+                {deployments.length > 0 ? (
+                  <DeploymentsList
+                    deployments={deployments}
+                    selectedIndex={selectedDeployment}
+                    onSelect={(index) => {
+                      setSelectedDeployment(index);
+                      setSidebarOpen(false);
+                    }}
+                    onEdit={() => setShowForm(true)}
+                    onDelete={handleDeleteDeployment}
+                    onDuplicate={handleDuplicateDeployment}
+                  />
+                ) : (
+                  <div className="p-6 text-center">
+                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <FileText className="w-8 h-8 text-gray-400" />
+                    </div>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No Deployments</h3>
+                    <p className="text-sm text-gray-500 mb-4">
+                      Get started by creating your first Kubernetes deployment
+                    </p>
+                  </div>
+                )}
+              </div>
             )}
 
             {sidebarTab === 'namespaces' && (
@@ -725,54 +989,120 @@ function App() {
               </div>
             )}
 
-            {sidebarTab === 'configmaps' && (
-              <div className="space-y-4">
-                <div className="p-4 border-b border-gray-200">
-                  <button
-                    onClick={() => setShowConfigMapManager(true)}
-                    className="w-full inline-flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 text-sm font-medium"
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add ConfigMap
-                  </button>
-                </div>
-                <ConfigMapsList
-                  configMaps={configMaps}
-                  selectedIndex={selectedConfigMap}
-                  onSelect={(index) => {
-                    setSelectedConfigMap(index);
-                    setSidebarOpen(false);
-                  }}
-                  onEdit={() => setShowConfigMapManager(true)}
-                  onDelete={handleDeleteConfigMap}
-                  onDuplicate={handleDuplicateConfigMap}
-                />
-              </div>
+            {sidebarTab === 'storage' && (
+              <>
+                {storageSubTab === 'configmaps' && (
+                  <>
+                    <div className="p-4 border-b border-gray-200">
+                      <button
+                        onClick={() => setShowConfigMapManager(true)}
+                        className="w-full inline-flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 text-sm font-medium"
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add ConfigMap
+                      </button>
+                    </div>
+                    <ConfigMapsList
+                      configMaps={configMaps}
+                      selectedIndex={selectedConfigMap}
+                      onSelect={(index) => {
+                        setSelectedConfigMap(index);
+                        setSidebarOpen(false);
+                      }}
+                      onEdit={() => setShowConfigMapManager(true)}
+                      onDelete={handleDeleteConfigMap}
+                      onDuplicate={handleDuplicateConfigMap}
+                    />
+                  </>
+                )}
+                {storageSubTab === 'secrets' && (
+                  <>
+                    <div className="p-4 border-b border-gray-200">
+                      <button
+                        onClick={() => setShowSecretManager(true)}
+                        className="w-full inline-flex items-center justify-center px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors duration-200 text-sm font-medium"
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add Secret
+                      </button>
+                    </div>
+                    <SecretsList
+                      secrets={secrets}
+                      selectedIndex={selectedSecret}
+                      onSelect={(index) => {
+                        setSelectedSecret(index);
+                        setSidebarOpen(false);
+                      }}
+                      onEdit={() => setShowSecretManager(true)}
+                      onDelete={handleDeleteSecret}
+                      onDuplicate={handleDuplicateSecret}
+                    />
+                  </>
+                )}
+              </>
             )}
 
-            {sidebarTab === 'secrets' && (
-              <div className="space-y-4">
-                <div className="p-4 border-b border-gray-200">
-                  <button
-                    onClick={() => setShowSecretManager(true)}
-                    className="w-full inline-flex items-center justify-center px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors duration-200 text-sm font-medium"
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Secret
-                  </button>
-                </div>
-                <SecretsList
-                  secrets={secrets}
-                  selectedIndex={selectedSecret}
-                  onSelect={(index) => {
-                    setSelectedSecret(index);
-                    setSidebarOpen(false);
-                  }}
-                  onEdit={() => setShowSecretManager(true)}
-                  onDelete={handleDeleteSecret}
-                  onDuplicate={handleDuplicateSecret}
-                />
-              </div>
+            {sidebarTab === 'jobs' && (
+              <>
+                {jobsSubTab === 'jobs' && (
+                  <>
+                    <JobList
+                      jobs={jobs.filter(j => j.type === 'job').map(jobToJobConfig)}
+                      selectedIndex={selectedJob}
+                      onSelect={setSelectedJob}
+                      onDelete={idx => {
+                        const job = jobs.filter(j => j.type === 'job')[idx];
+                        if (job) handleDeleteJob(job.id);
+                      }}
+                      onEdit={idx => {
+                        const job = jobs.filter(j => j.type === 'job')[idx];
+                        if (job) handleEditJob(job.id);
+                      }}
+                    />
+                    <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+                      <button
+                        onClick={() => {
+                          setJobTypeToCreate('job');
+                          setShowJobManager(true);
+                        }}
+                        className="w-full inline-flex items-center justify-center px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition-colors duration-200 text-sm font-medium"
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add Job
+                      </button>
+                    </div>
+                  </>
+                )}
+                {jobsSubTab === 'cronjobs' && (
+                  <>
+                    <CronJobList
+                      cronjobs={jobs.filter(j => j.type === 'cronjob').map(jobToCronJobConfig)}
+                      selectedIndex={selectedCronJob}
+                      onSelect={setSelectedCronJob}
+                      onDelete={idx => {
+                        const job = jobs.filter(j => j.type === 'cronjob')[idx];
+                        if (job) handleDeleteJob(job.id);
+                      }}
+                      onEdit={idx => {
+                        const job = jobs.filter(j => j.type === 'cronjob')[idx];
+                        if (job) handleEditJob(job.id);
+                      }}
+                    />
+                    <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+                      <button
+                        onClick={() => {
+                          setJobTypeToCreate('cronjob');
+                          setShowJobManager(true);
+                        }}
+                        className="w-full inline-flex items-center justify-center px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors duration-200 text-sm font-medium"
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add CronJob
+                      </button>
+                    </div>
+                  </>
+                )}
+              </>
             )}
           </div>
         </div>
@@ -813,6 +1143,16 @@ function App() {
                       <Key className="w-5 h-5 text-orange-500" />
                       <span className="font-bold">{secrets.length}</span>
                       <span className="text-gray-500">secret{secrets.length !== 1 ? 's' : ''}</span>
+                    </div>
+                    <div className="flex items-center space-x-1 text-sm text-gray-700 font-medium">
+                      <K8sJobIcon className="w-5 h-5 text-pink-500" />
+                      <span className="font-bold">{jobs.filter(j => j.type === 'job').length}</span>
+                      <span className="text-gray-500">job{jobs.filter(j => j.type === 'job').length !== 1 ? 's' : ''}</span>
+                    </div>
+                    <div className="flex items-center space-x-1 text-sm text-gray-700 font-medium">
+                      <Clock className="w-5 h-5 text-yellow-500" />
+                      <span className="font-bold">{jobs.filter(j => j.type === 'cronjob').length}</span>
+                      <span className="text-gray-500">cronjob{jobs.filter(j => j.type === 'cronjob').length !== 1 ? 's' : ''}</span>
                     </div>
                   </div>
                 </div>
@@ -876,42 +1216,34 @@ function App() {
       {/* Deployment Form Modal */}
       {showForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
-              <h3 className="text-xl font-semibold text-gray-900">
-                {currentConfig.appName ? `Edit ${currentConfig.appName}` : 'Create New Deployment'}
-              </h3>
-              <button
-                onClick={() => setShowForm(false)}
-                className="text-gray-400 hover:text-gray-600 transition-colors duration-200"
-              >
-                <X className="w-6 h-6" />
+          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-2xl w-full max-w-2xl mx-auto max-h-[90vh] overflow-y-auto flex flex-col">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Create Deployment</h3>
+              <button onClick={() => setShowForm(false)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
               </button>
             </div>
-            
-            {/* Modal Content */}
-            <div className="flex-1 overflow-y-auto p-6">
-              <DeploymentForm 
-                config={currentConfig} 
+            <div className="flex-1 p-6 overflow-y-auto">
+              <DeploymentForm
+                config={currentConfig}
                 onChange={handleConfigChange}
                 availableNamespaces={availableNamespaces}
                 availableConfigMaps={configMaps}
                 availableSecrets={secrets}
               />
             </div>
-            
-            {/* Modal Footer */}
-            <div className="flex items-center justify-end space-x-3 p-6 border-t border-gray-200 bg-gray-50 flex-shrink-0">
+            <div className="flex justify-end space-x-3 p-6 border-t border-gray-200 dark:border-gray-700">
               <button
+                type="button"
                 onClick={() => setShowForm(false)}
-                className="px-6 py-2.5 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200 font-medium"
+                className="px-6 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
               >
                 Cancel
               </button>
               <button
+                type="button"
                 onClick={() => setShowForm(false)}
-                className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium shadow-sm"
+                className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium shadow-sm"
               >
                 Save
               </button>
@@ -949,6 +1281,25 @@ function App() {
           onAddSecret={handleAddSecret}
           onDeleteSecret={handleDeleteSecret}
           onClose={() => setShowSecretManager(false)}
+        />
+      )}
+
+      {/* Job Manager Modal */}
+      {showJobManager && (
+        <JobManager
+          jobs={jobs}
+          namespaces={namespaces.map(ns => ns.name)}
+          onAddJob={handleAddJob}
+          onUpdateJob={handleUpdateJob}
+          onDeleteJob={handleDeleteJob}
+          onClose={() => {
+            setShowJobManager(false);
+            setJobToEdit(undefined);
+          }}
+          initialJobType={jobTypeToCreate}
+          initialJob={jobToEdit}
+          availableConfigMaps={configMaps}
+          availableSecrets={secrets}
         />
       )}
     </div>

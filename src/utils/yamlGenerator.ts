@@ -188,55 +188,58 @@ interface ContainerConfig {
 function generateContainers(config: ContainerConfig): any[] {
   // Use new containers array if available, otherwise fall back to legacy fields
   if (config.containers && config.containers.length > 0) {
-    return config.containers.map(container => ({
-      name: container.name || 'app',
-      image: container.image,
-      ...(container.port && {
-        ports: [{ containerPort: container.port }]
-      }),
-      ...(container.env.length > 0 && {
-        env: container.env.map((e: EnvVar) => {
-          if (e.valueFrom) {
-            // Environment variable from ConfigMap or Secret
-            return {
-              name: e.name,
-              valueFrom: e.valueFrom.type === 'configMap' ? {
-                configMapKeyRef: {
-                  name: e.valueFrom.name,
-                  key: e.valueFrom.key
+    return config.containers.map(container => {
+      const requests = {
+        cpu: container.resources.requests.cpu || '100m',
+        memory: container.resources.requests.memory || '128Mi'
+      };
+      const limits: any = {};
+      if (container.resources.limits.cpu) limits.cpu = container.resources.limits.cpu;
+      if (container.resources.limits.memory) limits.memory = container.resources.limits.memory;
+      return {
+        name: container.name || 'app',
+        image: container.image,
+        ...(container.port && {
+          ports: [{ containerPort: container.port }]
+        }),
+        ...(container.env.length > 0 && {
+          env: container.env.map((e: EnvVar) => {
+            if (e.valueFrom) {
+              // Environment variable from ConfigMap or Secret
+              return {
+                name: e.name,
+                valueFrom: e.valueFrom.type === 'configMap' ? {
+                  configMapKeyRef: {
+                    name: e.valueFrom.name,
+                    key: e.valueFrom.key
+                  }
+                } : {
+                  secretKeyRef: {
+                    name: e.valueFrom.name,
+                    key: e.valueFrom.key
+                  }
                 }
-              } : {
-                secretKeyRef: {
-                  name: e.valueFrom.name,
-                  key: e.valueFrom.key
-                }
-              }
-            };
-          } else {
-            // Simple environment variable
-            return {
-              name: e.name,
-              value: e.value
-            };
-          }
-        })
-      }),
-      ...(container.volumeMounts.length > 0 && {
-        volumeMounts: container.volumeMounts
-      }),
-      ...(container.command && { command: [container.command] }),
-      ...(container.args && { args: [container.args] }),
-      resources: {
-        requests: {
-          cpu: container.resources.requests.cpu || '0',
-          memory: container.resources.requests.memory || '0'
-        },
-        limits: {
-          cpu: container.resources.limits.cpu || '0',
-          memory: container.resources.limits.memory || '0'
+              };
+            } else {
+              // Simple environment variable
+              return {
+                name: e.name,
+                value: e.value
+              };
+            }
+          })
+        }),
+        ...(container.volumeMounts.length > 0 && {
+          volumeMounts: container.volumeMounts
+        }),
+        ...(container.command && { command: [container.command] }),
+        ...(container.args && { args: [container.args] }),
+        resources: {
+          requests,
+          ...(Object.keys(limits).length > 0 && { limits })
         }
-      }
-    }));
+      };
+    });
   }
 
   // Legacy fallback - this should not be reached for DaemonSets
@@ -247,12 +250,8 @@ function generateContainers(config: ContainerConfig): any[] {
     env: (config as any).env || [],
     resources: {
       requests: {
-        cpu: (config as any).resources?.requests?.cpu || '0',
-        memory: (config as any).resources?.requests?.memory || '0'
-      },
-      limits: {
-        cpu: (config as any).resources?.limits?.cpu || '0',
-        memory: (config as any).resources?.limits?.memory || '0'
+        cpu: (config as any).resources?.requests?.cpu || '100m',
+        memory: (config as any).resources?.requests?.memory || '128Mi'
       }
     }
   }];

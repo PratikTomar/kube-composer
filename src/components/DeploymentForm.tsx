@@ -22,7 +22,7 @@ export function DeploymentForm({ config, onChange, availableNamespaces, availabl
       port: 8080,
       env: [],
       resources: {
-        requests: { cpu: '', memory: '' },
+        requests: { cpu: '100m', memory: '128Mi' },
         limits: { cpu: '', memory: '' }
       },
       volumeMounts: []
@@ -44,9 +44,18 @@ export function DeploymentForm({ config, onChange, availableNamespaces, availabl
     const containerToDuplicate = config.containers[index];
     const duplicatedContainer: Container = {
       ...containerToDuplicate,
-      name: containerToDuplicate.name ? `${containerToDuplicate.name}-copy` : ''
+      name: containerToDuplicate.name ? `${containerToDuplicate.name}-copy` : '',
+      resources: {
+        requests: {
+          cpu: containerToDuplicate.resources.requests.cpu || '100m',
+          memory: containerToDuplicate.resources.requests.memory || '128Mi'
+        },
+        limits: {
+          cpu: '',
+          memory: ''
+        }
+      }
     };
-    
     const newContainers = [...config.containers];
     newContainers.splice(index + 1, 0, duplicatedContainer);
     updateConfig({ containers: newContainers });

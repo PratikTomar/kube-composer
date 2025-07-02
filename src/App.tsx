@@ -1,9 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
 import { Download, FileText, List, Plus, Menu, X, Database, Settings, Key, PlayCircle, Container as Docker, FolderOpen, GitBranch, Clock } from 'lucide-react';
 import { DeploymentForm } from './components/DeploymentForm';
+import { DaemonSetForm } from './components/DaemonSetForm';
 import { YamlPreview } from './components/YamlPreview';
 import { ResourceSummary } from './components/ResourceSummary';
 import { DeploymentsList } from './components/DeploymentsList';
+import { DaemonSetsList } from './components/DaemonSetsList';
 import { NamespacesList } from './components/NamespacesList';
 import { ConfigMapsList } from './components/ConfigMapsList';
 import { SecretsList } from './components/SecretsList';
@@ -21,7 +23,7 @@ import { generateMultiDeploymentYaml } from './utils/yamlGenerator';
 import { JobManager, Job } from './components/JobManager';
 import { JobList } from './components/jobs/JobList';
 import { CronJobList } from './components/jobs/CronJobList';
-import type { DeploymentConfig, Namespace, ConfigMap, Secret, ProjectSettings, JobConfig, CronJobConfig } from './types';
+import type { DeploymentConfig, DaemonSetConfig, Namespace, ConfigMap, Secret, ProjectSettings, JobConfig, CronJobConfig } from './types';
 import {
   K8sDeploymentIcon,
   K8sNamespaceIcon,
@@ -35,7 +37,7 @@ import {
 } from './components/KubernetesIcons';
 
 type PreviewMode = 'visual' | 'yaml' | 'summary' | 'argocd' | 'flow';
-type SidebarTab = 'deployments' | 'namespaces' | 'storage' | 'jobs' | 'configmaps' | 'secrets';
+type SidebarTab = 'deployments' | 'daemonsets' | 'namespaces' | 'storage' | 'jobs' | 'configmaps' | 'secrets';
 
 function App() {
   const [projectSettings, setProjectSettings] = useState<ProjectSettings>({
@@ -46,6 +48,7 @@ function App() {
     updatedAt: new Date().toISOString()
   });
   const [deployments, setDeployments] = useState<DeploymentConfig[]>([]);
+  const [daemonSets, setDaemonSets] = useState<DaemonSetConfig[]>([]);
   const [namespaces, setNamespaces] = useState<Namespace[]>([
     {
       name: 'default',
@@ -58,6 +61,7 @@ function App() {
   const [secrets, setSecrets] = useState<Secret[]>([]);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [selectedDeployment, setSelectedDeployment] = useState<number>(0);
+  const [selectedDaemonSet, setSelectedDaemonSet] = useState<number>(0);
   const [selectedNamespace, setSelectedNamespace] = useState<number>(0);
   const [selectedConfigMap, setSelectedConfigMap] = useState<number>(0);
   const [selectedSecret, setSelectedSecret] = useState<number>(0);
@@ -113,6 +117,34 @@ function App() {
       tls: [],
       rules: []
     }
+  };
+
+  const currentDaemonSetConfig = daemonSets[selectedDaemonSet] || {
+    appName: '',
+    containers: [{
+      name: '',
+      image: '',
+      port: 8080,
+      env: [],
+      resources: {
+        requests: { cpu: '', memory: '' },
+        limits: { cpu: '', memory: '' }
+      },
+      volumeMounts: []
+    }],
+    serviceEnabled: false,
+    port: 80,
+    targetPort: 8080,
+    serviceType: 'ClusterIP',
+    namespace: 'default',
+    labels: {},
+    annotations: {},
+    volumes: [],
+    configMaps: [],
+    secrets: [],
+    selectedConfigMaps: [],
+    selectedSecrets: [],
+    nodeSelector: {}
   };
 
   // Get available namespaces from all deployments
@@ -529,19 +561,21 @@ function App() {
   // Generate YAML for preview based on mode
   const getPreviewYaml = () => {
     const validDeployments = deployments.filter(d => d.appName);
+    const validDaemonSets = daemonSets.filter(d => d.appName);
     // Fix: Only map regular jobs to jobConfigs, not cronjobs
     const jobConfigs = jobs.filter(j => j.type === 'job').map(jobToJobConfig);
     const cronJobConfigs = jobs.filter(j => j.type === 'cronjob').map(jobToCronJobConfig);
-    const yaml = generateMultiDeploymentYaml(validDeployments, namespaces, configMaps, secrets, projectSettings, jobConfigs, cronJobConfigs);
+    const yaml = generateMultiDeploymentYaml(validDeployments, namespaces, configMaps, secrets, projectSettings, jobConfigs, cronJobConfigs, validDaemonSets);
     if (
       validDeployments.length === 0 &&
+      validDaemonSets.length === 0 &&
       jobConfigs.length === 0 &&
       cronJobConfigs.length === 0 &&
       namespaces.length <= 1 &&
       configMaps.length === 0 &&
       secrets.length === 0
     ) {
-      return '# No deployments or jobs configured\n# Create your first deployment or job to see the generated YAML';
+      return '# No deployments, daemonsets, or jobs configured\n# Create your first deployment, daemonset, or job to see the generated YAML';
     }
     return yaml;
   };
@@ -553,7 +587,7 @@ function App() {
   ];
 
   // Check if download should be enabled
-  const hasValidDeployments = deployments.some(d => d.appName);
+  const hasValidDeployments = deployments.some(d => d.appName) || daemonSets.some(d => d.appName);
 
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -611,7 +645,7 @@ function App() {
     setSidebarTab(tab);
     
     // Set preview mode based on the selected tab
-    if (tab === 'deployments') {
+    if (tab === 'deployments' || tab === 'daemonsets') {
       setPreviewMode('flow');
     } else {
       setPreviewMode('yaml');
@@ -627,6 +661,93 @@ function App() {
     } else if (subTab === 'cronjobs') {
       setJobsSubTab('cronjobs');
     }
+  };
+
+  // DaemonSet management
+  const handleDaemonSetConfigChange = (newConfig: DaemonSetConfig) => {
+    // Apply global labels to the new config
+    const configWithGlobalLabels = {
+      ...newConfig,
+      labels: cleanAndMergeLabels(newConfig.labels)
+    };
+
+    const newDaemonSets = [...daemonSets];
+    if (selectedDaemonSet < daemonSets.length) {
+      newDaemonSets[selectedDaemonSet] = configWithGlobalLabels;
+    } else {
+      newDaemonSets.push(configWithGlobalLabels);
+    }
+    setDaemonSets(newDaemonSets);
+  };
+
+  const handleAddDaemonSet = () => {
+    const newDaemonSet: DaemonSetConfig = {
+      appName: '',
+      containers: [{
+        name: '',
+        image: '',
+        port: 8080,
+        env: [],
+        resources: {
+          requests: { cpu: '', memory: '' },
+          limits: { cpu: '', memory: '' }
+        },
+        volumeMounts: []
+      }],
+      serviceEnabled: false,
+      port: 80,
+      targetPort: 8080,
+      serviceType: 'ClusterIP',
+      namespace: 'default',
+      labels: cleanAndMergeLabels({}),
+      annotations: {},
+      volumes: [],
+      configMaps: [],
+      secrets: [],
+      selectedConfigMaps: [],
+      selectedSecrets: [],
+      nodeSelector: {}
+    };
+    setDaemonSets([...daemonSets, newDaemonSet]);
+    setSelectedDaemonSet(daemonSets.length);
+    setSidebarTab('daemonsets');
+    setShowForm(true);
+  };
+
+  const handleDeleteDaemonSet = (index: number) => {
+    if (daemonSets.length <= 1) {
+      // If it's the last daemonset, remove it completely
+      setDaemonSets([]);
+      setSelectedDaemonSet(0);
+      return;
+    }
+
+    const newDaemonSets = daemonSets.filter((_, i) => i !== index);
+    setDaemonSets(newDaemonSets);
+    
+    // Adjust selected daemonset index
+    if (selectedDaemonSet >= index) {
+      setSelectedDaemonSet(Math.max(0, selectedDaemonSet - 1));
+    }
+  };
+
+  const handleDuplicateDaemonSet = (index: number) => {
+    const daemonSetToDuplicate = daemonSets[index];
+    const duplicatedDaemonSet: DaemonSetConfig = {
+      ...daemonSetToDuplicate,
+      appName: `${daemonSetToDuplicate.appName}-copy`,
+      containers: daemonSetToDuplicate.containers.map(container => ({
+        ...container,
+        name: container.name ? `${container.name}-copy` : ''
+      })),
+      labels: cleanAndMergeLabels(daemonSetToDuplicate.labels),
+      nodeSelector: { ...daemonSetToDuplicate.nodeSelector }
+    };
+    
+    const newDaemonSets = [...daemonSets];
+    newDaemonSets.splice(index + 1, 0, duplicatedDaemonSet);
+    setDaemonSets(newDaemonSets);
+    setSelectedDaemonSet(index + 1);
   };
 
   return (
@@ -798,6 +919,20 @@ function App() {
                 </button>
 
                 <button
+                  onClick={() => handleMenuClick('daemonsets')}
+                  className={`flex items-center w-full px-2 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+                    sidebarTab === 'daemonsets' 
+                      ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/20 dark:text-indigo-300 shadow-sm border border-indigo-100 dark:border-indigo-800' 
+                      : 'text-gray-700 dark:text-gray-200 hover:bg-indigo-50/50 dark:hover:bg-indigo-900/10 hover:text-indigo-600 dark:hover:text-indigo-300'
+                  }`}
+                >
+                  <K8sDaemonSetIcon className={`mr-3 flex-shrink-0 h-6 w-6 ${
+                    sidebarTab === 'daemonsets' ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-500 dark:text-gray-400'
+                  }`} />
+                  DaemonSets
+                </button>
+
+                <button
                   onClick={() => handleMenuClick('namespaces')}
                   className={`flex items-center w-full px-2 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
                     sidebarTab === 'namespaces' 
@@ -809,14 +944,6 @@ function App() {
                     sidebarTab === 'namespaces' ? 'text-purple-600 dark:text-purple-400' : 'text-gray-500 dark:text-gray-400'
                   }`} />
                   Namespaces
-                </button>
-
-                <button
-                  disabled
-                  className="flex items-center w-full px-2 py-2 text-sm font-medium rounded-md text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-50"
-                >
-                  <K8sDaemonSetIcon className="mr-3 flex-shrink-0 h-6 w-6 text-gray-400 dark:text-gray-600" />
-                  DaemonSets
                 </button>
 
                 <button
@@ -958,6 +1085,43 @@ function App() {
                     <h3 className="text-lg font-medium text-gray-900 mb-2">No Deployments</h3>
                     <p className="text-sm text-gray-500 mb-4">
                       Get started by creating your first Kubernetes deployment
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {sidebarTab === 'daemonsets' && (
+              <div>
+                <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                  <button
+                    onClick={handleAddDaemonSet}
+                    className="w-full inline-flex items-center justify-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors duration-200 text-sm font-medium"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add DaemonSet
+                  </button>
+                </div>
+                {daemonSets.length > 0 ? (
+                  <DaemonSetsList
+                    daemonSets={daemonSets}
+                    selectedDaemonSet={selectedDaemonSet}
+                    onSelectDaemonSet={(index) => {
+                      setSelectedDaemonSet(index);
+                      setSidebarOpen(false);
+                    }}
+                    onEditDaemonSet={() => setShowForm(true)}
+                    onDuplicateDaemonSet={handleDuplicateDaemonSet}
+                    onDeleteDaemonSet={handleDeleteDaemonSet}
+                  />
+                ) : (
+                  <div className="p-6 text-center">
+                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <FileText className="w-8 h-8 text-gray-400" />
+                    </div>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No DaemonSets</h3>
+                    <p className="text-sm text-gray-500 mb-4">
+                      Get started by creating your first Kubernetes DaemonSet
                     </p>
                   </div>
                 )}
@@ -1130,6 +1294,11 @@ function App() {
                       <span className="text-gray-500">deployment{deployments.length !== 1 ? 's' : ''}</span>
                     </div>
                     <div className="flex items-center space-x-1 text-sm text-gray-700 font-medium">
+                      <K8sDaemonSetIcon className="w-5 h-5 text-indigo-500" />
+                      <span className="font-bold">{daemonSets.length}</span>
+                      <span className="text-gray-500">daemonset{daemonSets.length !== 1 ? 's' : ''}</span>
+                    </div>
+                    <div className="flex items-center space-x-1 text-sm text-gray-700 font-medium">
                       <Database className="w-5 h-5 text-purple-500" />
                       <span className="font-bold">{namespaces.length}</span>
                       <span className="text-gray-500">namespace{namespaces.length !== 1 ? 's' : ''}</span>
@@ -1180,7 +1349,7 @@ function App() {
               </div>
             </div>
             <div className="p-4 sm:p-6 pb-8">
-              {previewMode === 'flow' && <VisualPreview deployments={deployments} namespaces={namespaces} configMaps={configMaps} secrets={secrets} containerRef={containerRef} />}
+              {previewMode === 'flow' && <VisualPreview deployments={deployments} daemonSets={daemonSets} namespaces={namespaces} configMaps={configMaps} secrets={secrets} containerRef={containerRef} />}
               {previewMode === 'summary' && <ResourceSummary config={currentConfig} />}
               {previewMode === 'yaml' && <YamlPreview yaml={getPreviewYaml()} />}
             </div>
@@ -1213,24 +1382,36 @@ function App() {
         />
       )}
 
-      {/* Deployment Form Modal */}
+      {/* Deployment/DaemonSet Form Modal */}
       {showForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-gray-900 rounded-xl shadow-2xl w-full max-w-2xl mx-auto max-h-[90vh] overflow-y-auto flex flex-col">
             <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Create Deployment</h3>
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                {sidebarTab === 'daemonsets' ? 'Create DaemonSet' : 'Create Deployment'}
+              </h3>
               <button onClick={() => setShowForm(false)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
               </button>
             </div>
             <div className="flex-1 p-6 overflow-y-auto">
-              <DeploymentForm
-                config={currentConfig}
-                onChange={handleConfigChange}
-                availableNamespaces={availableNamespaces}
-                availableConfigMaps={configMaps}
-                availableSecrets={secrets}
-              />
+              {sidebarTab === 'daemonsets' ? (
+                <DaemonSetForm
+                  config={currentDaemonSetConfig}
+                  onChange={handleDaemonSetConfigChange}
+                  availableNamespaces={availableNamespaces}
+                  availableConfigMaps={configMaps}
+                  availableSecrets={secrets}
+                />
+              ) : (
+                <DeploymentForm
+                  config={currentConfig}
+                  onChange={handleConfigChange}
+                  availableNamespaces={availableNamespaces}
+                  availableConfigMaps={configMaps}
+                  availableSecrets={secrets}
+                />
+              )}
             </div>
             <div className="flex justify-end space-x-3 p-6 border-t border-gray-200 dark:border-gray-700">
               <button

@@ -93,6 +93,31 @@ export interface DeploymentConfig {
   };
 }
 
+export interface DaemonSetConfig {
+  appName: string;
+  containers: Container[];
+  serviceEnabled: boolean;
+  port: number;
+  targetPort: number;
+  serviceType: 'ClusterIP' | 'NodePort' | 'LoadBalancer';
+  namespace: string;
+  labels: Record<string, string>;
+  annotations: Record<string, string>;
+  volumes: Array<{ name: string; mountPath: string; type: 'emptyDir' | 'configMap' | 'secret'; configMapName?: string; secretName?: string }>;
+  configMaps: Array<{ name: string; data: Record<string, string> }>; // Legacy - for backward compatibility
+  secrets: Array<{ name: string; data: Record<string, string> }>; // Legacy - for backward compatibility
+  selectedConfigMaps: string[]; // References to ConfigMap names
+  selectedSecrets: string[]; // References to Secret names
+  nodeSelector?: Record<string, string>; // Optional node selector
+  // Legacy fields for backward compatibility
+  image?: string;
+  env?: Array<{ name: string; value: string }>;
+  resources?: {
+    requests: { cpu: string; memory: string };
+    limits: { cpu: string; memory: string };
+  };
+}
+
 export interface Namespace {
   name: string;
   labels: Record<string, string>;

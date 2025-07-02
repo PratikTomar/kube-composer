@@ -19,12 +19,13 @@ import {
   GitCommit,
   X
 } from 'lucide-react';
-import type { DeploymentConfig, Namespace, ConfigMap, Secret } from '../types';
-import { generateKubernetesYaml, generateConfigMapYaml, generateSecretYaml, generateNamespaceYaml } from '../utils/yamlGenerator';
+import type { DeploymentConfig, DaemonSetConfig, Namespace, ConfigMap, Secret } from '../types';
+import { generateKubernetesYaml, generateDaemonSetYaml, generateConfigMapYaml, generateSecretYaml, generateNamespaceYaml } from '../utils/yamlGenerator';
 import { YamlPreview } from './YamlPreview';
 
 interface VisualPreviewProps {
   deployments: DeploymentConfig[];
+  daemonSets: DaemonSetConfig[];
   namespaces: Namespace[];
   configMaps: ConfigMap[];
   secrets: Secret[];
@@ -34,7 +35,7 @@ interface VisualPreviewProps {
 interface FlowNode {
   id: string;
   name: string;
-  type: 'deployment' | 'service' | 'pod' | 'configmap' | 'secret' | 'ingress' | 'namespace' | 'external';
+  type: 'deployment' | 'daemonset' | 'service' | 'pod' | 'configmap' | 'secret' | 'ingress' | 'namespace' | 'external';
   namespace: string;
   status: 'healthy' | 'warning' | 'error' | 'pending' | 'syncing';
   syncStatus: 'synced' | 'outofsync' | 'unknown';
@@ -55,6 +56,7 @@ interface FlowNode {
 
 export function VisualPreview({ 
   deployments, 
+  daemonSets,
   namespaces, 
   configMaps, 
   secrets, 
@@ -64,6 +66,7 @@ export function VisualPreview({
   const [yamlModal, setYamlModal] = useState<{ open: boolean, title: string, yaml: string } | null>(null);
 
   const validDeployments = deployments.filter(d => d.appName);
+  const validDaemonSets = daemonSets.filter(d => d.appName);
 
   const colorPalette = [
     'border-blue-300 bg-blue-50 shadow-blue-100',
@@ -76,7 +79,7 @@ export function VisualPreview({
     'border-orange-300 bg-orange-50 shadow-orange-100',
   ];
 
-  // Generate flow nodes with each deployment in its own row
+  // Generate flow nodes with each deployment/daemonset in its own row
   const rawFlowNodes = useMemo(() => {
     const nodes: FlowNode[] = [];
     const nodeSpacing = { x: 200, y: 140 };
@@ -87,15 +90,18 @@ export function VisualPreview({
     const namespaceGroups = namespaces.map(ns => ({
       namespace: ns,
       deployments: deployments.filter(d => d.namespace === ns.name && d.appName),
+      daemonSets: daemonSets.filter(d => d.namespace === ns.name && d.appName),
       configMaps: configMaps.filter(cm => cm.namespace === ns.name),
       secrets: secrets.filter(s => s.namespace === ns.name)
     })).filter(group => 
       group.deployments.length > 0 || 
+      group.daemonSets.length > 0 ||
       group.configMaps.length > 0 || 
       group.secrets.length > 0
     );
 
     namespaceGroups.forEach((group) => {
+      // Process deployments
       group.deployments.forEach((deployment, depIndex) => {
         const baseY = currentY;
         const colorIdx = depIndex % colorPalette.length;
@@ -243,12 +249,92 @@ export function VisualPreview({
             });
           }
         });
-        currentY += rowHeight; // more space between deployments
+        currentY += rowHeight;
       });
+
+      // Process daemonsets
+      group.daemonSets.forEach((daemonSet, dsIndex) => {
+        const baseY = currentY;
+        const colorIdx = (group.deployments.length + dsIndex) % colorPalette.length;
+        const colorClass = colorPalette[colorIdx];
+        const daemonSetId = `daemonset-${daemonSet.appName}`;
+        const serviceId = `service-${daemonSet.appName}`;
+        // Calculate daemonset status
+        const hasContainers = daemonSet.containers && daemonSet.containers.length > 0;
+        const hasValidContainers = hasContainers && daemonSet.containers.every(c => c.name && c.image);
+        const hasProperPorts = daemonSet.port > 0 && daemonSet.targetPort > 0;
+        let daemonSetStatus: 'healthy' | 'warning' | 'error' | 'pending' | 'syncing';
+        let syncStatus: 'synced' | 'outofsync' | 'unknown';
+        if (hasValidContainers && hasProperPorts) {
+          daemonSetStatus = 'healthy';
+          syncStatus = 'synced';
+        } else if (hasContainers && hasProperPorts) {
+          daemonSetStatus = 'warning';
+          syncStatus = 'outofsync';
+        } else {
+          daemonSetStatus = 'error';
+          syncStatus = 'outofsync';
+        }
+        // Add daemonset node
+        nodes.push({
+          id: daemonSetId,
+          name: daemonSet.appName,
+          type: 'daemonset',
+          namespace: daemonSet.namespace,
+          status: daemonSetStatus,
+          syncStatus: syncStatus,
+          position: { x: 0, y: baseY },
+          dependencies: [],
+          children: [serviceId],
+          metadata: {
+            containers: daemonSet.containers?.length || 0,
+            lastSync: new Date().toISOString(),
+            syncRevision: `v${Date.now()}`
+          },
+          colorClass: colorClass
+        });
+        // Add service node only if service is enabled
+        if (daemonSet.serviceEnabled) {
+          nodes.push({
+            id: serviceId,
+            name: `${daemonSet.appName}-service`,
+            type: 'service',
+            namespace: daemonSet.namespace,
+            status: hasValidContainers ? 'healthy' : 'warning',
+            syncStatus: hasValidContainers ? 'synced' : 'outofsync',
+            position: { x: nodeSpacing.x, y: baseY },
+            dependencies: [daemonSetId],
+            children: [],
+            metadata: {
+              ports: [daemonSet.port]
+            },
+            colorClass: colorClass
+          });
+        }
+        // Add a single pod node below the daemonset
+        const podId = `pod-${daemonSet.appName}`;
+        nodes.push({
+          id: podId,
+          name: `${daemonSet.appName}-pod`,
+          type: 'pod',
+          namespace: daemonSet.namespace,
+          status: hasValidContainers ? 'healthy' : 'error',
+          syncStatus: hasValidContainers ? 'synced' : 'outofsync',
+          position: { x: -nodeSpacing.x, y: baseY + 60 },
+          dependencies: [daemonSetId],
+          children: [],
+          metadata: {
+            containers: daemonSet.containers?.length || 0
+          },
+          colorClass: colorClass
+        });
+        currentY += rowHeight;
+      });
+
       currentY += rowHeight * 0.2;
     });
     return nodes;
-  }, [deployments, namespaces, configMaps, secrets]);
+  }, [deployments, daemonSets, namespaces, configMaps, secrets]);
 
   // Bounding box calculation
   const padding = 40;
@@ -304,6 +390,8 @@ export function VisualPreview({
     switch (type) {
       case 'deployment':
         return <Server className="w-4 h-4 text-blue-500" />;
+      case 'daemonset':
+        return <Server className="w-4 h-4 text-indigo-500" />;
       case 'service':
         return <Network className="w-4 h-4 text-green-500" />;
       case 'pod':
@@ -365,6 +453,15 @@ export function VisualPreview({
         return deploymentYaml?.trim() || '';
       }
     }
+    if (node.type === 'daemonset') {
+      const daemonSet = daemonSets.find(d => d.appName === node.name);
+      if (daemonSet) {
+        // Only output the DaemonSet YAML (not Service, etc.)
+        const allYaml = generateDaemonSetYaml(daemonSet);
+        const daemonSetYaml = allYaml.split('---').find(y => y.includes('kind: DaemonSet'));
+        return daemonSetYaml?.trim() || '';
+      }
+    }
     if (node.type === 'service') {
       const deployment = deployments.find(d => `${d.appName}-service` === node.name);
       if (deployment) {
@@ -373,12 +470,21 @@ export function VisualPreview({
         const serviceYaml = allYaml.split('---').find(y => y.includes('kind: Service'));
         return serviceYaml?.trim() || '';
       }
+      const daemonSet = daemonSets.find(d => `${d.appName}-service` === node.name);
+      if (daemonSet && daemonSet.serviceEnabled) {
+        // Only output the Service YAML
+        const allYaml = generateDaemonSetYaml(daemonSet);
+        const serviceYaml = allYaml.split('---').find(y => y.includes('kind: Service'));
+        return serviceYaml?.trim() || '';
+      }
     }
     if (node.type === 'pod') {
-      // Pods are not first-class in your generator, show deployment YAML with a note
+      // Pods are not first-class in your generator, show deployment/daemonset YAML with a note
       const depName = node.name.split('-').slice(0, -1).join('-');
       const deployment = deployments.find(d => d.appName === depName);
       if (deployment) return generateKubernetesYaml(deployment);
+      const daemonSet = daemonSets.find(d => d.appName === depName);
+      if (daemonSet) return generateDaemonSetYaml(daemonSet);
     }
     if (node.type === 'configmap') {
       const cm = configMaps.find(cm => cm.name === node.name);
@@ -410,7 +516,7 @@ export function VisualPreview({
     setYamlModal({ open: true, title: node.name, yaml });
   };
 
-  if (!validDeployments.length) {
+  if (!validDeployments.length && !validDaemonSets.length) {
     return (
       <div className="text-center py-16 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-xl border border-blue-200">
         <div className="max-w-md mx-auto">

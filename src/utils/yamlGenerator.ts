@@ -1,4 +1,4 @@
-import type { DeploymentConfig, KubernetesResource, Namespace, ConfigMap, Secret, ProjectSettings, JobConfig, CronJobConfig } from '../types';
+import type { DeploymentConfig, DaemonSetConfig, KubernetesResource, Namespace, ConfigMap, Secret, ProjectSettings, JobConfig, CronJobConfig, Container, EnvVar } from '../types';
 
 export function generateKubernetesYaml(config: DeploymentConfig, projectSettings?: ProjectSettings): string {
   if (!config.appName) {
@@ -178,7 +178,14 @@ export function generateKubernetesYaml(config: DeploymentConfig, projectSettings
   }).join('\n---\n');
 }
 
-function generateContainers(config: DeploymentConfig): any[] {
+// Generic interface for configs that have containers, port, and targetPort
+interface ContainerConfig {
+  containers: Container[];
+  port: number;
+  targetPort: number;
+}
+
+function generateContainers(config: ContainerConfig): any[] {
   // Use new containers array if available, otherwise fall back to legacy fields
   if (config.containers && config.containers.length > 0) {
     return config.containers.map(container => ({
@@ -188,7 +195,7 @@ function generateContainers(config: DeploymentConfig): any[] {
         ports: [{ containerPort: container.port }]
       }),
       ...(container.env.length > 0 && {
-        env: container.env.map(e => {
+        env: container.env.map((e: EnvVar) => {
           if (e.valueFrom) {
             // Environment variable from ConfigMap or Secret
             return {
@@ -206,72 +213,52 @@ function generateContainers(config: DeploymentConfig): any[] {
               }
             };
           } else {
-            // Direct value
-            return { name: e.name, value: e.value || '' };
+            // Simple environment variable
+            return {
+              name: e.name,
+              value: e.value
+            };
           }
         })
       }),
       ...(container.volumeMounts.length > 0 && {
-        volumeMounts: container.volumeMounts.map(vm => ({
-          name: vm.name,
-          mountPath: vm.mountPath
-        }))
+        volumeMounts: container.volumeMounts
       }),
-      ...((container.resources.requests.cpu || container.resources.requests.memory || 
-          container.resources.limits.cpu || container.resources.limits.memory) && {
-        resources: {
-          ...(container.resources.requests.cpu || container.resources.requests.memory) && {
-            requests: {
-              ...(container.resources.requests.cpu && { cpu: container.resources.requests.cpu }),
-              ...(container.resources.requests.memory && { memory: container.resources.requests.memory })
-            }
-          },
-          ...(container.resources.limits.cpu || container.resources.limits.memory) && {
-            limits: {
-              ...(container.resources.limits.cpu && { cpu: container.resources.limits.cpu }),
-              ...(container.resources.limits.memory && { memory: container.resources.limits.memory })
-            }
-          }
+      ...(container.command && { command: [container.command] }),
+      ...(container.args && { args: [container.args] }),
+      resources: {
+        requests: {
+          cpu: container.resources.requests.cpu || '0',
+          memory: container.resources.requests.memory || '0'
+        },
+        limits: {
+          cpu: container.resources.limits.cpu || '0',
+          memory: container.resources.limits.memory || '0'
         }
-      })
+      }
     }));
   }
 
-  // Legacy fallback for backward compatibility
+  // Legacy fallback - this should not be reached for DaemonSets
   return [{
-    name: config.appName || 'app',
-    image: config.image || '',
+    name: 'app',
+    image: (config as any).image || 'nginx:latest',
     ports: [{ containerPort: config.targetPort }],
-    ...(config.env && config.env.length > 0 && {
-      env: config.env.map(e => ({ name: e.name, value: e.value }))
-    }),
-    ...(config.volumes.length > 0 && {
-      volumeMounts: config.volumes.map(v => ({
-        name: v.name,
-        mountPath: v.mountPath
-      }))
-    }),
-    ...(config.resources && (config.resources.requests.cpu || config.resources.requests.memory || 
-        config.resources.limits.cpu || config.resources.limits.memory) && {
-      resources: {
-        ...(config.resources.requests.cpu || config.resources.requests.memory) && {
-          requests: {
-            ...(config.resources.requests.cpu && { cpu: config.resources.requests.cpu }),
-            ...(config.resources.requests.memory && { memory: config.resources.requests.memory })
-          }
-        },
-        ...(config.resources.limits.cpu || config.resources.limits.memory) && {
-          limits: {
-            ...(config.resources.limits.cpu && { cpu: config.resources.limits.cpu }),
-            ...(config.resources.limits.memory && { memory: config.resources.limits.memory })
-          }
-        }
+    env: (config as any).env || [],
+    resources: {
+      requests: {
+        cpu: (config as any).resources?.requests?.cpu || '0',
+        memory: (config as any).resources?.requests?.memory || '0'
+      },
+      limits: {
+        cpu: (config as any).resources?.limits?.cpu || '0',
+        memory: (config as any).resources?.limits?.memory || '0'
       }
-    })
+    }
   }];
 }
 
-function generateServicePorts(config: DeploymentConfig): any[] {
+function generateServicePorts(config: ContainerConfig): any[] {
   // If using new containers structure, generate ports for all containers
   if (config.containers && config.containers.length > 0) {
     const ports = [];
@@ -482,15 +469,18 @@ export function generateMultiDeploymentYaml(
   secrets: Secret[] = [],
   projectSettings?: ProjectSettings,
   jobs: JobConfig[] = [],
-  cronjobs: CronJobConfig[] = []
+  cronjobs: CronJobConfig[] = [],
+  daemonSets: DaemonSetConfig[] = []
 ): string {
+  // Check if we have any meaningful content
   if (
     deployments.length === 0 &&
-    jobs.length === 0 &&
-    cronjobs.length === 0 &&
     namespaces.length <= 1 &&
     configMaps.length === 0 &&
-    secrets.length === 0
+    secrets.length === 0 &&
+    jobs.length === 0 &&
+    cronjobs.length === 0 &&
+    daemonSets.length === 0
   ) {
     return `# Welcome to Kube Composer!
 # 
@@ -514,6 +504,7 @@ export function generateMultiDeploymentYaml(
 # - Resource validation
 # - Production-ready output
 # - ConfigMap and Secret management
+# - DaemonSet support
 #
 # No registration required - start building now!
 
@@ -542,7 +533,7 @@ data:
   );
 
   // Add header comment
-  if (deployments.length > 0 || customNamespaces.length > 0 || configMaps.length > 0 || secrets.length > 0) {
+  if (deployments.length > 0 || daemonSets.length > 0 || customNamespaces.length > 0 || configMaps.length > 0 || secrets.length > 0 || jobs.length > 0 || cronjobs.length > 0) {
     allResources.push(`# Kubernetes Configuration`);
     allResources.push(`# Generated by Kube Composer`);
     
@@ -573,6 +564,11 @@ data:
       if (ingressCount > 0) {
         allResources.push(`# Ingress Resources: ${ingressCount}`);
       }
+    }
+    if (daemonSets.length > 0) {
+      allResources.push(`# DaemonSets: ${daemonSets.filter(d => d.appName).length}`);
+      const totalContainers = daemonSets.reduce((sum, d) => sum + (d.containers?.length || 1), 0);
+      allResources.push(`# Total DaemonSet Containers: ${totalContainers}`);
     }
     if (jobs.length > 0) {
       allResources.push(`# Jobs: ${jobs.length}`);
@@ -611,7 +607,7 @@ data:
       allResources.push(objectToYaml(namespaceResource));
     });
     
-    if (configMaps.length > 0 || secrets.length > 0 || deployments.length > 0) {
+    if (configMaps.length > 0 || secrets.length > 0 || deployments.length > 0 || daemonSets.length > 0 || jobs.length > 0 || cronjobs.length > 0) {
       allResources.push('---');
       allResources.push('');
     }
@@ -647,7 +643,7 @@ data:
       allResources.push(objectToYaml(configMapResource));
     });
     
-    if (secrets.length > 0 || deployments.length > 0) {
+    if (secrets.length > 0 || deployments.length > 0 || daemonSets.length > 0 || jobs.length > 0 || cronjobs.length > 0) {
       allResources.push('---');
       allResources.push('');
     }
@@ -686,7 +682,144 @@ data:
       allResources.push(objectToYaml(secretResource));
     });
     
-    if (deployments.length > 0) {
+    if (deployments.length > 0 || daemonSets.length > 0 || jobs.length > 0 || cronjobs.length > 0) {
+      allResources.push('---');
+      allResources.push('');
+    }
+  }
+
+  // Generate DaemonSet resources
+  if (daemonSets.length > 0) {
+    allResources.push('# === DAEMONSETS ===');
+    daemonSets.forEach((daemonSet, index) => {
+      if (index > 0) {
+        allResources.push('---');
+      }
+
+      // Merge global labels with daemonset labels
+      const mergedLabels = projectSettings ? {
+        ...projectSettings.globalLabels,
+        ...daemonSet.labels,
+        project: projectSettings.name
+      } : daemonSet.labels;
+
+      // Create selector labels that include the project label
+      const selectorLabels = {
+        'app.kubernetes.io/name': daemonSet.appName,
+        ...(projectSettings && { project: projectSettings.name })
+      };
+
+      // Generate DaemonSet
+      const daemonSetResource: KubernetesResource = {
+        apiVersion: 'apps/v1',
+        kind: 'DaemonSet',
+        metadata: {
+          name: daemonSet.appName,
+          namespace: daemonSet.namespace,
+          labels: {
+            'app.kubernetes.io/name': daemonSet.appName,
+            ...mergedLabels
+          },
+          ...(Object.keys(daemonSet.annotations).length > 0 && { annotations: daemonSet.annotations })
+        },
+        spec: {
+          selector: {
+            matchLabels: selectorLabels
+          },
+          template: {
+            metadata: {
+              labels: {
+                'app.kubernetes.io/name': daemonSet.appName,
+                ...mergedLabels
+              }
+            },
+            spec: {
+              containers: generateContainers(daemonSet),
+              ...(daemonSet.volumes.length > 0 && {
+                volumes: daemonSet.volumes.map(v => ({
+                  name: v.name,
+                  ...(v.type === 'emptyDir' && { emptyDir: {} }),
+                  ...(v.type === 'configMap' && { configMap: { name: v.configMapName || v.name } }),
+                  ...(v.type === 'secret' && { secret: { secretName: v.secretName || v.name } })
+                }))
+              }),
+              ...(daemonSet.nodeSelector && Object.keys(daemonSet.nodeSelector).length > 0 && {
+                nodeSelector: daemonSet.nodeSelector
+              })
+            }
+          }
+        }
+      };
+
+      allResources.push(objectToYaml(daemonSetResource));
+
+      // Generate Service only if enabled
+      if (daemonSet.serviceEnabled) {
+        const serviceResource: KubernetesResource = {
+          apiVersion: 'v1',
+          kind: 'Service',
+          metadata: {
+            name: `${daemonSet.appName}-service`,
+            namespace: daemonSet.namespace,
+            labels: {
+              'app.kubernetes.io/name': daemonSet.appName,
+              ...mergedLabels
+            }
+          },
+          spec: {
+            selector: selectorLabels,
+            ports: generateServicePorts(daemonSet),
+            type: daemonSet.serviceType
+          }
+        };
+
+        allResources.push('---');
+        allResources.push(objectToYaml(serviceResource));
+      }
+
+      // Generate ConfigMaps (legacy support)
+      daemonSet.configMaps.forEach(cm => {
+        allResources.push('---');
+        const configMapResource: KubernetesResource = {
+          apiVersion: 'v1',
+          kind: 'ConfigMap',
+          metadata: {
+            name: cm.name,
+            namespace: daemonSet.namespace,
+            labels: {
+              'app.kubernetes.io/name': daemonSet.appName,
+              ...mergedLabels
+            }
+          },
+          data: cm.data
+        };
+        allResources.push(objectToYaml(configMapResource));
+      });
+
+      // Generate Secrets (legacy support)
+      daemonSet.secrets.forEach(secret => {
+        allResources.push('---');
+        const secretResource: KubernetesResource = {
+          apiVersion: 'v1',
+          kind: 'Secret',
+          metadata: {
+            name: secret.name,
+            namespace: daemonSet.namespace,
+            labels: {
+              'app.kubernetes.io/name': daemonSet.appName,
+              ...mergedLabels
+            }
+          },
+          type: 'Opaque',
+          data: Object.fromEntries(
+            Object.entries(secret.data).map(([key, value]) => [key, btoa(value)])
+          )
+        };
+        allResources.push(objectToYaml(secretResource));
+      });
+    });
+    
+    if (deployments.length > 0 || jobs.length > 0 || cronjobs.length > 0) {
       allResources.push('---');
       allResources.push('');
     }
@@ -834,6 +967,139 @@ data:
   }
 
   return allResources.join('\n');
+}
+
+export function generateDaemonSetYaml(config: DaemonSetConfig, projectSettings?: ProjectSettings): string {
+  if (!config.appName) {
+    return '# Please configure your daemonset first';
+  }
+
+  const resources: KubernetesResource[] = [];
+
+  // Merge global labels with daemonset labels
+  const mergedLabels = projectSettings ? {
+    ...projectSettings.globalLabels,
+    ...config.labels,
+    project: projectSettings.name
+  } : config.labels;
+
+  // Create selector labels that include the project label
+  const selectorLabels = {
+    'app.kubernetes.io/name': config.appName,
+    ...(projectSettings && { project: projectSettings.name })
+  };
+
+  // Generate DaemonSet
+  const daemonSet: KubernetesResource = {
+    apiVersion: 'apps/v1',
+    kind: 'DaemonSet',
+    metadata: {
+      name: config.appName,
+      namespace: config.namespace,
+      labels: {
+        'app.kubernetes.io/name': config.appName,
+        ...mergedLabels
+      },
+      ...(Object.keys(config.annotations).length > 0 && { annotations: config.annotations })
+    },
+    spec: {
+      selector: {
+        matchLabels: selectorLabels
+      },
+      template: {
+        metadata: {
+          labels: {
+            'app.kubernetes.io/name': config.appName,
+            ...mergedLabels
+          }
+        },
+        spec: {
+          containers: generateContainers(config),
+          ...(config.volumes.length > 0 && {
+            volumes: config.volumes.map(v => ({
+              name: v.name,
+              ...(v.type === 'emptyDir' && { emptyDir: {} }),
+              ...(v.type === 'configMap' && { configMap: { name: v.configMapName || v.name } }),
+              ...(v.type === 'secret' && { secret: { secretName: v.secretName || v.name } })
+            }))
+          }),
+          ...(config.nodeSelector && Object.keys(config.nodeSelector).length > 0 && {
+            nodeSelector: config.nodeSelector
+          })
+        }
+      }
+    }
+  };
+
+  resources.push(daemonSet);
+
+  // Generate Service only if enabled
+  if (config.serviceEnabled) {
+    const service: KubernetesResource = {
+      apiVersion: 'v1',
+      kind: 'Service',
+      metadata: {
+        name: `${config.appName}-service`,
+        namespace: config.namespace,
+        labels: {
+          'app.kubernetes.io/name': config.appName,
+          ...mergedLabels
+        }
+      },
+      spec: {
+        selector: selectorLabels, // Use the same selector labels as the daemonset
+        ports: generateServicePorts(config),
+        type: config.serviceType
+      }
+    };
+
+    resources.push(service);
+  }
+
+  // Generate ConfigMaps (legacy support)
+  config.configMaps.forEach(cm => {
+    const configMap: KubernetesResource = {
+      apiVersion: 'v1',
+      kind: 'ConfigMap',
+      metadata: {
+        name: cm.name,
+        namespace: config.namespace,
+        labels: {
+          'app.kubernetes.io/name': config.appName,
+          ...mergedLabels
+        }
+      },
+      data: cm.data
+    };
+    resources.push(configMap);
+  });
+
+  // Generate Secrets (legacy support)
+  config.secrets.forEach(secret => {
+    const secretResource: KubernetesResource = {
+      apiVersion: 'v1',
+      kind: 'Secret',
+      metadata: {
+        name: secret.name,
+        namespace: config.namespace,
+        labels: {
+          'app.kubernetes.io/name': config.appName,
+          ...mergedLabels
+        }
+      },
+      type: 'Opaque',
+      data: Object.fromEntries(
+        Object.entries(secret.data).map(([key, value]) => [key, btoa(value)])
+      )
+    };
+    resources.push(secretResource);
+  });
+
+  // Convert to YAML
+  return resources.map(resource => {
+    const yaml = objectToYaml(resource);
+    return yaml;
+  }).join('\n---\n');
 }
 
 function objectToYaml(obj: any, indent = 0): string {

@@ -1,4 +1,4 @@
-import { Plus, Minus, Server, Settings, Database, Key, Trash2, Copy, Globe, FileText } from 'lucide-react';
+import { Plus, Minus, Server, Key, Trash2, Copy, Globe, FileText, Database } from 'lucide-react';
 import type { DaemonSetConfig, Container, ConfigMap, Secret, EnvVar } from '../types';
 import React, { useState, useEffect, useRef } from 'react';
 

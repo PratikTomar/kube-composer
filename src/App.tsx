@@ -1110,7 +1110,6 @@ function App() {
                       setSelectedDaemonSet(index);
                       setSidebarOpen(false);
                     }}
-                    onAddDaemonSet={handleAddDaemonSet}
                     onEditDaemonSet={() => setShowForm(true)}
                     onDuplicateDaemonSet={handleDuplicateDaemonSet}
                     onDeleteDaemonSet={handleDeleteDaemonSet}

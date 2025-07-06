@@ -1,4 +1,4 @@
-import { Github, Heart, Zap } from 'lucide-react';
+import { Github, Heart } from 'lucide-react';
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
@@ -42,20 +42,7 @@ export function Footer() {
               <span>for the Kubernetes community</span>
             </div>
 
-            {/* Right: Built with Bolt.new Badge */}
-            <div className="flex justify-end">
-              <a
-                href="https://bolt.new"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center space-x-2 px-3 py-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 rounded-lg transition-all duration-200 text-sm font-medium shadow-lg hover:shadow-xl transform hover:scale-105"
-              >
-                <div className="w-5 h-5 bg-white rounded flex items-center justify-center">
-                  <Zap className="w-3 h-3 text-purple-600" />
-                </div>
-                <span>Built with Bolt.new</span>
-              </a>
-            </div>
+
           </div>
         </div>
       </div>

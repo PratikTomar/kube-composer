@@ -32,8 +32,7 @@ import {
   K8sJobIcon,
   K8sCronJobIcon,
   K8sStorageIcon,
-  K8sDaemonSetIcon,
-  K8sPodIcon
+  K8sDaemonSetIcon
 } from './components/KubernetesIcons';
 
 type PreviewMode = 'visual' | 'yaml' | 'summary' | 'argocd' | 'flow';
@@ -984,13 +983,7 @@ function App() {
                   CronJobs
                 </button>
 
-                <button
-                  disabled
-                  className="flex items-center w-full px-2 py-2 text-sm font-medium rounded-md text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-50"
-                >
-                  <K8sPodIcon className="mr-3 flex-shrink-0 h-6 w-6 text-gray-400 dark:text-gray-600" />
-                  Pods
-                </button>
+
               </div>
             )}
             {/* Storage Group */}

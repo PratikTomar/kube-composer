@@ -175,6 +175,10 @@ export function DeploymentForm({ config, onChange, availableNamespaces, availabl
   };
 
   const removeIngressRule = (index: number) => {
+    // Don't allow removing the last rule when ingress is enabled
+    if (config.ingress.enabled && config.ingress.rules.length <= 1) {
+      return;
+    }
     updateIngress({
       rules: config.ingress.rules.filter((_, i) => i !== index)
     });
@@ -199,12 +203,19 @@ export function DeploymentForm({ config, onChange, availableNamespaces, availabl
     updateIngress({ annotations: newAnnotations });
   };
 
-  const updateIngressAnnotation = (oldKey: string, newKey: string, value: string) => {
+  const updateIngressAnnotationKey = (oldKey: string, newKey: string) => {
     const newAnnotations = { ...config.ingress.annotations };
     if (oldKey !== newKey) {
+      const value = newAnnotations[oldKey];
       delete newAnnotations[oldKey];
+      newAnnotations[newKey] = value;
+      updateIngress({ annotations: newAnnotations });
     }
-    newAnnotations[newKey] = value;
+  };
+
+  const updateIngressAnnotationValue = (key: string, value: string) => {
+    const newAnnotations = { ...config.ingress.annotations };
+    newAnnotations[key] = value;
     updateIngress({ annotations: newAnnotations });
   };
 
@@ -918,7 +929,25 @@ export function DeploymentForm({ config, onChange, availableNamespaces, availabl
           <div className="flex items-center space-x-2">
             <span className="text-sm text-gray-600">Enable Ingress</span>
             <button
-              onClick={() => updateIngress({ enabled: !config.ingress.enabled })}
+              onClick={() => {
+                const newEnabled = !config.ingress.enabled;
+                if (newEnabled && config.ingress.rules.length === 0) {
+                  // Auto-add default rule when enabling ingress
+                  const serviceName = config.appName ? `${config.appName}-service` : 'service';
+                  updateIngress({ 
+                    enabled: newEnabled,
+                    rules: [{
+                      host: '',
+                      path: '/',
+                      pathType: 'Prefix',
+                      serviceName,
+                      servicePort: config.port
+                    }]
+                  });
+                } else {
+                  updateIngress({ enabled: newEnabled });
+                }
+              }}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ${
                 config.ingress.enabled ? 'bg-orange-600' : 'bg-gray-300'
               }`}
@@ -965,19 +994,19 @@ export function DeploymentForm({ config, onChange, availableNamespaces, availabl
               
               {Object.entries(config.ingress.annotations).length > 0 && (
                 <div className="space-y-2">
-                  {Object.entries(config.ingress.annotations).map(([key, value]) => (
-                    <div key={key} className="flex items-center space-x-2">
+                  {Object.entries(config.ingress.annotations).map(([key, value], idx) => (
+                    <div key={idx} className="flex items-center space-x-2">
                       <input
                         type="text"
                         value={key}
-                        onChange={(e) => updateIngressAnnotation(key, e.target.value, value)}
+                        onChange={(e) => updateIngressAnnotationKey(key, e.target.value)}
                         className="flex-1 px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-orange-500 focus:border-transparent text-sm"
                         placeholder="nginx.ingress.kubernetes.io/rewrite-target"
                       />
                       <input
                         type="text"
                         value={value}
-                        onChange={(e) => updateIngressAnnotation(key, key, e.target.value)}
+                        onChange={(e) => updateIngressAnnotationValue(key, e.target.value)}
                         className="flex-1 px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-orange-500 focus:border-transparent text-sm"
                         placeholder="/"
                       />
@@ -1014,7 +1043,12 @@ export function DeploymentForm({ config, onChange, availableNamespaces, availabl
                         <h6 className="text-sm font-medium text-gray-900">Rule {ruleIndex + 1}</h6>
                         <button
                           onClick={() => removeIngressRule(ruleIndex)}
-                          className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors duration-200"
+                          disabled={config.ingress.enabled && config.ingress.rules.length <= 1}
+                          className={`p-1 rounded transition-colors duration-200 ${
+                            config.ingress.enabled && config.ingress.rules.length <= 1
+                              ? 'text-gray-400 cursor-not-allowed'
+                              : 'text-red-600 hover:bg-red-50'
+                          }`}
                         >
                           <Trash2 className="w-3 h-3" />
                         </button>

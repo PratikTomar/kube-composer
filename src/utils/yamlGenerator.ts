@@ -113,8 +113,6 @@ export function generateKubernetesYaml(config: DeploymentConfig, projectSettings
             paths: [{
               path: rule.path,
               pathType: rule.pathType,
-              serviceName: rule.serviceName,
-              servicePort: rule.servicePort,
               backend: {
                 service: {
                   name: rule.serviceName,

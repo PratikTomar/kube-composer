@@ -32,8 +32,7 @@ import {
   K8sJobIcon,
   K8sCronJobIcon,
   K8sStorageIcon,
-  K8sDaemonSetIcon,
-  K8sPodIcon
+  K8sDaemonSetIcon
 } from './components/KubernetesIcons';
 
 type PreviewMode = 'visual' | 'yaml' | 'summary' | 'argocd' | 'flow';

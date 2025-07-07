@@ -1,5 +1,6 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Download, FileText, List, Plus, Menu, X, Database, Settings, Key, PlayCircle, Container as Docker, FolderOpen, GitBranch, Clock } from 'lucide-react';
+import { loadConfig, saveConfig, clearConfig } from './utils/localStorage';
 import { DeploymentForm } from './components/DeploymentForm';
 import { DaemonSetForm } from './components/DaemonSetForm';
 import { YamlPreview } from './components/YamlPreview';
@@ -41,6 +42,9 @@ type SidebarTab = 'deployments' | 'daemonsets' | 'namespaces' | 'storage' | 'job
 function App() {
   const hideDemoIcons = import.meta.env.VITE_HIDE_DEMO_ICONS === 'true';
   
+  // Initialize state with loading flag
+  const [isLoading, setIsLoading] = useState(true);
+  
   const [projectSettings, setProjectSettings] = useState<ProjectSettings>({
     name: 'my-project',
     description: '',
@@ -50,14 +54,12 @@ function App() {
   });
   const [deployments, setDeployments] = useState<DeploymentConfig[]>([]);
   const [daemonSets, setDaemonSets] = useState<DaemonSetConfig[]>([]);
-  const [namespaces, setNamespaces] = useState<Namespace[]>([
-    {
-      name: 'default',
-      labels: {},
-      annotations: {},
-      createdAt: new Date().toISOString()
-    }
-  ]);
+  const [namespaces, setNamespaces] = useState<Namespace[]>([{
+    name: 'default',
+    labels: {},
+    annotations: {},
+    createdAt: new Date().toISOString()
+  }]);
   const [configMaps, setConfigMaps] = useState<ConfigMap[]>([]);
   const [secrets, setSecrets] = useState<Secret[]>([]);
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -80,11 +82,113 @@ function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showYouTubePopup, setShowYouTubePopup] = useState(false);
   const [showDockerPopup, setShowDockerPopup] = useState(false);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [showClearModal, setShowClearModal] = useState(false);
   // Only one group open at a time: 'workloads' | 'storage'
   const [openGroup, setOpenGroup] = useState<'workloads' | 'storage'>('workloads');
   const [jobToEdit, setJobToEdit] = useState<Job | undefined>(undefined);
   const [selectedJob, setSelectedJob] = useState<number>(-1);
   const [selectedCronJob, setSelectedCronJob] = useState<number>(-1);
+  const [generatedYaml, setGeneratedYaml] = useState<string>('');
+
+  // Auto-save functionality
+  const autoSaveTimeoutRef = useRef<number | null>(null);
+  const lastSavedRef = useRef<number>(0);
+
+  // Force save function for immediate saves
+  const forceSave = useCallback(() => {
+    try {
+      const config = {
+        deployments,
+        daemonSets,
+        jobs,
+        configMaps,
+        secrets,
+        namespaces,
+        projectSettings,
+        generatedYaml
+      };
+      const success = saveConfig(config);
+      if (success) {
+        lastSavedRef.current = Date.now();
+        console.log('Configuration force-saved successfully');
+      }
+      return success;
+    } catch (e) {
+      console.warn('Force save failed:', e);
+      return false;
+    }
+  }, [deployments, daemonSets, jobs, configMaps, secrets, namespaces, projectSettings, generatedYaml]);
+
+  // Auto-save function
+  const autoSave = useCallback(() => {
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
+    }
+
+    autoSaveTimeoutRef.current = window.setTimeout(() => {
+      try {
+        const config = {
+          deployments,
+          daemonSets,
+          jobs,
+          configMaps,
+          secrets,
+          namespaces,
+          projectSettings,
+          generatedYaml
+        };
+        const success = saveConfig(config);
+        if (success) {
+          lastSavedRef.current = Date.now();
+        }
+      } catch (e) {
+        console.warn('Auto-save failed:', e);
+      }
+    }, 3000); // 3 second delay
+  }, [deployments, daemonSets, jobs, configMaps, secrets, namespaces, projectSettings, generatedYaml]);
+
+  // Update generated YAML when configuration changes
+  useEffect(() => {
+    const yaml = getPreviewYaml();
+    setGeneratedYaml(yaml);
+  }, [deployments, daemonSets, jobs, configMaps, secrets, namespaces, projectSettings]);
+
+  // Trigger auto-save when any configuration changes
+  useEffect(() => {
+    autoSave();
+  }, [autoSave]);
+
+  // Load saved configuration on mount
+  useEffect(() => {
+    try {
+      const saved = loadConfig();
+      if (saved) {
+        if (saved.projectSettings) setProjectSettings(saved.projectSettings);
+        if (saved.deployments) setDeployments(saved.deployments);
+        if (saved.daemonSets) setDaemonSets(saved.daemonSets);
+        if (saved.namespaces && saved.namespaces.length > 0) setNamespaces(saved.namespaces);
+        if (saved.configMaps) setConfigMaps(saved.configMaps);
+        if (saved.secrets) setSecrets(saved.secrets);
+        if (saved.jobs) setJobs(saved.jobs);
+        if (saved.generatedYaml) setGeneratedYaml(saved.generatedYaml);
+        console.log('Configuration loaded from localStorage');
+      }
+    } catch (e) {
+      console.warn('Failed to load saved configuration:', e);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (autoSaveTimeoutRef.current) {
+        clearTimeout(autoSaveTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const currentConfig = deployments[selectedDeployment] || {
     appName: '',
@@ -567,6 +671,8 @@ function App() {
     const jobConfigs = jobs.filter(j => j.type === 'job').map(jobToJobConfig);
     const cronJobConfigs = jobs.filter(j => j.type === 'cronjob').map(jobToCronJobConfig);
     const yaml = generateMultiDeploymentYaml(validDeployments, namespaces, configMaps, secrets, projectSettings, jobConfigs, cronJobConfigs, validDaemonSets);
+    
+    let finalYaml = yaml;
     if (
       validDeployments.length === 0 &&
       validDaemonSets.length === 0 &&
@@ -576,9 +682,10 @@ function App() {
       configMaps.length === 0 &&
       secrets.length === 0
     ) {
-      return '# No deployments, daemonsets, or jobs configured\n# Create your first deployment, daemonset, or job to see the generated YAML';
+      finalYaml = '# No deployments, daemonsets, or jobs configured\n# Create your first deployment, daemonset, or job to see the generated YAML';
     }
-    return yaml;
+    
+    return finalYaml;
   };
 
   const previewModes = [
@@ -751,6 +858,18 @@ function App() {
     setSelectedDaemonSet(index + 1);
   };
 
+  // Show loading state while initializing
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading saved configuration...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* SEO Head Component */}
@@ -895,6 +1014,54 @@ function App() {
                 {Object.keys(projectSettings.globalLabels).length} global label{Object.keys(projectSettings.globalLabels).length !== 1 ? 's' : ''} active
               </div>
             )}
+            
+            {/* Debug buttons - remove in production */}
+            <div className="mt-3">
+              <div className="flex space-x-2">
+                <button 
+                  onClick={() => {
+                    console.log('Current state:', { deployments: deployments.length, daemonSets: daemonSets.length, jobs: jobs.length });
+                    const success = forceSave();
+                    if (success) {
+                      alert('Configuration saved successfully!');
+                    } else {
+                      alert('Failed to save configuration. Please try again.');
+                    }
+                  }}
+                  className="flex-1 px-3 py-2 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all duration-200 shadow-sm hover:shadow-md flex items-center justify-center space-x-1"
+                  title="Save current configuration"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                  </svg>
+                  <span>Save</span>
+                </button>
+                <button 
+                  onClick={() => {
+                    setShowUploadModal(true);
+                  }}
+                  className="flex-1 px-3 py-2 text-sm bg-green-500 text-white rounded-lg hover:bg-green-600 transition-all duration-200 shadow-sm hover:shadow-md flex items-center justify-center space-x-1"
+                  title="Upload configuration file"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+                  </svg>
+                  <span>Upload</span>
+                </button>
+                <button 
+                  onClick={() => {
+                    setShowClearModal(true);
+                  }}
+                  className="flex-1 px-3 py-2 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all duration-200 shadow-sm hover:shadow-md flex items-center justify-center space-x-1"
+                  title="Clear all configuration data"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                  <span>Clear</span>
+                </button>
+              </div>
+            </div>
           </div>
 
           {/* Grouped Sidebar Menu */}
@@ -1354,7 +1521,7 @@ function App() {
             <div className="p-4 sm:p-6 pb-8">
               {previewMode === 'flow' && <VisualPreview deployments={deployments} daemonSets={daemonSets} namespaces={namespaces} configMaps={configMaps} secrets={secrets} containerRef={containerRef} />}
               {previewMode === 'summary' && <ResourceSummary config={currentConfig} />}
-              {previewMode === 'yaml' && <YamlPreview yaml={getPreviewYaml()} />}
+              {previewMode === 'yaml' && <YamlPreview yaml={generatedYaml} />}
             </div>
           </div>
         </div>
@@ -1485,6 +1652,219 @@ function App() {
           availableConfigMaps={configMaps}
           availableSecrets={secrets}
         />
+      )}
+
+      {/* Upload Modal */}
+      {showUploadModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-2xl w-full max-w-md mx-auto">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white flex items-center">
+                <svg className="w-6 h-6 mr-3 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+                </svg>
+                Upload Configuration
+              </h3>
+              <button 
+                onClick={() => setShowUploadModal(false)} 
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-200"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="p-6">
+              <div className="text-center">
+                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                  Coming Soon!
+                </h4>
+                <p className="text-gray-600 dark:text-gray-300 mb-6">
+                  The upload functionality is currently under development. You'll soon be able to import your existing Kubernetes configurations directly into Kube Composer.
+                </p>
+                <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 mb-6">
+                  <h5 className="font-medium text-gray-900 dark:text-white mb-2">Planned Features:</h5>
+                  <ul className="text-sm text-gray-600 dark:text-gray-300 space-y-1">
+                    <li className="flex items-center">
+                      <svg className="w-4 h-4 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      Import YAML files
+                    </li>
+                    <li className="flex items-center">
+                      <svg className="w-4 h-4 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      Drag & drop support
+                    </li>
+                    <li className="flex items-center">
+                      <svg className="w-4 h-4 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      Configuration validation
+                    </li>
+                    <li className="flex items-center">
+                      <svg className="w-4 h-4 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      Auto-detection of resources
+                    </li>
+                  </ul>
+                </div>
+                <button
+                  onClick={() => setShowUploadModal(false)}
+                  className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium"
+                >
+                  Got it!
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Clear Configuration Modal */}
+      {showClearModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-2xl w-full max-w-md mx-auto">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white flex items-center">
+                <svg className="w-6 h-6 mr-3 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+                Clear Configuration
+              </h3>
+              <button 
+                onClick={() => setShowClearModal(false)} 
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-200"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="p-6">
+              <div className="text-center">
+                <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </div>
+                <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                  Clear All Configuration?
+                </h4>
+                <p className="text-gray-600 dark:text-gray-300 mb-6">
+                  This action will permanently remove all your deployments, daemonsets, jobs, configmaps, secrets, and namespaces. This action cannot be undone.
+                </p>
+                
+                {/* Configuration Summary */}
+                <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 mb-6">
+                  <h5 className="font-medium text-gray-900 dark:text-white mb-3">Current Configuration:</h5>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-600 dark:text-gray-300">Deployments:</span>
+                      <span className="font-semibold text-gray-900 dark:text-white">{deployments.length}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-600 dark:text-gray-300">DaemonSets:</span>
+                      <span className="font-semibold text-gray-900 dark:text-white">{daemonSets.length}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-600 dark:text-gray-300">Jobs:</span>
+                      <span className="font-semibold text-gray-900 dark:text-white">{jobs.length}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-600 dark:text-gray-300">ConfigMaps:</span>
+                      <span className="font-semibold text-gray-900 dark:text-white">{configMaps.length}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-600 dark:text-gray-300">Secrets:</span>
+                      <span className="font-semibold text-gray-900 dark:text-white">{secrets.length}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-600 dark:text-gray-300">Namespaces:</span>
+                      <span className="font-semibold text-gray-900 dark:text-white">{namespaces.length}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="space-y-3">
+                  <button
+                    onClick={() => {
+                      handleDownload();
+                      setShowClearModal(false);
+                    }}
+                    className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium flex items-center justify-center space-x-2"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <span>Download & Clear</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      const success = clearConfig();
+                      if (success) {
+                        // Reset all state to defaults
+                        setDeployments([]);
+                        setDaemonSets([]);
+                        setJobs([]);
+                        setConfigMaps([]);
+                        setSecrets([]);
+                        setNamespaces([{
+                          name: 'default',
+                          labels: {},
+                          annotations: {},
+                          createdAt: new Date().toISOString()
+                        }]);
+                        setProjectSettings({
+                          name: 'my-project',
+                          description: '',
+                          globalLabels: {},
+                          createdAt: new Date().toISOString(),
+                          updatedAt: new Date().toISOString()
+                        });
+                        setGeneratedYaml('');
+                        setSelectedDeployment(0);
+                        setSelectedDaemonSet(0);
+                        setSelectedNamespace(0);
+                        setSelectedConfigMap(0);
+                        setSelectedSecret(0);
+                        setSelectedJob(-1);
+                        setSelectedCronJob(-1);
+                        
+                        console.log('Configuration cleared successfully');
+                        alert('Configuration cleared successfully!');
+                      } else {
+                        console.error('Failed to clear configuration');
+                        alert('Failed to clear configuration. Please try again.');
+                      }
+                      setShowClearModal(false);
+                    }}
+                    className="w-full px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200 font-medium flex items-center justify-center space-x-2"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    <span>Clear Without Download</span>
+                  </button>
+                  <button
+                    onClick={() => setShowClearModal(false)}
+                    className="w-full px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors duration-200 font-medium"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

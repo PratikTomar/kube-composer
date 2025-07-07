@@ -1,7 +1,6 @@
-import React from 'react';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Download, FileText, List, Plus, Menu, X, Database, Settings, Key, PlayCircle, Container as Docker, FolderOpen, GitBranch, Clock } from 'lucide-react';
-import { loadConfig, saveConfig, testLocalStorage, clearConfig } from './utils/localStorage';
+import { loadConfig, saveConfig, clearConfig } from './utils/localStorage';
 import { DeploymentForm } from './components/DeploymentForm';
 import { DaemonSetForm } from './components/DaemonSetForm';
 import { YamlPreview } from './components/YamlPreview';

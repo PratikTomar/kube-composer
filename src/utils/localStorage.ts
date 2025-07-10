@@ -1,4 +1,4 @@
-import type { DeploymentConfig, DaemonSetConfig, Namespace, ConfigMap, Secret, ProjectSettings } from '../types';
+import type { DeploymentConfig, DaemonSetConfig, Namespace, ConfigMap, Secret, ServiceAccount, ProjectSettings } from '../types';
 
 // Job interface from JobManager component
 export interface Job {
@@ -33,6 +33,7 @@ export interface KubeConfig {
   jobs: Job[];
   configMaps: ConfigMap[];
   secrets: Secret[];
+  serviceAccounts: ServiceAccount[];
   namespaces: Namespace[];
   projectSettings: ProjectSettings;
   generatedYaml?: string;
@@ -117,6 +118,7 @@ export function saveConfig(config: Partial<KubeConfig>): boolean {
       jobs: config.jobs || [],
       configMaps: config.configMaps || [],
       secrets: config.secrets || [],
+      serviceAccounts: config.serviceAccounts || [],
       namespaces: config.namespaces || [],
       projectSettings: config.projectSettings || {
         name: 'my-project',

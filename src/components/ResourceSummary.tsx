@@ -1,50 +1,109 @@
-import { Server, Globe, Database, CheckCircle, AlertCircle, Shield } from 'lucide-react';
-import type { DeploymentConfig } from '../types';
+import { Server, Globe, Database, CheckCircle, AlertCircle, Shield, Users, Settings, Key, GitBranch, Play, Clock } from 'lucide-react';
+import type { DeploymentConfig, DaemonSetConfig, Namespace, ConfigMap, Secret, ServiceAccount } from '../types';
+import type { Job } from './JobManager';
 
 interface ResourceSummaryProps {
-  config: DeploymentConfig;
+  deployments: DeploymentConfig[];
+  daemonSets: DaemonSetConfig[];
+  namespaces: Namespace[];
+  configMaps: ConfigMap[];
+  secrets: Secret[];
+  serviceAccounts: ServiceAccount[];
+  jobs: Job[];
 }
 
-export function ResourceSummary({ config }: ResourceSummaryProps) {
-  const getResourceCount = () => {
+export function ResourceSummary({ 
+  deployments, 
+  daemonSets, 
+  namespaces, 
+  configMaps, 
+  secrets, 
+  serviceAccounts,
+  jobs
+}: ResourceSummaryProps) {
+  const getTotalResourceCount = () => {
     let count = 0;
-    if (config.appName) count += 2; // Deployment + Service
-    if (config.ingress.enabled) count += 1; // Ingress
-    count += config.configMaps.length;
-    count += config.secrets.length;
+    
+    // Deployments and their associated resources
+    deployments.forEach(deployment => {
+      if (deployment.appName) {
+        count += 2; // Deployment + Service
+        if (deployment.ingress?.enabled) count += 1; // Ingress
+      }
+    });
+    
+    // DaemonSets and their associated resources
+    daemonSets.forEach(daemonSet => {
+      if (daemonSet.appName) {
+        count += 1; // DaemonSet
+        if (daemonSet.serviceEnabled) count += 1; // Service
+      }
+    });
+    
+    // Other resources
+    count += configMaps.length;
+    count += secrets.length;
+    count += serviceAccounts.length;
+    count += namespaces.length;
+    count += jobs.length;
+    
     return count;
   };
 
   const getValidationStatus = () => {
-    const issues = [];
-    if (!config.appName) issues.push('Application name is required');
+    const issues: string[] = [];
     
-    // Check containers
-    if (!config.containers || config.containers.length === 0) {
-      issues.push('At least one container is required');
-    } else {
-      config.containers.forEach((container, index) => {
-        if (!container.name) issues.push(`Container ${index + 1}: Name is required`);
-        if (!container.image) issues.push(`Container ${index + 1}: Image is required`);
-        if (container.port && container.port <= 0) issues.push(`Container ${index + 1}: Port must be greater than 0`);
-      });
-    }
-    
-    if (config.port <= 0) issues.push('Service port must be greater than 0');
-    if (config.targetPort <= 0) issues.push('Target port must be greater than 0');
-    if (config.replicas <= 0) issues.push('Replicas must be greater than 0');
-    
-    // Check ingress configuration
-    if (config.ingress.enabled) {
-      if (config.ingress.rules.length === 0) {
-        issues.push('Ingress is enabled but no rules are configured');
+    // Check deployments
+    deployments.forEach((deployment, index) => {
+      if (!deployment.appName) issues.push(`Deployment ${index + 1}: Application name is required`);
+      
+      if (!deployment.containers || deployment.containers.length === 0) {
+        issues.push(`Deployment ${index + 1}: At least one container is required`);
       } else {
-        config.ingress.rules.forEach((rule, index) => {
-          if (!rule.serviceName) issues.push(`Ingress rule ${index + 1}: Service name is required`);
-          if (rule.servicePort <= 0) issues.push(`Ingress rule ${index + 1}: Service port must be greater than 0`);
+        deployment.containers.forEach((container, containerIndex) => {
+          if (!container.name) issues.push(`Deployment ${index + 1}, Container ${containerIndex + 1}: Name is required`);
+          if (!container.image) issues.push(`Deployment ${index + 1}, Container ${containerIndex + 1}: Image is required`);
         });
       }
-    }
+      
+      if (deployment.port <= 0) issues.push(`Deployment ${index + 1}: Service port must be greater than 0`);
+      if (deployment.targetPort <= 0) issues.push(`Deployment ${index + 1}: Target port must be greater than 0`);
+      if (deployment.replicas <= 0) issues.push(`Deployment ${index + 1}: Replicas must be greater than 0`);
+    });
+    
+    // Check daemonSets
+    daemonSets.forEach((daemonSet, index) => {
+      if (!daemonSet.appName) issues.push(`DaemonSet ${index + 1}: Application name is required`);
+      
+      if (!daemonSet.containers || daemonSet.containers.length === 0) {
+        issues.push(`DaemonSet ${index + 1}: At least one container is required`);
+      } else {
+        daemonSet.containers.forEach((container, containerIndex) => {
+          if (!container.name) issues.push(`DaemonSet ${index + 1}, Container ${containerIndex + 1}: Name is required`);
+          if (!container.image) issues.push(`DaemonSet ${index + 1}, Container ${containerIndex + 1}: Image is required`);
+        });
+      }
+    });
+    
+    // Check service accounts
+    serviceAccounts.forEach((serviceAccount, index) => {
+      if (!serviceAccount.name) issues.push(`Service Account ${index + 1}: Name is required`);
+      if (!serviceAccount.namespace) issues.push(`Service Account ${index + 1}: Namespace is required`);
+    });
+    
+    // Check jobs
+    jobs.forEach((job, index) => {
+      if (!job.name) issues.push(`Job ${index + 1}: Name is required`);
+      if (!job.namespace) issues.push(`Job ${index + 1}: Namespace is required`);
+      if (!job.containers || job.containers.length === 0) {
+        issues.push(`Job ${index + 1}: At least one container is required`);
+      } else {
+        job.containers.forEach((container, containerIndex) => {
+          if (!container.name) issues.push(`Job ${index + 1}, Container ${containerIndex + 1}: Name is required`);
+          if (!container.image) issues.push(`Job ${index + 1}, Container ${containerIndex + 1}: Image is required`);
+        });
+      }
+    });
     
     return {
       isValid: issues.length === 0,
@@ -53,7 +112,11 @@ export function ResourceSummary({ config }: ResourceSummaryProps) {
   };
 
   const validation = getValidationStatus();
-  const containerCount = config.containers?.length || 0;
+  const totalResources = getTotalResourceCount();
+  const validDeployments = deployments.filter(d => d.appName);
+  const validDaemonSets = daemonSets.filter(d => d.appName);
+  const validServiceAccounts = serviceAccounts.filter(sa => sa.name);
+  const validJobs = jobs.filter(job => job.name);
 
   return (
     <div className="space-y-6">
@@ -87,88 +150,66 @@ export function ResourceSummary({ config }: ResourceSummaryProps) {
       </div>
 
       {/* Resource Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {/* Workloads */}
         <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
           <div className="flex items-center space-x-2 mb-2">
             <Server className="w-5 h-5 text-blue-600" />
-            <span className="font-medium text-blue-900">Deployment</span>
+            <span className="font-medium text-blue-900">Workloads</span>
           </div>
           <div className="text-sm text-blue-700 space-y-1">
-            <div>Name: {config.appName || 'Not specified'}</div>
-            <div>Containers: {containerCount}</div>
-            <div>Replicas: {config.replicas}</div>
-            <div>Namespace: {config.namespace}</div>
+            <div>Deployments: {validDeployments.length}</div>
+            <div>DaemonSets: {validDaemonSets.length}</div>
+            <div>Jobs: {validJobs.filter(job => job.type === 'job').length}</div>
+            <div>CronJobs: {validJobs.filter(job => job.type === 'cronjob').length}</div>
+            <div>Total Containers: {validDeployments.reduce((sum, d) => sum + (d.containers?.length || 0), 0) + validDaemonSets.reduce((sum, d) => sum + (d.containers?.length || 0), 0) + validJobs.reduce((sum, job) => sum + (job.containers?.length || 0), 0)}</div>
           </div>
         </div>
 
+        {/* Security */}
+        <div className="bg-cyan-50 p-4 rounded-lg border border-cyan-200">
+          <div className="flex items-center space-x-2 mb-2">
+            <Users className="w-5 h-5 text-cyan-600" />
+            <span className="font-medium text-cyan-900">Security</span>
+          </div>
+          <div className="text-sm text-cyan-700 space-y-1">
+            <div>Service Accounts: {validServiceAccounts.length}</div>
+            <div>Secrets: {secrets.length}</div>
+            <div>Total Secrets: {validServiceAccounts.reduce((sum, sa) => sum + (sa.secrets?.length || 0) + (sa.imagePullSecrets?.length || 0), 0)}</div>
+          </div>
+        </div>
+
+        {/* Storage */}
         <div className="bg-green-50 p-4 rounded-lg border border-green-200">
           <div className="flex items-center space-x-2 mb-2">
-            <Globe className="w-5 h-5 text-green-600" />
-            <span className="font-medium text-green-900">Service</span>
+            <Settings className="w-5 h-5 text-green-600" />
+            <span className="font-medium text-green-900">Storage</span>
           </div>
           <div className="text-sm text-green-700 space-y-1">
-            <div>Type: {config.serviceType}</div>
-            <div>Port: {config.port}</div>
-            <div>Target Port: {config.targetPort}</div>
-            <div>Protocol: TCP</div>
+            <div>ConfigMaps: {configMaps.length}</div>
+            <div>Namespaces: {namespaces.length}</div>
+            <div>Total Data Keys: {configMaps.reduce((sum, cm) => sum + Object.keys(cm.data).length, 0)}</div>
           </div>
         </div>
       </div>
 
-      {/* Ingress Summary */}
-      {config.ingress.enabled && (
-        <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
-          <div className="flex items-center space-x-2 mb-2">
-            <Globe className="w-5 h-5 text-orange-600" />
-            <span className="font-medium text-orange-900">Ingress</span>
-          </div>
-          <div className="text-sm text-orange-700 space-y-1">
-            <div>Rules: {config.ingress.rules.length}</div>
-            <div>TLS Certificates: {config.ingress.tls.length}</div>
-            {config.ingress.className && (
-              <div>Ingress Class: {config.ingress.className}</div>
-            )}
-            {config.ingress.rules.length > 0 && (
-              <div className="mt-2">
-                <div className="font-medium mb-1">Configured Hosts:</div>
-                {config.ingress.rules.map((rule, index) => (
-                  <div key={index} className="text-xs text-orange-600">
-                    {rule.host || '*'} → {rule.path} → {rule.serviceName}:{rule.servicePort}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Container Details */}
-      {config.containers && config.containers.length > 0 && (
+      {/* Service Accounts Summary */}
+      {validServiceAccounts.length > 0 && (
         <div className="space-y-4">
-          <h4 className="font-medium text-gray-900">Container Details</h4>
-          <div className="grid grid-cols-1 gap-4">
-            {config.containers.map((container, index) => (
-              <div key={index} className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+          <h4 className="font-medium text-gray-900">Service Accounts</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {validServiceAccounts.map((serviceAccount, index) => (
+              <div key={index} className="bg-cyan-50 p-4 rounded-lg border border-cyan-200">
                 <div className="flex items-center space-x-2 mb-2">
-                  <Database className="w-5 h-5 text-purple-600" />
-                  <span className="font-medium text-purple-900">
-                    Container {index + 1}: {container.name || 'Unnamed'}
-                  </span>
+                  <Users className="w-5 h-5 text-cyan-600" />
+                  <span className="font-medium text-cyan-900">{serviceAccount.name}</span>
                 </div>
-                <div className="text-sm text-purple-700 space-y-1">
-                  <div>Image: {container.image || 'Not specified'}</div>
-                  <div>Port: {container.port}</div>
-                  {container.env.length > 0 && (
-                    <div>Environment Variables: {container.env.length}</div>
-                  )}
-                  {container.volumeMounts.length > 0 && (
-                    <div>Volume Mounts: {container.volumeMounts.length}</div>
-                  )}
-                  {(container.resources.requests.cpu || container.resources.requests.memory) && (
-                    <div>Resource Requests: 
-                      {container.resources.requests.cpu && ` CPU: ${container.resources.requests.cpu}`}
-                      {container.resources.requests.memory && ` Memory: ${container.resources.requests.memory}`}
-                    </div>
+                <div className="text-sm text-cyan-700 space-y-1">
+                  <div>Namespace: {serviceAccount.namespace}</div>
+                  <div>Secrets: {serviceAccount.secrets?.length || 0}</div>
+                  <div>Image Pull Secrets: {serviceAccount.imagePullSecrets?.length || 0}</div>
+                  {serviceAccount.automountServiceAccountToken !== undefined && (
+                    <div>Auto-mount: {serviceAccount.automountServiceAccountToken ? 'Enabled' : 'Disabled'}</div>
                   )}
                 </div>
               </div>
@@ -177,53 +218,135 @@ export function ResourceSummary({ config }: ResourceSummaryProps) {
         </div>
       )}
 
-      {/* Additional Resources */}
-      {config.volumes.length > 0 && (
+      {/* Jobs Summary */}
+      {validJobs.length > 0 && (
         <div className="space-y-4">
-          <h4 className="font-medium text-gray-900">Additional Resources</h4>
-          
-          <div className="bg-indigo-50 p-4 rounded-lg border border-indigo-200">
-            <div className="flex items-center space-x-2 mb-2">
-              <Database className="w-5 h-5 text-indigo-600" />
-              <span className="font-medium text-indigo-900">Volumes</span>
-            </div>
-            <div className="text-sm text-indigo-700">
-              {config.volumes.length} volume{config.volumes.length !== 1 ? 's' : ''} configured
-            </div>
-            <div className="mt-2 space-y-1">
-              {config.volumes.slice(0, 3).map((volume, index) => (
-                <div key={index} className="text-xs text-indigo-600">
-                  {volume.name} → {volume.mountPath} ({volume.type})
+          <h4 className="font-medium text-gray-900">Jobs & CronJobs</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {validJobs.map((job, index) => (
+              <div key={index} className={`p-4 rounded-lg border ${
+                job.type === 'cronjob' ? 'bg-purple-50 border-purple-200' : 'bg-orange-50 border-orange-200'
+              }`}>
+                <div className="flex items-center space-x-2 mb-2">
+                  {job.type === 'cronjob' ? (
+                    <Clock className="w-5 h-5 text-purple-600" />
+                  ) : (
+                    <Play className="w-5 h-5 text-orange-600" />
+                  )}
+                  <span className={`font-medium ${
+                    job.type === 'cronjob' ? 'text-purple-900' : 'text-orange-900'
+                  }`}>{job.name}</span>
                 </div>
-              ))}
-              {config.volumes.length > 3 && (
-                <div className="text-xs text-indigo-600">
-                  +{config.volumes.length - 3} more...
+                <div className={`text-sm space-y-1 ${
+                  job.type === 'cronjob' ? 'text-purple-700' : 'text-orange-700'
+                }`}>
+                  <div>Type: {job.type === 'cronjob' ? 'CronJob' : 'Job'}</div>
+                  <div>Namespace: {job.namespace}</div>
+                  <div>Containers: {job.containers?.length || 0}</div>
+                  {job.type === 'cronjob' && job.schedule && (
+                    <div>Schedule: {job.schedule}</div>
+                  )}
+                  {job.completions && (
+                    <div>Completions: {job.completions}</div>
+                  )}
+                  {job.replicas && (
+                    <div>Parallelism: {job.replicas}</div>
+                  )}
                 </div>
-              )}
-            </div>
+              </div>
+            ))}
           </div>
         </div>
       )}
 
-      {/* Security Features */}
-      {config.ingress.enabled && config.ingress.tls.length > 0 && (
-        <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-          <div className="flex items-center space-x-2 mb-2">
-            <Shield className="w-5 h-5 text-green-600" />
-            <span className="font-medium text-green-900">Security Features</span>
-          </div>
-          <div className="text-sm text-green-700 space-y-1">
-            <div>TLS/SSL Encryption: Enabled</div>
-            <div>TLS Certificates: {config.ingress.tls.length}</div>
-            <div className="mt-2">
-              <div className="font-medium mb-1">Protected Domains:</div>
-              {config.ingress.tls.map((tls, index) => (
-                <div key={index} className="text-xs text-green-600">
-                  {tls.secretName}: {tls.hosts.join(', ')}
+      {/* Deployments Summary */}
+      {validDeployments.length > 0 && (
+        <div className="space-y-4">
+          <h4 className="font-medium text-gray-900">Deployments</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {validDeployments.map((deployment, index) => (
+              <div key={index} className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                <div className="flex items-center space-x-2 mb-2">
+                  <Server className="w-5 h-5 text-blue-600" />
+                  <span className="font-medium text-blue-900">{deployment.appName}</span>
                 </div>
-              ))}
-            </div>
+                <div className="text-sm text-blue-700 space-y-1">
+                  <div>Namespace: {deployment.namespace}</div>
+                  <div>Replicas: {deployment.replicas}</div>
+                  <div>Containers: {deployment.containers?.length || 0}</div>
+                  <div>Port: {deployment.port} → {deployment.targetPort}</div>
+                  {deployment.ingress?.enabled && (
+                    <div>Ingress: Enabled ({deployment.ingress.rules.length} rules)</div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* DaemonSets Summary */}
+      {validDaemonSets.length > 0 && (
+        <div className="space-y-4">
+          <h4 className="font-medium text-gray-900">DaemonSets</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {validDaemonSets.map((daemonSet, index) => (
+              <div key={index} className="bg-indigo-50 p-4 rounded-lg border border-indigo-200">
+                <div className="flex items-center space-x-2 mb-2">
+                  <Server className="w-5 h-5 text-indigo-600" />
+                  <span className="font-medium text-indigo-900">{daemonSet.appName}</span>
+                </div>
+                <div className="text-sm text-indigo-700 space-y-1">
+                  <div>Namespace: {daemonSet.namespace}</div>
+                  <div>Containers: {daemonSet.containers?.length || 0}</div>
+                  <div>Port: {daemonSet.port} → {daemonSet.targetPort}</div>
+                  <div>Service: {daemonSet.serviceEnabled ? 'Enabled' : 'Disabled'}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ConfigMaps Summary */}
+      {configMaps.length > 0 && (
+        <div className="space-y-4">
+          <h4 className="font-medium text-gray-900">ConfigMaps</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {configMaps.map((configMap, index) => (
+              <div key={index} className="bg-green-50 p-4 rounded-lg border border-green-200">
+                <div className="flex items-center space-x-2 mb-2">
+                  <Settings className="w-5 h-5 text-green-600" />
+                  <span className="font-medium text-green-900">{configMap.name}</span>
+                </div>
+                <div className="text-sm text-green-700 space-y-1">
+                  <div>Namespace: {configMap.namespace}</div>
+                  <div>Data Keys: {Object.keys(configMap.data).length}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Secrets Summary */}
+      {secrets.length > 0 && (
+        <div className="space-y-4">
+          <h4 className="font-medium text-gray-900">Secrets</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {secrets.map((secret, index) => (
+              <div key={index} className="bg-red-50 p-4 rounded-lg border border-red-200">
+                <div className="flex items-center space-x-2 mb-2">
+                  <Key className="w-5 h-5 text-red-600" />
+                  <span className="font-medium text-red-900">{secret.name}</span>
+                </div>
+                <div className="text-sm text-red-700 space-y-1">
+                  <div>Namespace: {secret.namespace}</div>
+                  <div>Data Keys: {Object.keys(secret.data).length}</div>
+                  <div>Type: {secret.type}</div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}
@@ -232,7 +355,7 @@ export function ResourceSummary({ config }: ResourceSummaryProps) {
       <div className="bg-indigo-50 p-4 rounded-lg border border-indigo-200">
         <div className="flex items-center justify-between">
           <span className="font-medium text-indigo-900">Total Kubernetes Resources</span>
-          <span className="text-2xl font-bold text-indigo-600">{getResourceCount()}</span>
+          <span className="text-2xl font-bold text-indigo-600">{totalResources}</span>
         </div>
         <div className="text-sm text-indigo-700 mt-1">
           Resources that will be created in your cluster

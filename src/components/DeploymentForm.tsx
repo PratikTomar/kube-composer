@@ -1,5 +1,5 @@
-import { Plus, Minus, Server, Settings, Database, Key, Trash2, Copy, Globe, Shield, FileText } from 'lucide-react';
-import type { DeploymentConfig, Container, ConfigMap, Secret, EnvVar } from '../types';
+import { Plus, Minus, Server, Settings, Database, Key, Trash2, Copy, Globe, Shield, FileText, Users, X } from 'lucide-react';
+import type { DeploymentConfig, Container, ConfigMap, Secret, EnvVar, ServiceAccount } from '../types';
 
 interface DeploymentFormProps {
   config: DeploymentConfig;
@@ -7,9 +7,11 @@ interface DeploymentFormProps {
   availableNamespaces: string[];
   availableConfigMaps: ConfigMap[];
   availableSecrets: Secret[];
+  availableServiceAccounts: ServiceAccount[];
+  onNavigateToServiceAccounts?: () => void;
 }
 
-export function DeploymentForm({ config, onChange, availableNamespaces, availableConfigMaps, availableSecrets }: DeploymentFormProps) {
+export function DeploymentForm({ config, onChange, availableNamespaces, availableConfigMaps, availableSecrets, availableServiceAccounts, onNavigateToServiceAccounts }: DeploymentFormProps) {
   const updateConfig = (updates: Partial<DeploymentConfig>) => {
     onChange({ ...config, ...updates });
   };
@@ -329,6 +331,56 @@ export function DeploymentForm({ config, onChange, availableNamespaces, availabl
                 </option>
               ))}
             </select>
+          </div>
+
+          <div className="sm:col-span-2">
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Service Account
+              </label>
+              {onNavigateToServiceAccounts && (
+                <button
+                  type="button"
+                  onClick={onNavigateToServiceAccounts}
+                  className="inline-flex items-center px-2 py-1 text-xs bg-cyan-600 text-white rounded hover:bg-cyan-700 transition-colors duration-200"
+                >
+                  <Plus className="w-3 h-3 mr-1" />
+                  New Service Account
+                </button>
+              )}
+            </div>
+            <div className="flex space-x-2">
+              <select
+                value={config.serviceAccount || ''}
+                onChange={(e) => updateConfig({ serviceAccount: e.target.value || undefined })}
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
+              >
+                <option value="">Default (no service account)</option>
+                {availableServiceAccounts
+                  .filter(sa => sa.namespace === config.namespace)
+                  .map(serviceAccount => (
+                    <option key={serviceAccount.name} value={serviceAccount.name}>
+                      {serviceAccount.name}
+                    </option>
+                  ))}
+              </select>
+              {config.serviceAccount && (
+                <button
+                  type="button"
+                  onClick={() => updateConfig({ serviceAccount: undefined })}
+                  className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm transition-colors duration-200"
+                  title="Remove service account"
+                >
+                  <X className="w-4 h-4 text-gray-500 hover:text-red-600" />
+                </button>
+              )}
+            </div>
+            {config.serviceAccount && (
+              <div className="mt-2 flex items-center space-x-2 text-xs text-gray-600">
+                <Users className="w-3 h-3 text-cyan-500" />
+                <span>Using service account: {config.serviceAccount}</span>
+              </div>
+            )}
           </div>
         </div>
       </div>

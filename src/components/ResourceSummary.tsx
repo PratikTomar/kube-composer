@@ -1,4 +1,4 @@
-import { Server, Globe, Database, CheckCircle, AlertCircle, Shield, Users, Settings, Key, GitBranch, Play, Clock } from 'lucide-react';
+import { Server, CheckCircle, AlertCircle, Users, Settings, Key, Play, Clock } from 'lucide-react';
 import type { DeploymentConfig, DaemonSetConfig, Namespace, ConfigMap, Secret, ServiceAccount } from '../types';
 import type { Job } from './JobManager';
 

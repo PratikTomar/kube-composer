@@ -1,4 +1,4 @@
-import type { DeploymentConfig, DaemonSetConfig, KubernetesResource, Namespace, ConfigMap, Secret, ProjectSettings, JobConfig, CronJobConfig, Container, EnvVar } from '../types';
+import type { DeploymentConfig, DaemonSetConfig, KubernetesResource, Namespace, ConfigMap, Secret, ServiceAccount, ProjectSettings, JobConfig, CronJobConfig, Container, EnvVar } from '../types';
 
 export function generateKubernetesYaml(config: DeploymentConfig, projectSettings?: ProjectSettings): string {
   if (!config.appName) {
@@ -46,6 +46,7 @@ export function generateKubernetesYaml(config: DeploymentConfig, projectSettings
           }
         },
         spec: {
+          ...(config.serviceAccount && { serviceAccountName: config.serviceAccount }),
           containers: generateContainers(config),
           ...(config.volumes.length > 0 && {
             volumes: config.volumes.map(v => ({
@@ -459,6 +460,144 @@ export function generateSecretYaml(secrets: Secret[], projectSettings?: ProjectS
   return allResources.join('\n');
 }
 
+export function generateServiceAccountYaml(serviceAccounts: ServiceAccount[], projectSettings?: ProjectSettings): string {
+  if (serviceAccounts.length === 0) {
+    return '# No Service Accounts configured';
+  }
+
+  const allResources: string[] = [];
+
+  serviceAccounts.forEach(serviceAccount => {
+    // Merge global labels with service account labels
+    const mergedLabels = projectSettings ? {
+      ...projectSettings.globalLabels,
+      ...serviceAccount.labels,
+      project: projectSettings.name
+    } : serviceAccount.labels;
+
+    const serviceAccountResource: KubernetesResource = {
+      apiVersion: 'v1',
+      kind: 'ServiceAccount',
+      metadata: {
+        name: serviceAccount.name,
+        namespace: serviceAccount.namespace,
+        ...(Object.keys(mergedLabels).length > 0 && { labels: mergedLabels }),
+        ...(Object.keys(serviceAccount.annotations).length > 0 && { annotations: serviceAccount.annotations }),
+        ...(serviceAccount.secrets && serviceAccount.secrets.length > 0 && {
+          secrets: serviceAccount.secrets
+        }),
+        ...(serviceAccount.imagePullSecrets && serviceAccount.imagePullSecrets.length > 0 && {
+          imagePullSecrets: serviceAccount.imagePullSecrets
+        })
+      },
+      ...(serviceAccount.automountServiceAccountToken !== undefined && {
+        automountServiceAccountToken: serviceAccount.automountServiceAccountToken
+      })
+    };
+
+    allResources.push(objectToYaml(serviceAccountResource));
+  });
+
+  return allResources.join('\n');
+}
+
+export function generateJobYaml(jobs: JobConfig[], projectSettings?: ProjectSettings): string {
+  if (jobs.length === 0) {
+    return '# No jobs to generate';
+  }
+
+  const resources: KubernetesResource[] = [];
+
+  jobs.forEach(job => {
+    // Merge global labels with job labels
+    const mergedLabels = projectSettings ? {
+      ...projectSettings.globalLabels,
+      ...job.labels,
+      project: projectSettings.name
+    } : job.labels;
+
+    const resource: KubernetesResource = {
+      apiVersion: 'batch/v1',
+      kind: 'Job',
+      metadata: {
+        name: job.name,
+        namespace: job.namespace,
+        ...(Object.keys(mergedLabels).length > 0 && { labels: mergedLabels }),
+        ...(Object.keys(job.annotations).length > 0 && { annotations: job.annotations })
+      },
+      spec: {
+        ...(job.completions && { completions: job.completions }),
+        ...(job.parallelism && { parallelism: job.parallelism }),
+        ...(job.backoffLimit && { backoffLimit: job.backoffLimit }),
+        ...(job.activeDeadlineSeconds && { activeDeadlineSeconds: job.activeDeadlineSeconds }),
+        template: {
+          spec: {
+            restartPolicy: job.restartPolicy,
+            containers: job.containers
+          }
+        }
+      }
+    };
+
+    resources.push(resource);
+  });
+
+  return resources.map(resource => objectToYaml(resource)).join('\n---\n');
+}
+
+export function generateCronJobYaml(cronjobs: CronJobConfig[], projectSettings?: ProjectSettings): string {
+  if (cronjobs.length === 0) {
+    return '# No cronjobs to generate';
+  }
+
+  const resources: KubernetesResource[] = [];
+
+  cronjobs.forEach(cronjob => {
+    // Merge global labels with cronjob labels
+    const mergedLabels = projectSettings ? {
+      ...projectSettings.globalLabels,
+      ...cronjob.labels,
+      project: projectSettings.name
+    } : cronjob.labels;
+
+    const resource: KubernetesResource = {
+      apiVersion: 'batch/v1',
+      kind: 'CronJob',
+      metadata: {
+        name: cronjob.name,
+        namespace: cronjob.namespace,
+        ...(Object.keys(mergedLabels).length > 0 && { labels: mergedLabels }),
+        ...(Object.keys(cronjob.annotations).length > 0 && { annotations: cronjob.annotations })
+      },
+      spec: {
+        schedule: cronjob.schedule,
+        ...(cronjob.concurrencyPolicy && { concurrencyPolicy: cronjob.concurrencyPolicy }),
+        ...(cronjob.startingDeadlineSeconds && { startingDeadlineSeconds: cronjob.startingDeadlineSeconds }),
+        ...(cronjob.successfulJobsHistoryLimit && { successfulJobsHistoryLimit: cronjob.successfulJobsHistoryLimit }),
+        ...(cronjob.failedJobsHistoryLimit && { failedJobsHistoryLimit: cronjob.failedJobsHistoryLimit }),
+        jobTemplate: {
+          spec: {
+            ...(cronjob.jobTemplate.completions && { completions: cronjob.jobTemplate.completions }),
+            ...(cronjob.jobTemplate.parallelism && { parallelism: cronjob.jobTemplate.parallelism }),
+            ...(cronjob.jobTemplate.backoffLimit && { backoffLimit: cronjob.jobTemplate.backoffLimit }),
+            ...(cronjob.jobTemplate.activeDeadlineSeconds && { activeDeadlineSeconds: cronjob.jobTemplate.activeDeadlineSeconds }),
+            template: {
+              spec: {
+                restartPolicy: cronjob.jobTemplate.restartPolicy,
+                containers: cronjob.jobTemplate.containers
+              }
+            }
+          }
+        }
+      }
+    };
+
+    resources.push(resource);
+  });
+
+  return resources.map(resource => objectToYaml(resource)).join('\n---\n');
+}
+
 export function generateMultiDeploymentYaml(
   deployments: DeploymentConfig[], 
   namespaces: Namespace[] = [], 
@@ -467,7 +606,8 @@ export function generateMultiDeploymentYaml(
   projectSettings?: ProjectSettings,
   jobs: JobConfig[] = [],
   cronjobs: CronJobConfig[] = [],
-  daemonSets: DaemonSetConfig[] = []
+  daemonSets: DaemonSetConfig[] = [],
+  serviceAccounts: ServiceAccount[] = []
 ): string {
   // Check if we have any meaningful content
   if (
@@ -477,7 +617,8 @@ export function generateMultiDeploymentYaml(
     secrets.length === 0 &&
     jobs.length === 0 &&
     cronjobs.length === 0 &&
-    daemonSets.length === 0
+    daemonSets.length === 0 &&
+    serviceAccounts.length === 0
   ) {
     return `# Welcome to Kube Composer!
 # 
@@ -530,7 +671,7 @@ data:
   );
 
   // Add header comment
-  if (deployments.length > 0 || daemonSets.length > 0 || customNamespaces.length > 0 || configMaps.length > 0 || secrets.length > 0 || jobs.length > 0 || cronjobs.length > 0) {
+  if (deployments.length > 0 || daemonSets.length > 0 || customNamespaces.length > 0 || configMaps.length > 0 || secrets.length > 0 || jobs.length > 0 || cronjobs.length > 0 || serviceAccounts.length > 0) {
     allResources.push(`# Kubernetes Configuration`);
     allResources.push(`# Generated by Kube Composer`);
     
@@ -552,6 +693,9 @@ data:
     }
     if (secrets.length > 0) {
       allResources.push(`# Secrets: ${secrets.length}`);
+    }
+    if (serviceAccounts.length > 0) {
+      allResources.push(`# Service Accounts: ${serviceAccounts.length}`);
     }
     if (deployments.length > 0) {
       allResources.push(`# Deployments: ${deployments.filter(d => d.appName).length}`);
@@ -677,6 +821,50 @@ data:
       };
 
       allResources.push(objectToYaml(secretResource));
+    });
+    
+    if (serviceAccounts.length > 0 || deployments.length > 0 || daemonSets.length > 0 || jobs.length > 0 || cronjobs.length > 0) {
+      allResources.push('---');
+      allResources.push('');
+    }
+  }
+
+  // Generate Service Account resources
+  if (serviceAccounts.length > 0) {
+    allResources.push('# === SERVICE ACCOUNTS ===');
+    serviceAccounts.forEach((serviceAccount, index) => {
+      if (index > 0) {
+        allResources.push('---');
+      }
+
+      // Merge global labels with service account labels
+      const mergedLabels = projectSettings ? {
+        ...projectSettings.globalLabels,
+        ...serviceAccount.labels,
+        project: projectSettings.name
+      } : serviceAccount.labels;
+
+      const serviceAccountResource: KubernetesResource = {
+        apiVersion: 'v1',
+        kind: 'ServiceAccount',
+        metadata: {
+          name: serviceAccount.name,
+          namespace: serviceAccount.namespace,
+          ...(Object.keys(mergedLabels).length > 0 && { labels: mergedLabels }),
+          ...(Object.keys(serviceAccount.annotations).length > 0 && { annotations: serviceAccount.annotations }),
+          ...(serviceAccount.secrets && serviceAccount.secrets.length > 0 && {
+            secrets: serviceAccount.secrets
+          }),
+          ...(serviceAccount.imagePullSecrets && serviceAccount.imagePullSecrets.length > 0 && {
+            imagePullSecrets: serviceAccount.imagePullSecrets
+          })
+        },
+        ...(serviceAccount.automountServiceAccountToken !== undefined && {
+          automountServiceAccountToken: serviceAccount.automountServiceAccountToken
+        })
+      };
+
+      allResources.push(objectToYaml(serviceAccountResource));
     });
     
     if (deployments.length > 0 || daemonSets.length > 0 || jobs.length > 0 || cronjobs.length > 0) {
@@ -1011,6 +1199,7 @@ export function generateDaemonSetYaml(config: DaemonSetConfig, projectSettings?:
           }
         },
         spec: {
+          ...(config.serviceAccount && { serviceAccountName: config.serviceAccount }),
           containers: generateContainers(config),
           ...(config.volumes.length > 0 && {
             volumes: config.volumes.map(v => ({

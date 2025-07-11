@@ -17,10 +17,12 @@ import {
   ExternalLink,
   GitBranch,
   GitCommit,
-  X
+  X,
+  Play
 } from 'lucide-react';
-import type { DeploymentConfig, DaemonSetConfig, Namespace, ConfigMap, Secret } from '../types';
-import { generateKubernetesYaml, generateDaemonSetYaml, generateConfigMapYaml, generateSecretYaml, generateNamespaceYaml } from '../utils/yamlGenerator';
+import type { DeploymentConfig, DaemonSetConfig, Namespace, ConfigMap, Secret, ServiceAccount } from '../types';
+import type { Job } from './JobManager';
+import { generateKubernetesYaml, generateDaemonSetYaml, generateConfigMapYaml, generateSecretYaml, generateNamespaceYaml, generateServiceAccountYaml, generateJobYaml, generateCronJobYaml } from '../utils/yamlGenerator';
 import { YamlPreview } from './YamlPreview';
 
 interface VisualPreviewProps {
@@ -29,13 +31,16 @@ interface VisualPreviewProps {
   namespaces: Namespace[];
   configMaps: ConfigMap[];
   secrets: Secret[];
+  serviceAccounts: ServiceAccount[];
+  jobs: Job[];
   containerRef?: React.RefObject<HTMLDivElement>;
+  filterType?: 'all' | 'deployments' | 'daemonsets' | 'namespaces' | 'configmaps' | 'secrets' | 'serviceaccounts' | 'jobs' | 'cronjobs';
 }
 
 interface FlowNode {
   id: string;
   name: string;
-  type: 'deployment' | 'daemonset' | 'service' | 'pod' | 'configmap' | 'secret' | 'ingress' | 'namespace' | 'external';
+  type: 'deployment' | 'daemonset' | 'service' | 'pod' | 'configmap' | 'secret' | 'ingress' | 'namespace' | 'external' | 'serviceaccount' | 'job' | 'cronjob';
   namespace: string;
   status: 'healthy' | 'warning' | 'error' | 'pending' | 'syncing';
   syncStatus: 'synced' | 'outofsync' | 'unknown';
@@ -50,6 +55,11 @@ interface FlowNode {
     dataKeys?: number;
     lastSync?: string;
     syncRevision?: string;
+    secrets?: number;
+    imagePullSecrets?: number;
+    schedule?: string;
+    completions?: number;
+    parallelism?: number;
   };
   colorClass?: string;
 }
@@ -60,7 +70,10 @@ export function VisualPreview({
   namespaces, 
   configMaps, 
   secrets, 
-  containerRef
+  serviceAccounts,
+  jobs,
+  containerRef,
+  filterType = 'all'
 }: VisualPreviewProps) {
   const showDetails = true;
   const [yamlModal, setYamlModal] = useState<{ open: boolean, title: string, yaml: string } | null>(null);
@@ -86,18 +99,31 @@ export function VisualPreview({
     const rowHeight = 260; // Increased for more space between deployments
     let currentY = 0;
 
+    // Filter resources based on filterType
+    const filteredDeployments = filterType === 'all' || filterType === 'deployments' ? deployments : [];
+    const filteredDaemonSets = filterType === 'all' || filterType === 'daemonsets' ? daemonSets : [];
+    const filteredNamespaces = filterType === 'all' || filterType === 'namespaces' ? namespaces : [];
+    const filteredConfigMaps = filterType === 'all' || filterType === 'configmaps' ? configMaps : [];
+    const filteredSecrets = filterType === 'all' || filterType === 'secrets' ? secrets : [];
+    const filteredServiceAccounts = filterType === 'all' || filterType === 'serviceaccounts' ? serviceAccounts : [];
+    const filteredJobs = filterType === 'all' || filterType === 'jobs' || filterType === 'cronjobs' ? jobs : [];
+
     // Group by namespace
-    const namespaceGroups = namespaces.map(ns => ({
+    const namespaceGroups = filteredNamespaces.map(ns => ({
       namespace: ns,
-      deployments: deployments.filter(d => d.namespace === ns.name && d.appName),
-      daemonSets: daemonSets.filter(d => d.namespace === ns.name && d.appName),
-      configMaps: configMaps.filter(cm => cm.namespace === ns.name),
-      secrets: secrets.filter(s => s.namespace === ns.name)
+      deployments: filteredDeployments.filter(d => d.namespace === ns.name && d.appName),
+      daemonSets: filteredDaemonSets.filter(d => d.namespace === ns.name && d.appName),
+      configMaps: filteredConfigMaps.filter(cm => cm.namespace === ns.name),
+      secrets: filteredSecrets.filter(s => s.namespace === ns.name),
+      serviceAccounts: filteredServiceAccounts.filter(sa => sa.namespace === ns.name)
     })).filter(group => 
       group.deployments.length > 0 || 
       group.daemonSets.length > 0 ||
       group.configMaps.length > 0 || 
-      group.secrets.length > 0
+      group.secrets.length > 0 ||
+      group.serviceAccounts.length > 0 ||
+      // Include namespace groups even if they only have standalone resources
+      (filterType === 'namespaces' && group.namespace)
     );
 
     namespaceGroups.forEach((group) => {
@@ -331,10 +357,581 @@ export function VisualPreview({
         currentY += rowHeight;
       });
 
+      // Process service accounts in a compact layout
+      if (group.serviceAccounts.length > 0) {
+        const baseY = currentY;
+        const colorClass = colorPalette[0]; // Use consistent color for service accounts
+        
+        // Create a compact grid layout for service accounts
+        const serviceAccountsPerRow = 3;
+        const serviceAccountSpacing = 220; // Reduced spacing between service accounts
+        
+        group.serviceAccounts.forEach((serviceAccount, saIndex) => {
+          const row = Math.floor(saIndex / serviceAccountsPerRow);
+          const col = saIndex % serviceAccountsPerRow;
+          const serviceAccountId = `serviceaccount-${serviceAccount.name}`;
+          
+          // Calculate service account status
+          const hasName = serviceAccount.name && serviceAccount.name.trim() !== '';
+          const hasNamespace = serviceAccount.namespace && serviceAccount.namespace.trim() !== '';
+          let serviceAccountStatus: 'healthy' | 'warning' | 'error' | 'pending' | 'syncing';
+          let syncStatus: 'synced' | 'outofsync' | 'unknown';
+          
+          if (hasName && hasNamespace) {
+            serviceAccountStatus = 'healthy';
+            syncStatus = 'synced';
+          } else if (hasName || hasNamespace) {
+            serviceAccountStatus = 'warning';
+            syncStatus = 'outofsync';
+          } else {
+            serviceAccountStatus = 'error';
+            syncStatus = 'outofsync';
+          }
+
+          // Add service account node in compact grid
+          nodes.push({
+            id: serviceAccountId,
+            name: serviceAccount.name,
+            type: 'serviceaccount',
+            namespace: serviceAccount.namespace,
+            status: serviceAccountStatus,
+            syncStatus: syncStatus,
+            position: { 
+              x: col * serviceAccountSpacing, 
+              y: baseY + (row * 120) // Reduced vertical spacing
+            },
+            dependencies: [],
+            children: [],
+            metadata: {
+              secrets: serviceAccount.secrets?.length || 0,
+              imagePullSecrets: serviceAccount.imagePullSecrets?.length || 0,
+              lastSync: new Date().toISOString(),
+              syncRevision: `v${Date.now()}`
+            },
+            colorClass: colorClass
+          });
+
+          // Add associated secrets if any (positioned to the left)
+          serviceAccount.secrets?.forEach((secretRef, secIndex) => {
+            const secret = secrets.find(s => s.name === secretRef.name);
+            if (secret) {
+              nodes.push({
+                id: `secret-${secretRef.name}-sa-${saIndex}`,
+                name: secretRef.name,
+                type: 'secret',
+                namespace: secret.namespace,
+                status: 'healthy',
+                syncStatus: 'synced',
+                position: { 
+                  x: col * serviceAccountSpacing - 200, 
+                  y: baseY + (row * 120) + (secIndex * 40) // Compact secret positioning
+                },
+                dependencies: [serviceAccountId],
+                children: [],
+                metadata: {
+                  dataKeys: Object.keys(secret.data).length
+                },
+                colorClass: colorClass
+              });
+            }
+          });
+
+          // Add associated image pull secrets if any (positioned to the right)
+          serviceAccount.imagePullSecrets?.forEach((secretRef, ipsIndex) => {
+            const secret = secrets.find(s => s.name === secretRef.name);
+            if (secret) {
+              nodes.push({
+                id: `imagepullsecret-${secretRef.name}-sa-${saIndex}`,
+                name: `${secretRef.name} (Image Pull)`,
+                type: 'secret',
+                namespace: secret.namespace,
+                status: 'healthy',
+                syncStatus: 'synced',
+                position: { 
+                  x: col * serviceAccountSpacing + 200, 
+                  y: baseY + (row * 120) + (ipsIndex * 40) // Compact secret positioning
+                },
+                dependencies: [serviceAccountId],
+                children: [],
+                metadata: {
+                  dataKeys: Object.keys(secret.data).length
+                },
+                colorClass: colorClass
+              });
+            }
+          });
+        });
+
+        // Update currentY based on the number of rows needed
+        const totalRows = Math.ceil(group.serviceAccounts.length / serviceAccountsPerRow);
+        currentY += totalRows * 120 + 40; // Reduced spacing
+      }
+
+      // Process namespaces
+      if (group.namespace) {
+        const namespaceId = `namespace-${group.namespace.name}`;
+        nodes.push({
+          id: namespaceId,
+          name: group.namespace.name,
+          type: 'namespace',
+          namespace: group.namespace.name,
+          status: 'healthy',
+          syncStatus: 'synced',
+          position: { x: 0, y: currentY },
+          dependencies: [],
+          children: [],
+          metadata: {
+            lastSync: new Date().toISOString(),
+            syncRevision: `v${Date.now()}`
+          },
+          colorClass: colorPalette[1]
+        });
+        currentY += 100; // Compact namespace spacing
+      }
+
+      // Process jobs and cronjobs
+      const namespaceJobs = filteredJobs.filter(job => job.namespace === group.namespace.name);
+      
+      // Apply specific job/cronjob filtering
+      const filteredNamespaceJobs = filterType === 'jobs' 
+        ? namespaceJobs.filter(job => job.type === 'job')
+        : filterType === 'cronjobs'
+        ? namespaceJobs.filter(job => job.type === 'cronjob')
+        : namespaceJobs;
+      
+      if (filteredNamespaceJobs.length > 0) {
+        const jobsPerRow = 2;
+        const jobSpacing = 250;
+        
+        filteredNamespaceJobs.forEach((job, jobIndex) => {
+          const row = Math.floor(jobIndex / jobsPerRow);
+          const col = jobIndex % jobsPerRow;
+          const jobId = `${job.type}-${job.name}`;
+          
+          // Calculate job status
+          const hasName = job.name && job.name.trim() !== '';
+          const hasNamespace = job.namespace && job.namespace.trim() !== '';
+          const hasContainers = job.containers && job.containers.length > 0;
+          let jobStatus: 'healthy' | 'warning' | 'error' | 'pending' | 'syncing';
+          let syncStatus: 'synced' | 'outofsync' | 'unknown';
+          
+          if (hasName && hasNamespace && hasContainers) {
+            jobStatus = 'healthy';
+            syncStatus = 'synced';
+          } else if (hasName && hasNamespace) {
+            jobStatus = 'warning';
+            syncStatus = 'outofsync';
+          } else {
+            jobStatus = 'error';
+            syncStatus = 'outofsync';
+          }
+
+          // Add job/cronjob node
+          nodes.push({
+            id: jobId,
+            name: job.name,
+            type: job.type,
+            namespace: job.namespace,
+            status: jobStatus,
+            syncStatus: syncStatus,
+            position: { 
+              x: col * jobSpacing, 
+              y: currentY + (row * 100) // Compact job spacing
+            },
+            dependencies: [],
+            children: [],
+            metadata: {
+              containers: job.containers?.length || 0,
+              schedule: job.schedule,
+              completions: job.completions,
+              parallelism: job.replicas,
+              lastSync: new Date().toISOString(),
+              syncRevision: `v${Date.now()}`
+            },
+            colorClass: job.type === 'cronjob' ? colorPalette[2] : colorPalette[3]
+          });
+        });
+
+        // Update currentY based on the number of rows needed
+        const totalJobRows = Math.ceil(filteredNamespaceJobs.length / jobsPerRow);
+        currentY += totalJobRows * 100 + 40; // Compact job spacing
+      }
+
       currentY += rowHeight * 0.2;
     });
+
+    // Handle standalone resources that don't need to be grouped by namespace
+    if (filterType === 'deployments' || filterType === 'daemonsets' || filterType === 'configmaps' || filterType === 'secrets' || filterType === 'serviceaccounts' || filterType === 'jobs' || filterType === 'cronjobs') {
+      // Add standalone deployments
+      if (filterType === 'deployments') {
+        filteredDeployments.forEach((deployment, depIndex) => {
+          const baseY = currentY;
+          const colorIdx = depIndex % colorPalette.length;
+          const colorClass = colorPalette[colorIdx];
+          const deploymentId = `deployment-${deployment.appName}`;
+          const serviceId = `service-${deployment.appName}`;
+          
+          // Calculate deployment status
+          const hasContainers = deployment.containers && deployment.containers.length > 0;
+          const hasValidContainers = hasContainers && deployment.containers.every(c => c.name && c.image);
+          const hasProperPorts = deployment.port > 0 && deployment.targetPort > 0;
+          let deploymentStatus: 'healthy' | 'warning' | 'error' | 'pending' | 'syncing';
+          let syncStatus: 'synced' | 'outofsync' | 'unknown';
+          
+          if (hasValidContainers && hasProperPorts) {
+            deploymentStatus = 'healthy';
+            syncStatus = 'synced';
+          } else if (hasContainers && hasProperPorts) {
+            deploymentStatus = 'warning';
+            syncStatus = 'outofsync';
+          } else {
+            deploymentStatus = 'error';
+            syncStatus = 'outofsync';
+          }
+
+          // Add deployment node
+          nodes.push({
+            id: deploymentId,
+            name: deployment.appName,
+            type: 'deployment',
+            namespace: deployment.namespace,
+            status: deploymentStatus,
+            syncStatus: syncStatus,
+            position: { x: 0, y: baseY },
+            dependencies: [],
+            children: [serviceId],
+            metadata: {
+              replicas: deployment.replicas,
+              readyReplicas: hasValidContainers ? deployment.replicas : 0,
+              containers: deployment.containers?.length || 0,
+              lastSync: new Date().toISOString(),
+              syncRevision: `v${Date.now()}`
+            },
+            colorClass: colorClass
+          });
+
+          // Add service node
+          nodes.push({
+            id: serviceId,
+            name: `${deployment.appName}-service`,
+            type: 'service',
+            namespace: deployment.namespace,
+            status: hasValidContainers ? 'healthy' : 'warning',
+            syncStatus: hasValidContainers ? 'synced' : 'outofsync',
+            position: { x: 200, y: baseY },
+            dependencies: [deploymentId],
+            children: deployment.ingress?.enabled ? [`ingress-${deployment.appName}`] : [],
+            metadata: {
+              ports: [deployment.port]
+            },
+            colorClass: colorClass
+          });
+
+          // Add pod node
+          const podId = `pod-${deployment.appName}`;
+          nodes.push({
+            id: podId,
+            name: `${deployment.appName}-pod`,
+            type: 'pod',
+            namespace: deployment.namespace,
+            status: hasValidContainers ? 'healthy' : 'error',
+            syncStatus: hasValidContainers ? 'synced' : 'outofsync',
+            position: { x: -200, y: baseY + 60 },
+            dependencies: [deploymentId],
+            children: [],
+            metadata: {
+              containers: deployment.containers?.length || 0,
+              replicas: deployment.replicas
+            },
+            colorClass: colorClass
+          });
+
+          // Add ingress if enabled
+          if (deployment.ingress?.enabled) {
+            nodes.push({
+              id: `ingress-${deployment.appName}`,
+              name: `${deployment.appName}-ingress`,
+              type: 'ingress',
+              namespace: deployment.namespace,
+              status: 'healthy',
+              syncStatus: 'synced',
+              position: { x: 400, y: baseY },
+              dependencies: [serviceId],
+              children: [`external-${deployment.appName}`],
+              metadata: {},
+              colorClass: colorClass
+            });
+            nodes.push({
+              id: `external-${deployment.appName}`,
+              name: 'External Traffic',
+              type: 'external',
+              namespace: deployment.namespace,
+              status: 'healthy',
+              syncStatus: 'synced',
+              position: { x: 600, y: baseY },
+              dependencies: [`ingress-${deployment.appName}`],
+              children: [],
+              metadata: {},
+              colorClass: colorClass
+            });
+          }
+
+          currentY += 260; // Move to next deployment
+        });
+      }
+
+      // Add standalone daemonSets
+      if (filterType === 'daemonsets') {
+        filteredDaemonSets.forEach((daemonSet, dsIndex) => {
+          const baseY = currentY;
+          const colorIdx = dsIndex % colorPalette.length;
+          const colorClass = colorPalette[colorIdx];
+          const daemonSetId = `daemonset-${daemonSet.appName}`;
+          const serviceId = `service-${daemonSet.appName}`;
+          
+          // Calculate daemonSet status
+          const hasContainers = daemonSet.containers && daemonSet.containers.length > 0;
+          const hasValidContainers = hasContainers && daemonSet.containers.every(c => c.name && c.image);
+          let daemonSetStatus: 'healthy' | 'warning' | 'error' | 'pending' | 'syncing';
+          let syncStatus: 'synced' | 'outofsync' | 'unknown';
+          
+          if (hasValidContainers) {
+            daemonSetStatus = 'healthy';
+            syncStatus = 'synced';
+          } else if (hasContainers) {
+            daemonSetStatus = 'warning';
+            syncStatus = 'outofsync';
+          } else {
+            daemonSetStatus = 'error';
+            syncStatus = 'outofsync';
+          }
+
+          // Add daemonSet node
+          nodes.push({
+            id: daemonSetId,
+            name: daemonSet.appName,
+            type: 'daemonset',
+            namespace: daemonSet.namespace,
+            status: daemonSetStatus,
+            syncStatus: syncStatus,
+            position: { x: 0, y: baseY },
+            dependencies: [],
+            children: daemonSet.serviceEnabled ? [serviceId] : [],
+            metadata: {
+              containers: daemonSet.containers?.length || 0,
+              lastSync: new Date().toISOString(),
+              syncRevision: `v${Date.now()}`
+            },
+            colorClass: colorClass
+          });
+
+          // Add service node if enabled
+          if (daemonSet.serviceEnabled) {
+            nodes.push({
+              id: serviceId,
+              name: `${daemonSet.appName}-service`,
+              type: 'service',
+              namespace: daemonSet.namespace,
+              status: hasValidContainers ? 'healthy' : 'warning',
+              syncStatus: hasValidContainers ? 'synced' : 'outofsync',
+              position: { x: 200, y: baseY },
+              dependencies: [daemonSetId],
+              children: [],
+              metadata: {
+                ports: [daemonSet.port]
+              },
+              colorClass: colorClass
+            });
+          }
+
+          // Add pod node
+          const podId = `pod-${daemonSet.appName}`;
+          nodes.push({
+            id: podId,
+            name: `${daemonSet.appName}-pod`,
+            type: 'pod',
+            namespace: daemonSet.namespace,
+            status: hasValidContainers ? 'healthy' : 'error',
+            syncStatus: hasValidContainers ? 'synced' : 'outofsync',
+            position: { x: -200, y: baseY + 60 },
+            dependencies: [daemonSetId],
+            children: [],
+            metadata: {
+              containers: daemonSet.containers?.length || 0
+            },
+            colorClass: colorClass
+          });
+
+          currentY += 260; // Move to next daemonSet
+        });
+      }
+
+      // Add standalone configmaps in grid layout
+      if (filterType === 'configmaps') {
+        const configMapsPerRow = 3;
+        const configMapSpacing = 250;
+        
+        filteredConfigMaps.forEach((configMap, index) => {
+          const row = Math.floor(index / configMapsPerRow);
+          const col = index % configMapsPerRow;
+          
+          nodes.push({
+            id: `configmap-${configMap.name}`,
+            name: configMap.name,
+            type: 'configmap',
+            namespace: configMap.namespace,
+            status: 'healthy',
+            syncStatus: 'synced',
+            position: { 
+              x: col * configMapSpacing, 
+              y: currentY + (row * 120) // Compact spacing
+            },
+            dependencies: [],
+            children: [],
+            metadata: {
+              dataKeys: Object.keys(configMap.data).length
+            },
+            colorClass: colorPalette[0]
+          });
+        });
+        
+        // Update currentY based on the number of rows needed
+        const totalRows = Math.ceil(filteredConfigMaps.length / configMapsPerRow);
+        currentY += totalRows * 120 + 40; // Compact spacing
+      }
+
+      // Add standalone secrets in grid layout
+      if (filterType === 'secrets') {
+        const secretsPerRow = 3;
+        const secretSpacing = 250;
+        
+        filteredSecrets.forEach((secret, index) => {
+          const row = Math.floor(index / secretsPerRow);
+          const col = index % secretsPerRow;
+          
+          nodes.push({
+            id: `secret-${secret.name}`,
+            name: secret.name,
+            type: 'secret',
+            namespace: secret.namespace,
+            status: 'healthy',
+            syncStatus: 'synced',
+            position: { 
+              x: col * secretSpacing, 
+              y: currentY + (row * 120) // Compact spacing
+            },
+            dependencies: [],
+            children: [],
+            metadata: {
+              dataKeys: Object.keys(secret.data).length
+            },
+            colorClass: colorPalette[1]
+          });
+        });
+        
+        // Update currentY based on the number of rows needed
+        const totalRows = Math.ceil(filteredSecrets.length / secretsPerRow);
+        currentY += totalRows * 120 + 40; // Compact spacing
+      }
+
+      // Add standalone service accounts in grid layout
+      if (filterType === 'serviceaccounts') {
+        const serviceAccountsPerRow = 3;
+        const serviceAccountSpacing = 250;
+        
+        filteredServiceAccounts.forEach((serviceAccount, index) => {
+          const row = Math.floor(index / serviceAccountsPerRow);
+          const col = index % serviceAccountsPerRow;
+          
+          nodes.push({
+            id: `serviceaccount-${serviceAccount.name}`,
+            name: serviceAccount.name,
+            type: 'serviceaccount',
+            namespace: serviceAccount.namespace,
+            status: 'healthy',
+            syncStatus: 'synced',
+            position: { 
+              x: col * serviceAccountSpacing, 
+              y: currentY + (row * 120) // Compact spacing
+            },
+            dependencies: [],
+            children: [],
+            metadata: {
+              secrets: serviceAccount.secrets?.length || 0,
+              imagePullSecrets: serviceAccount.imagePullSecrets?.length || 0
+            },
+            colorClass: colorPalette[2]
+          });
+        });
+        
+        // Update currentY based on the number of rows needed
+        const totalRows = Math.ceil(filteredServiceAccounts.length / serviceAccountsPerRow);
+        currentY += totalRows * 120 + 40; // Compact spacing
+      }
+
+      // Add standalone jobs/cronjobs in grid layout
+      if (filterType === 'jobs' || filterType === 'cronjobs') {
+        const jobsToShow = filterType === 'jobs' 
+          ? filteredJobs.filter(job => job.type === 'job')
+          : filteredJobs.filter(job => job.type === 'cronjob');
+        
+        const jobsPerRow = 3;
+        const jobSpacing = 250;
+        
+        jobsToShow.forEach((job, index) => {
+          const row = Math.floor(index / jobsPerRow);
+          const col = index % jobsPerRow;
+          
+          const hasName = job.name && job.name.trim() !== '';
+          const hasNamespace = job.namespace && job.namespace.trim() !== '';
+          const hasContainers = job.containers && job.containers.length > 0;
+          let jobStatus: 'healthy' | 'warning' | 'error' | 'pending' | 'syncing';
+          let syncStatus: 'synced' | 'outofsync' | 'unknown';
+          
+          if (hasName && hasNamespace && hasContainers) {
+            jobStatus = 'healthy';
+            syncStatus = 'synced';
+          } else if (hasName && hasNamespace) {
+            jobStatus = 'warning';
+            syncStatus = 'outofsync';
+          } else {
+            jobStatus = 'error';
+            syncStatus = 'outofsync';
+          }
+
+          nodes.push({
+            id: `${job.type}-${job.name}`,
+            name: job.name,
+            type: job.type,
+            namespace: job.namespace,
+            status: jobStatus,
+            syncStatus: syncStatus,
+            position: { 
+              x: col * jobSpacing, 
+              y: currentY + (row * 120) // Compact spacing
+            },
+            dependencies: [],
+            children: [],
+            metadata: {
+              containers: job.containers?.length || 0,
+              schedule: job.schedule,
+              completions: job.completions,
+              parallelism: job.replicas,
+              lastSync: new Date().toISOString(),
+              syncRevision: `v${Date.now()}`
+            },
+            colorClass: job.type === 'cronjob' ? colorPalette[2] : colorPalette[3]
+          });
+        });
+        
+        // Update currentY based on the number of rows needed
+        const totalRows = Math.ceil(jobsToShow.length / jobsPerRow);
+        currentY += totalRows * 120 + 40; // Compact spacing
+      }
+    }
+
     return nodes;
-  }, [deployments, daemonSets, namespaces, configMaps, secrets]);
+  }, [deployments, daemonSets, namespaces, configMaps, secrets, serviceAccounts, jobs, filterType]);
 
   // Bounding box calculation
   const padding = 40;
@@ -397,6 +994,13 @@ export function VisualPreview({
       case 'pod':
         return <HardDrive className="w-4 h-4 text-purple-500" />;
       case 'configmap':
+        return <Settings className="w-4 h-4 text-green-500" />;
+      case 'serviceaccount':
+        return <Users className="w-4 h-4 text-cyan-500" />;
+      case 'job':
+        return <Play className="w-4 h-4 text-orange-500" />;
+      case 'cronjob':
+        return <Clock className="w-4 h-4 text-purple-500" />;
         return <Settings className="w-4 h-4 text-orange-500" />;
       case 'secret':
         return <Key className="w-4 h-4 text-red-500" />;
@@ -498,6 +1102,69 @@ export function VisualPreview({
       const ns = namespaces.find(ns => ns.name === node.name);
       if (ns) return generateNamespaceYaml([ns]);
     }
+    if (node.type === 'serviceaccount') {
+      const sa = serviceAccounts.find(sa => sa.name === node.name);
+      if (sa) return generateServiceAccountYaml([sa]);
+    }
+    if (node.type === 'job') {
+      const job = jobs.find(job => job.name === node.name && job.type === 'job');
+      if (job) {
+        // Convert Job to JobConfig format
+        const labelsObj = job.labels.reduce((acc, label) => {
+          acc[label.key] = label.value;
+          return acc;
+        }, {} as Record<string, string>);
+        
+        const jobConfig = {
+          name: job.name,
+          namespace: job.namespace,
+          labels: labelsObj,
+          annotations: {},
+          containers: job.containers,
+          completions: job.completions,
+          parallelism: job.replicas,
+          backoffLimit: job.backoffLimit,
+          activeDeadlineSeconds: job.activeDeadlineSeconds,
+          restartPolicy: job.restartPolicy
+        };
+        return generateJobYaml([jobConfig]);
+      }
+    }
+    if (node.type === 'cronjob') {
+      const job = jobs.find(job => job.name === node.name && job.type === 'cronjob');
+      if (job) {
+        // Convert Job to CronJobConfig format
+        const labelsObj = job.labels.reduce((acc, label) => {
+          acc[label.key] = label.value;
+          return acc;
+        }, {} as Record<string, string>);
+        
+        const cronJobConfig = {
+          name: job.name,
+          namespace: job.namespace,
+          labels: labelsObj,
+          annotations: {},
+          schedule: job.schedule || '',
+          concurrencyPolicy: job.concurrencyPolicy,
+          startingDeadlineSeconds: job.startingDeadline ? parseInt(job.startingDeadline) : undefined,
+          successfulJobsHistoryLimit: job.historySuccess ? parseInt(job.historySuccess) : undefined,
+          failedJobsHistoryLimit: job.historyFailure ? parseInt(job.historyFailure) : undefined,
+          jobTemplate: {
+            name: job.name,
+            namespace: job.namespace,
+            labels: labelsObj,
+            annotations: {},
+            completions: job.completions,
+            parallelism: job.replicas,
+            backoffLimit: job.backoffLimit,
+            activeDeadlineSeconds: job.activeDeadlineSeconds,
+            restartPolicy: job.restartPolicy,
+            containers: job.containers
+          }
+        };
+        return generateCronJobYaml([cronJobConfig]);
+      }
+    }
     if (node.type === 'ingress') {
       const depName = node.name.replace(/-ingress$/, '');
       const deployment = deployments.find(d => d.appName === depName);
@@ -516,7 +1183,34 @@ export function VisualPreview({
     setYamlModal({ open: true, title: node.name, yaml });
   };
 
-  if (!validDeployments.length && !validDaemonSets.length) {
+  const validServiceAccounts = serviceAccounts.filter(sa => sa.name);
+  const validJobs = jobs.filter(job => job.name);
+  
+  // Check if there are any resources for the current filter
+  const hasFilteredResources = () => {
+    if (filterType === 'all') {
+      return validDeployments.length > 0 || validDaemonSets.length > 0 || validServiceAccounts.length > 0 || validJobs.length > 0;
+    } else if (filterType === 'deployments') {
+      return validDeployments.length > 0;
+    } else if (filterType === 'daemonsets') {
+      return validDaemonSets.length > 0;
+    } else if (filterType === 'serviceaccounts') {
+      return validServiceAccounts.length > 0;
+    } else if (filterType === 'jobs') {
+      return validJobs.filter(job => job.type === 'job').length > 0;
+    } else if (filterType === 'cronjobs') {
+      return validJobs.filter(job => job.type === 'cronjob').length > 0;
+    } else if (filterType === 'configmaps') {
+      return configMaps.length > 0;
+    } else if (filterType === 'secrets') {
+      return secrets.length > 0;
+    } else if (filterType === 'namespaces') {
+      return namespaces.length > 0;
+    }
+    return false;
+  };
+  
+  if (!hasFilteredResources()) {
     return (
       <div className="text-center py-16 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-xl border border-blue-200">
         <div className="max-w-md mx-auto">
@@ -524,10 +1218,10 @@ export function VisualPreview({
             <GitBranch className="w-10 h-10 text-blue-600" />
           </div>
           <h3 className="text-xl font-semibold text-gray-900 mb-2">No Resources to Visualize</h3>
-          <p className="text-gray-600 mb-6">Create your first deployment to see the Visual diagram</p>
+          <p className="text-gray-600 mb-6">Create your first deployment or service account to see the Visual diagram</p>
           <div className="bg-white/60 backdrop-blur-sm rounded-lg p-4 border border-white/20">
             <p className="text-sm text-gray-500">
-              Add deployments, ConfigMaps, and Secrets to visualize your Kubernetes resource flow and dependencies
+              Add deployments, service accounts, ConfigMaps, and Secrets to visualize your Kubernetes resource flow and dependencies
             </p>
           </div>
         </div>
@@ -652,6 +1346,18 @@ export function VisualPreview({
                   <div className="flex items-center space-x-1">
                     <Settings className="w-3 h-3" />
                     <span>{node.metadata.dataKeys} keys</span>
+                  </div>
+                )}
+                {node.metadata.secrets !== undefined && (
+                  <div className="flex items-center space-x-1">
+                    <Key className="w-3 h-3" />
+                    <span>{node.metadata.secrets} secrets</span>
+                  </div>
+                )}
+                {node.metadata.imagePullSecrets !== undefined && (
+                  <div className="flex items-center space-x-1">
+                    <Key className="w-3 h-3" />
+                    <span>{node.metadata.imagePullSecrets} image pull secrets</span>
                   </div>
                 )}
                 {node.metadata.lastSync && (

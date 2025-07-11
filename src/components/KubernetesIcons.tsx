@@ -56,4 +56,16 @@ export const K8sPodIcon: React.FC<IconProps> = ({ className = "w-4 h-4" }) => (
   <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M12 2L4 6V18L12 22L20 18V6L12 2ZM12 4.21L17.37 7L12 9.83L6.63 7L12 4.21ZM6 16.89L5 16.35V8.17L11 11.15V19.29L6 16.89ZM13 19.29V11.15L19 8.17V16.35L18 16.89L13 19.29Z" fill="currentColor"/>
   </svg>
+);
+
+export const K8sSecurityIcon: React.FC<IconProps> = ({ className = "w-4 h-4" }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M12,7C13.4,7 14.8,8.6 14.8,10V11H16V16H8V11H9.2V10C9.2,8.6 10.6,7 12,7M12,8.2C11.2,8.2 10.4,8.7 10.4,10V11H13.6V10C13.6,8.7 12.8,8.2 12,8.2Z" fill="currentColor"/>
+  </svg>
+);
+
+export const K8sServiceAccountIcon: React.FC<IconProps> = ({ className = "w-4 h-4" }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM21 9V7L15 5.5C14.8 4.1 13.9 2.9 12.6 2.2L11.2 5.6C11.5 5.8 11.7 6.1 11.8 6.5L17.5 7.5C17.3 7.2 17.1 6.9 16.8 6.7L21 9ZM3 9L7.2 6.7C6.9 6.9 6.7 7.2 6.5 7.5L12.2 6.5C12.3 6.1 12.5 5.8 12.8 5.6L11.4 2.2C10.1 2.9 9.2 4.1 9 5.5L3 7V9ZM9 13C9 15.8 11.2 18 14 18S19 15.8 19 13V11H17V13C17 14.7 15.7 16 14 16S11 14.7 11 13V11H9V13ZM5 13C5 15.8 7.2 18 10 18S15 15.8 15 13V11H13V13C13 14.7 11.7 16 10 16S7 14.7 7 13V11H5V13Z" fill="currentColor"/>
+  </svg>
 ); 

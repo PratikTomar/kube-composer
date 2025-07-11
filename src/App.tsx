@@ -10,6 +10,7 @@ import { DaemonSetsList } from './components/DaemonSetsList';
 import { NamespacesList } from './components/NamespacesList';
 import { ConfigMapsList } from './components/ConfigMapsList';
 import { SecretsList } from './components/SecretsList';
+import { ServiceAccountsList } from './components/ServiceAccountsList';
 import { VisualPreview } from './components/VisualPreview';
 import { Footer } from './components/Footer';
 import { SocialShare } from './components/SocialShare';
@@ -17,6 +18,7 @@ import { SEOHead } from './components/SEOHead';
 import { NamespaceManager } from './components/NamespaceManager';
 import { ConfigMapManager } from './components/ConfigMapManager';
 import { SecretManager } from './components/SecretManager';
+import { ServiceAccountManager } from './components/ServiceAccountManager';
 import { ProjectSettingsManager } from './components/ProjectSettingsManager';
 import { YouTubePopup } from './components/YouTubePopup';
 import { DockerRunPopup } from './components/DockerRunPopup';
@@ -24,7 +26,7 @@ import { generateMultiDeploymentYaml } from './utils/yamlGenerator';
 import { JobManager, Job } from './components/JobManager';
 import { JobList } from './components/jobs/JobList';
 import { CronJobList } from './components/jobs/CronJobList';
-import type { DeploymentConfig, DaemonSetConfig, Namespace, ConfigMap, Secret, ProjectSettings, JobConfig, CronJobConfig } from './types';
+import type { DeploymentConfig, DaemonSetConfig, Namespace, ConfigMap, Secret, ServiceAccount, ProjectSettings, JobConfig, CronJobConfig } from './types';
 import {
   K8sDeploymentIcon,
   K8sNamespaceIcon,
@@ -33,11 +35,13 @@ import {
   K8sJobIcon,
   K8sCronJobIcon,
   K8sStorageIcon,
-  K8sDaemonSetIcon
+  K8sDaemonSetIcon,
+  K8sSecurityIcon,
+  K8sServiceAccountIcon
 } from './components/KubernetesIcons';
 
 type PreviewMode = 'visual' | 'yaml' | 'summary' | 'argocd' | 'flow';
-type SidebarTab = 'deployments' | 'daemonsets' | 'namespaces' | 'storage' | 'jobs' | 'configmaps' | 'secrets';
+type SidebarTab = 'deployments' | 'daemonsets' | 'namespaces' | 'storage' | 'security' | 'jobs' | 'configmaps' | 'secrets';
 
 function App() {
   const hideDemoIcons = import.meta.env.VITE_HIDE_DEMO_ICONS === 'true';
@@ -62,20 +66,26 @@ function App() {
   }]);
   const [configMaps, setConfigMaps] = useState<ConfigMap[]>([]);
   const [secrets, setSecrets] = useState<Secret[]>([]);
+  const [serviceAccounts, setServiceAccounts] = useState<ServiceAccount[]>([]);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [selectedDeployment, setSelectedDeployment] = useState<number>(0);
   const [selectedDaemonSet, setSelectedDaemonSet] = useState<number>(0);
   const [selectedNamespace, setSelectedNamespace] = useState<number>(0);
   const [selectedConfigMap, setSelectedConfigMap] = useState<number>(0);
   const [selectedSecret, setSelectedSecret] = useState<number>(0);
+  const [selectedServiceAccount, setSelectedServiceAccount] = useState<number>(0);
   const [previewMode, setPreviewMode] = useState<PreviewMode>('flow');
   const [sidebarTab, setSidebarTab] = useState<SidebarTab>('deployments');
+  const [showAllResources, setShowAllResources] = useState<boolean>(true); // Show all resources by default
   const [storageSubTab, setStorageSubTab] = useState<'configmaps' | 'secrets'>('configmaps');
+  const [securitySubTab, setSecuritySubTab] = useState<'serviceaccounts'>('serviceaccounts');
   const [jobsSubTab, setJobsSubTab] = useState<'jobs' | 'cronjobs'>('jobs');
   const [showForm, setShowForm] = useState(false);
   const [showNamespaceManager, setShowNamespaceManager] = useState(false);
   const [showConfigMapManager, setShowConfigMapManager] = useState(false);
   const [showSecretManager, setShowSecretManager] = useState(false);
+  const [showServiceAccountManager, setShowServiceAccountManager] = useState(false);
+  const [editingServiceAccountIndex, setEditingServiceAccountIndex] = useState<number | undefined>(undefined);
   const [showJobManager, setShowJobManager] = useState(false);
   const [jobTypeToCreate, setJobTypeToCreate] = useState<'job' | 'cronjob'>('job');
   const [showProjectSettings, setShowProjectSettings] = useState(false);
@@ -84,8 +94,8 @@ function App() {
   const [showDockerPopup, setShowDockerPopup] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showClearModal, setShowClearModal] = useState(false);
-  // Only one group open at a time: 'workloads' | 'storage'
-  const [openGroup, setOpenGroup] = useState<'workloads' | 'storage'>('workloads');
+  // Only one group open at a time: 'workloads' | 'storage' | 'security' | null (all collapsed)
+  const [openGroup, setOpenGroup] = useState<'workloads' | 'storage' | 'security' | null>(null);
   const [jobToEdit, setJobToEdit] = useState<Job | undefined>(undefined);
   const [selectedJob, setSelectedJob] = useState<number>(-1);
   const [selectedCronJob, setSelectedCronJob] = useState<number>(-1);
@@ -104,6 +114,7 @@ function App() {
         jobs,
         configMaps,
         secrets,
+        serviceAccounts,
         namespaces,
         projectSettings,
         generatedYaml
@@ -118,7 +129,7 @@ function App() {
       console.warn('Force save failed:', e);
       return false;
     }
-  }, [deployments, daemonSets, jobs, configMaps, secrets, namespaces, projectSettings, generatedYaml]);
+  }, [deployments, daemonSets, jobs, configMaps, secrets, serviceAccounts, namespaces, projectSettings, generatedYaml]);
 
   // Auto-save function
   const autoSave = useCallback(() => {
@@ -134,6 +145,7 @@ function App() {
           jobs,
           configMaps,
           secrets,
+          serviceAccounts,
           namespaces,
           projectSettings,
           generatedYaml
@@ -146,13 +158,13 @@ function App() {
         console.warn('Auto-save failed:', e);
       }
     }, 3000); // 3 second delay
-  }, [deployments, daemonSets, jobs, configMaps, secrets, namespaces, projectSettings, generatedYaml]);
+  }, [deployments, daemonSets, jobs, configMaps, secrets, serviceAccounts, namespaces, projectSettings, generatedYaml]);
 
   // Update generated YAML when configuration changes
   useEffect(() => {
     const yaml = getPreviewYaml();
     setGeneratedYaml(yaml);
-  }, [deployments, daemonSets, jobs, configMaps, secrets, namespaces, projectSettings]);
+  }, [deployments, daemonSets, jobs, configMaps, secrets, serviceAccounts, namespaces, projectSettings]);
 
   // Trigger auto-save when any configuration changes
   useEffect(() => {
@@ -170,6 +182,7 @@ function App() {
         if (saved.namespaces && saved.namespaces.length > 0) setNamespaces(saved.namespaces);
         if (saved.configMaps) setConfigMaps(saved.configMaps);
         if (saved.secrets) setSecrets(saved.secrets);
+        if (saved.serviceAccounts) setServiceAccounts(saved.serviceAccounts);
         if (saved.jobs) setJobs(saved.jobs);
         if (saved.generatedYaml) setGeneratedYaml(saved.generatedYaml);
         console.log('Configuration loaded from localStorage');
@@ -215,6 +228,7 @@ function App() {
     secrets: [],
     selectedConfigMaps: [],
     selectedSecrets: [],
+    serviceAccount: undefined,
     ingress: {
       enabled: false,
       className: '',
@@ -249,6 +263,7 @@ function App() {
     secrets: [],
     selectedConfigMaps: [],
     selectedSecrets: [],
+    serviceAccount: undefined,
     nodeSelector: {}
   };
 
@@ -326,6 +341,7 @@ function App() {
       secrets: [],
       selectedConfigMaps: [],
       selectedSecrets: [],
+      serviceAccount: undefined,
       ingress: {
         enabled: false,
         className: '',
@@ -533,6 +549,110 @@ function App() {
     setSelectedSecret(secrets.length);
   };
 
+  // Service Account management functions
+  const handleAddServiceAccount = (serviceAccount: ServiceAccount) => {
+    const serviceAccountWithGlobalLabels: ServiceAccount = {
+      ...serviceAccount,
+      labels: cleanAndMergeLabels(serviceAccount.labels)
+    };
+    setServiceAccounts([...serviceAccounts, serviceAccountWithGlobalLabels]);
+    setSelectedServiceAccount(serviceAccounts.length);
+    setShowServiceAccountManager(false);
+    setEditingServiceAccountIndex(undefined);
+  };
+
+  const handleUpdateServiceAccount = (serviceAccount: ServiceAccount, index: number) => {
+    const oldServiceAccount = serviceAccounts[index];
+    const serviceAccountWithGlobalLabels: ServiceAccount = {
+      ...serviceAccount,
+      labels: cleanAndMergeLabels(serviceAccount.labels)
+    };
+    const newServiceAccounts = [...serviceAccounts];
+    newServiceAccounts[index] = serviceAccountWithGlobalLabels;
+    setServiceAccounts(newServiceAccounts);
+    
+    // Update deployments that reference this service account
+    const updatedDeployments = deployments.map(deployment => {
+      if (deployment.serviceAccount === oldServiceAccount.name) {
+        return {
+          ...deployment,
+          serviceAccount: serviceAccount.name // Update to new name
+        };
+      }
+      return deployment;
+    });
+    setDeployments(updatedDeployments);
+    
+    // Update daemonSets that reference this service account
+    const updatedDaemonSets = daemonSets.map(daemonSet => {
+      if (daemonSet.serviceAccount === oldServiceAccount.name) {
+        return {
+          ...daemonSet,
+          serviceAccount: serviceAccount.name // Update to new name
+        };
+      }
+      return daemonSet;
+    });
+    setDaemonSets(updatedDaemonSets);
+    
+    setShowServiceAccountManager(false);
+    setEditingServiceAccountIndex(undefined);
+  };
+
+  const handleDeleteServiceAccount = (serviceAccountName: string) => {
+    const index = serviceAccounts.findIndex(sa => sa.name === serviceAccountName);
+    if (index > -1) {
+      const newServiceAccounts = serviceAccounts.filter((_, i) => i !== index);
+      setServiceAccounts(newServiceAccounts);
+      
+      // Remove service account reference from deployments that use it
+      const updatedDeployments = deployments.map(deployment => {
+        if (deployment.serviceAccount === serviceAccountName) {
+          return {
+            ...deployment,
+            serviceAccount: undefined // Clear the reference
+          };
+        }
+        return deployment;
+      });
+      setDeployments(updatedDeployments);
+      
+      // Remove service account reference from daemonSets that use it
+      const updatedDaemonSets = daemonSets.map(daemonSet => {
+        if (daemonSet.serviceAccount === serviceAccountName) {
+          return {
+            ...daemonSet,
+            serviceAccount: undefined // Clear the reference
+          };
+        }
+        return daemonSet;
+      });
+      setDaemonSets(updatedDaemonSets);
+      
+      if (selectedServiceAccount >= newServiceAccounts.length) {
+        setSelectedServiceAccount(Math.max(0, newServiceAccounts.length - 1));
+      }
+    }
+  };
+
+  const handleDuplicateServiceAccount = (index: number) => {
+    const serviceAccountToDuplicate = serviceAccounts[index];
+    const duplicatedServiceAccount: ServiceAccount = {
+      ...serviceAccountToDuplicate,
+      name: `${serviceAccountToDuplicate.name}-copy`,
+      createdAt: new Date().toISOString()
+    };
+    setServiceAccounts([...serviceAccounts, duplicatedServiceAccount]);
+    setSelectedServiceAccount(serviceAccounts.length);
+    setEditingServiceAccountIndex(serviceAccounts.length);
+    setShowServiceAccountManager(true);
+  };
+
+  const handleEditServiceAccount = (index: number) => {
+    setEditingServiceAccountIndex(index);
+    setShowServiceAccountManager(true);
+  };
+
   // Job management functions
   const handleAddJob = (job: Job) => {
     // Convert job labels from array to object format for global label merging
@@ -614,6 +734,12 @@ function App() {
     }));
     setSecrets(updatedSecrets);
 
+    const updatedServiceAccounts = serviceAccounts.map(serviceAccount => ({
+      ...serviceAccount,
+      labels: cleanAndMergeLabels(serviceAccount.labels, oldGlobalLabels, newSettings.globalLabels, newSettings.name)
+    }));
+    setServiceAccounts(updatedServiceAccounts);
+
     // Update jobs with new global labels
     const updatedJobs = jobs.map(job => {
       // Convert job labels from array to object format
@@ -670,7 +796,7 @@ function App() {
     // Fix: Only map regular jobs to jobConfigs, not cronjobs
     const jobConfigs = jobs.filter(j => j.type === 'job').map(jobToJobConfig);
     const cronJobConfigs = jobs.filter(j => j.type === 'cronjob').map(jobToCronJobConfig);
-    const yaml = generateMultiDeploymentYaml(validDeployments, namespaces, configMaps, secrets, projectSettings, jobConfigs, cronJobConfigs, validDaemonSets);
+    const yaml = generateMultiDeploymentYaml(validDeployments, namespaces, configMaps, secrets, projectSettings, jobConfigs, cronJobConfigs, validDaemonSets, serviceAccounts);
     
     let finalYaml = yaml;
     if (
@@ -680,9 +806,10 @@ function App() {
       cronJobConfigs.length === 0 &&
       namespaces.length <= 1 &&
       configMaps.length === 0 &&
-      secrets.length === 0
+      secrets.length === 0 &&
+      serviceAccounts.length === 0
     ) {
-      finalYaml = '# No deployments, daemonsets, or jobs configured\n# Create your first deployment, daemonset, or job to see the generated YAML';
+      finalYaml = '# No resources configured\n# Create your first deployment, daemonset, job, service account, configmap, or secret to see the generated YAML';
     }
     
     return finalYaml;
@@ -705,14 +832,7 @@ function App() {
     }
   }, []);
 
-  useEffect(() => {
-    // Ensure the correct group is open based on the selected tab
-    if (sidebarTab === 'storage' || sidebarTab === 'configmaps' || sidebarTab === 'secrets') {
-      setOpenGroup('storage');
-    } else {
-      setOpenGroup('workloads');
-    }
-  }, [sidebarTab]);
+
 
   // Helper: Map Job (JobManager) to JobConfig (for JobList)
   function jobToJobConfig(job: Job): JobConfig {
@@ -748,22 +868,47 @@ function App() {
     };
   }
 
+  // Function to determine filter type based on current sidebar tab and sub-tabs
+  const getFilterType = (): 'all' | 'deployments' | 'daemonsets' | 'namespaces' | 'configmaps' | 'secrets' | 'serviceaccounts' | 'jobs' | 'cronjobs' => {
+    // Show all resources when showAllResources is true
+    if (showAllResources) return 'all';
+    
+    // Show specific resources based on sidebar tab
+    if (sidebarTab === 'deployments') return 'deployments';
+    if (sidebarTab === 'daemonsets') return 'daemonsets';
+    if (sidebarTab === 'namespaces') return 'namespaces';
+    if (sidebarTab === 'jobs') {
+      if (jobsSubTab === 'jobs') return 'jobs';
+      if (jobsSubTab === 'cronjobs') return 'cronjobs';
+      return 'jobs'; // default
+    }
+    if (sidebarTab === 'storage') {
+      if (storageSubTab === 'configmaps') return 'configmaps';
+      if (storageSubTab === 'secrets') return 'secrets';
+      return 'configmaps'; // default
+    }
+    if (sidebarTab === 'security') {
+      if (securitySubTab === 'serviceaccounts') return 'serviceaccounts';
+      return 'serviceaccounts'; // default
+    }
+    return 'all'; // Show all resources by default
+  };
+
   // Function to handle menu item clicks and set appropriate preview mode
   const handleMenuClick = (tab: SidebarTab, subTab?: string) => {
     setSidebarTab(tab);
+    setShowAllResources(false); // Show filtered view when clicking menu items
     
-    // Set preview mode based on the selected tab
-    if (tab === 'deployments' || tab === 'daemonsets') {
-      setPreviewMode('flow');
-    } else {
-      setPreviewMode('yaml');
-    }
+    // Set visual mode as default for all items
+    setPreviewMode('flow');
     
     // Handle sub-tabs
     if (subTab === 'configmaps') {
       setStorageSubTab('configmaps');
     } else if (subTab === 'secrets') {
       setStorageSubTab('secrets');
+    } else if (subTab === 'serviceaccounts') {
+      setSecuritySubTab('serviceaccounts');
     } else if (subTab === 'jobs') {
       setJobsSubTab('jobs');
     } else if (subTab === 'cronjobs') {
@@ -814,6 +959,7 @@ function App() {
       secrets: [],
       selectedConfigMaps: [],
       selectedSecrets: [],
+      serviceAccount: undefined,
       nodeSelector: {}
     };
     setDaemonSets([...daemonSets, newDaemonSet]);
@@ -895,14 +1041,22 @@ function App() {
                 <FileText className="w-5 h-5 text-white" />
               </div>
               <div className="flex flex-col">
-                <a 
-                  href="https://kube-composer.com" 
-                  className="text-lg sm:text-xl font-semibold text-gray-900 hover:text-blue-600 transition-colors duration-200"
+                <button 
+                  onClick={() => {
+                    setShowAllResources(true);
+                    setSidebarTab('deployments'); // Reset to default tab
+                  }}
+                  className="text-lg sm:text-xl font-semibold text-gray-900 hover:text-blue-600 transition-colors duration-200 text-left"
                 >
                   Kube Composer
-                </a>
+                </button>
                 <p className="block text-sm text-gray-500">
                   {projectSettings.name ? `Project: ${projectSettings.name}` : 'Kubernetes YAML Generator for developers'}
+                  {showAllResources && (
+                    <span className="inline-block ml-2 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                      All Resources
+                    </span>
+                  )}
                 </p>
               </div>
             </div>
@@ -1069,7 +1223,14 @@ function App() {
             {/* Workloads Group */}
             <button
               className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-semibold text-gray-700 dark:text-gray-200 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200"
-              onClick={() => setOpenGroup('workloads')}
+              onClick={() => {
+                if (openGroup === 'workloads') {
+                  setOpenGroup(null);
+                } else {
+                  setOpenGroup('workloads');
+                  setSidebarTab('deployments');
+                }
+              }}
               aria-expanded={openGroup === 'workloads'}
             >
               <span className="flex items-center gap-2">
@@ -1156,7 +1317,15 @@ function App() {
             {/* Storage Group */}
             <button
               className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-semibold text-gray-700 dark:text-gray-200 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200"
-              onClick={() => setOpenGroup('storage')}
+              onClick={() => {
+                if (openGroup === 'storage') {
+                  setOpenGroup(null);
+                } else {
+                  setOpenGroup('storage');
+                  setSidebarTab('storage');
+                  setStorageSubTab('configmaps');
+                }
+              }}
               aria-expanded={openGroup === 'storage'}
             >
               <span className="flex items-center gap-2">
@@ -1220,10 +1389,81 @@ function App() {
                 </button>
               </div>
             )}
+
+            {/* Security Group */}
+            <button
+              className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-semibold text-gray-700 dark:text-gray-200 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200"
+              onClick={() => {
+                if (openGroup === 'security') {
+                  setOpenGroup(null);
+                } else {
+                  setOpenGroup('security');
+                  setSidebarTab('security');
+                  setSecuritySubTab('serviceaccounts');
+                }
+              }}
+              aria-expanded={openGroup === 'security'}
+            >
+              <span className="flex items-center gap-2">
+                <K8sSecurityIcon className="w-4 h-4 text-blue-600" />
+                Security
+              </span>
+              <span>{openGroup === 'security' ? '▾' : '▸'}</span>
+            </button>
+            {openGroup === 'security' && (
+              <div className="pl-6 space-y-1">
+                <button
+                  onClick={() => handleMenuClick('security', 'serviceaccounts')}
+                  className={`flex items-center w-full px-2 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+                    sidebarTab === 'security' && securitySubTab === 'serviceaccounts'
+                      ? 'bg-cyan-50 text-cyan-700 dark:bg-cyan-900/20 dark:text-cyan-300 shadow-sm border border-cyan-100 dark:border-cyan-800' 
+                      : 'text-gray-700 dark:text-gray-200 hover:bg-cyan-50/50 dark:hover:bg-cyan-900/10 hover:text-cyan-600 dark:hover:text-cyan-300'
+                  }`}
+                >
+                  <K8sServiceAccountIcon className={`mr-3 flex-shrink-0 h-6 w-6 ${
+                    sidebarTab === 'security' && securitySubTab === 'serviceaccounts' ? 'text-cyan-600 dark:text-cyan-400' : 'text-gray-500 dark:text-gray-400'
+                  }`} />
+                  Service Accounts
+                </button>
+
+                {/* Future RBAC items - disabled for now */}
+                <button
+                  disabled
+                  className="flex items-center w-full px-2 py-2 text-sm font-medium rounded-md text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-50"
+                >
+                  <K8sSecurityIcon className="mr-3 flex-shrink-0 h-6 w-6 text-gray-400 dark:text-gray-600" />
+                  Roles
+                </button>
+
+                <button
+                  disabled
+                  className="flex items-center w-full px-2 py-2 text-sm font-medium rounded-md text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-50"
+                >
+                  <K8sSecurityIcon className="mr-3 flex-shrink-0 h-6 w-6 text-gray-400 dark:text-gray-600" />
+                  RoleBindings
+                </button>
+
+                <button
+                  disabled
+                  className="flex items-center w-full px-2 py-2 text-sm font-medium rounded-md text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-50"
+                >
+                  <K8sSecurityIcon className="mr-3 flex-shrink-0 h-6 w-6 text-gray-400 dark:text-gray-600" />
+                  ClusterRoles
+                </button>
+
+                <button
+                  disabled
+                  className="flex items-center w-full px-2 py-2 text-sm font-medium rounded-md text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-50"
+                >
+                  <K8sSecurityIcon className="mr-3 flex-shrink-0 h-6 w-6 text-gray-400 dark:text-gray-600" />
+                  ClusterRoleBindings
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Tab Content */}
-          <div className="flex-1 min-h-0 overflow-y-auto">
+          <div className="flex-1 min-h-0">
             {sidebarTab === 'deployments' && (
               <div>
                 <div className="p-4 border-b border-gray-200 dark:border-gray-700">
@@ -1438,6 +1678,38 @@ function App() {
                 )}
               </>
             )}
+
+            {sidebarTab === 'security' && (
+              <>
+                {securitySubTab === 'serviceaccounts' && (
+                  <>
+                    <div className="p-4 border-b border-gray-200">
+                      <button
+                        onClick={() => {
+                          setEditingServiceAccountIndex(undefined);
+                          setShowServiceAccountManager(true);
+                        }}
+                        className="w-full inline-flex items-center justify-center px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 transition-colors duration-200 text-sm font-medium"
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add Service Account
+                      </button>
+                    </div>
+                    <ServiceAccountsList
+                      serviceAccounts={serviceAccounts}
+                      selectedIndex={selectedServiceAccount}
+                      onSelect={(index) => {
+                        setSelectedServiceAccount(index);
+                        setSidebarOpen(false);
+                      }}
+                      onEdit={handleEditServiceAccount}
+                      onDelete={handleDeleteServiceAccount}
+                      onDuplicate={handleDuplicateServiceAccount}
+                    />
+                  </>
+                )}
+              </>
+            )}
           </div>
         </div>
 
@@ -1483,6 +1755,7 @@ function App() {
                       <span className="font-bold">{secrets.length}</span>
                       <span className="text-gray-500">secret{secrets.length !== 1 ? 's' : ''}</span>
                     </div>
+
                     <div className="flex items-center space-x-1 text-sm text-gray-700 font-medium">
                       <K8sJobIcon className="w-5 h-5 text-pink-500" />
                       <span className="font-bold">{jobs.filter(j => j.type === 'job').length}</span>
@@ -1519,8 +1792,8 @@ function App() {
               </div>
             </div>
             <div className="p-4 sm:p-6 pb-8">
-              {previewMode === 'flow' && <VisualPreview deployments={deployments} daemonSets={daemonSets} namespaces={namespaces} configMaps={configMaps} secrets={secrets} containerRef={containerRef} />}
-              {previewMode === 'summary' && <ResourceSummary config={currentConfig} />}
+              {previewMode === 'flow' && <VisualPreview deployments={deployments} daemonSets={daemonSets} namespaces={namespaces} configMaps={configMaps} secrets={secrets} serviceAccounts={serviceAccounts} jobs={jobs} containerRef={containerRef} filterType={getFilterType()} />}
+              {previewMode === 'summary' && <ResourceSummary deployments={deployments} daemonSets={daemonSets} namespaces={namespaces} configMaps={configMaps} secrets={secrets} serviceAccounts={serviceAccounts} jobs={jobs} />}
               {previewMode === 'yaml' && <YamlPreview yaml={generatedYaml} />}
             </div>
           </div>
@@ -1580,6 +1853,13 @@ function App() {
                   availableNamespaces={availableNamespaces}
                   availableConfigMaps={configMaps}
                   availableSecrets={secrets}
+                  availableServiceAccounts={serviceAccounts}
+                  onNavigateToServiceAccounts={() => {
+                    setShowForm(false);
+                    setSidebarTab('security');
+                    setSecuritySubTab('serviceaccounts');
+                    setShowServiceAccountManager(true);
+                  }}
                 />
               )}
             </div>
@@ -1632,6 +1912,22 @@ function App() {
           onAddSecret={handleAddSecret}
           onDeleteSecret={handleDeleteSecret}
           onClose={() => setShowSecretManager(false)}
+        />
+      )}
+
+      {/* Service Account Manager Modal */}
+      {showServiceAccountManager && (
+        <ServiceAccountManager
+          serviceAccounts={serviceAccounts}
+          namespaces={availableNamespaces}
+          secrets={secrets}
+          onAddServiceAccount={handleAddServiceAccount}
+          onUpdateServiceAccount={handleUpdateServiceAccount}
+          onClose={() => {
+            setShowServiceAccountManager(false);
+            setEditingServiceAccountIndex(undefined);
+          }}
+          editingIndex={editingServiceAccountIndex}
         />
       )}
 
@@ -1759,7 +2055,7 @@ function App() {
                   Clear All Configuration?
                 </h4>
                 <p className="text-gray-600 dark:text-gray-300 mb-6">
-                  This action will permanently remove all your deployments, daemonsets, jobs, configmaps, secrets, and namespaces. This action cannot be undone.
+                  This action will permanently remove all your deployments, daemonsets, jobs, configmaps, secrets, service accounts, and namespaces. This action cannot be undone.
                 </p>
                 
                 {/* Configuration Summary */}
@@ -1790,6 +2086,10 @@ function App() {
                       <span className="text-gray-600 dark:text-gray-300">Namespaces:</span>
                       <span className="font-semibold text-gray-900 dark:text-white">{namespaces.length}</span>
                     </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-600 dark:text-gray-300">Service Accounts:</span>
+                      <span className="font-semibold text-gray-900 dark:text-white">{serviceAccounts.length}</span>
+                    </div>
                   </div>
                 </div>
 
@@ -1817,6 +2117,7 @@ function App() {
                         setJobs([]);
                         setConfigMaps([]);
                         setSecrets([]);
+                        setServiceAccounts([]);
                         setNamespaces([{
                           name: 'default',
                           labels: {},
@@ -1836,6 +2137,8 @@ function App() {
                         setSelectedNamespace(0);
                         setSelectedConfigMap(0);
                         setSelectedSecret(0);
+                        setSelectedServiceAccount(0);
+                        setEditingServiceAccountIndex(undefined);
                         setSelectedJob(-1);
                         setSelectedCronJob(-1);
                         

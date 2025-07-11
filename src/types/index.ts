@@ -83,6 +83,7 @@ export interface DeploymentConfig {
   secrets: Array<{ name: string; data: Record<string, string> }>; // Legacy - for backward compatibility
   selectedConfigMaps: string[]; // References to ConfigMap names
   selectedSecrets: string[]; // References to Secret names
+  serviceAccount?: string; // Reference to ServiceAccount name
   ingress: IngressConfig;
   // Legacy fields for backward compatibility
   image?: string;
@@ -108,6 +109,7 @@ export interface DaemonSetConfig {
   secrets: Array<{ name: string; data: Record<string, string> }>; // Legacy - for backward compatibility
   selectedConfigMaps: string[]; // References to ConfigMap names
   selectedSecrets: string[]; // References to Secret names
+  serviceAccount?: string; // Reference to ServiceAccount name
   nodeSelector?: Record<string, string>; // Optional node selector
   // Legacy fields for backward compatibility
   image?: string;
@@ -122,6 +124,21 @@ export interface Namespace {
   name: string;
   labels: Record<string, string>;
   annotations: Record<string, string>;
+  createdAt: string;
+}
+
+export interface ServiceAccount {
+  name: string;
+  namespace: string;
+  labels: Record<string, string>;
+  annotations: Record<string, string>;
+  secrets?: Array<{
+    name: string;
+  }>;
+  imagePullSecrets?: Array<{
+    name: string;
+  }>;
+  automountServiceAccountToken?: boolean;
   createdAt: string;
 }
 

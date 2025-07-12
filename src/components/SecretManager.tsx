@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, X, Key, Trash2, AlertTriangle, Eye, EyeOff } from 'lucide-react';
+import { Plus, X, Key, AlertTriangle, Eye, EyeOff } from 'lucide-react';
 import type { Secret } from '../types';
 
 interface SecretManagerProps {

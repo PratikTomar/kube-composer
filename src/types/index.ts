@@ -196,3 +196,90 @@ export interface DockerHubSecret {
   annotations: Record<string, string>;
   createdAt: string;
 }
+
+// RBAC Types
+export interface PolicyRule {
+  apiGroups: string[];
+  resources: string[];
+  verbs: string[];
+  resourceNames?: string[];
+}
+
+export interface KubernetesRole {
+  apiVersion: 'rbac.authorization.k8s.io/v1';
+  kind: 'Role';
+  metadata: {
+    name: string;
+    namespace: string;
+    labels?: Record<string, string>;
+    annotations?: Record<string, string>;
+  };
+  rules: PolicyRule[];
+}
+
+export interface KubernetesClusterRole {
+  apiVersion: 'rbac.authorization.k8s.io/v1';
+  kind: 'ClusterRole';
+  metadata: {
+    name: string;
+    labels?: Record<string, string>;
+    annotations?: Record<string, string>;
+  };
+  rules: PolicyRule[];
+}
+
+export interface RoleFormData {
+  metadata: {
+    name: string;
+    namespace: string;
+    labels: Record<string, string>;
+  };
+  rules: PolicyRule[];
+}
+
+export interface ClusterRoleFormData {
+  metadata: {
+    name: string;
+    labels: Record<string, string>;
+  };
+  rules: PolicyRule[];
+}
+
+// For future RoleBinding support
+export interface KubernetesRoleBinding {
+  apiVersion: 'rbac.authorization.k8s.io/v1';
+  kind: 'RoleBinding';
+  metadata: {
+    name: string;
+    namespace: string;
+  };
+  subjects: {
+    kind: 'User' | 'Group' | 'ServiceAccount';
+    name: string;
+    namespace?: string;
+  }[];
+  roleRef: {
+    kind: 'Role';
+    name: string;
+    apiGroup: 'rbac.authorization.k8s.io';
+  };
+}
+
+// For future ClusterRoleBinding support
+export interface KubernetesClusterRoleBinding {
+  apiVersion: 'rbac.authorization.k8s.io/v1';
+  kind: 'ClusterRoleBinding';
+  metadata: {
+    name: string;
+  };
+  subjects: {
+    kind: 'User' | 'Group' | 'ServiceAccount';
+    name: string;
+    namespace?: string;
+  }[];
+  roleRef: {
+    kind: 'ClusterRole';
+    name: string;
+    apiGroup: 'rbac.authorization.k8s.io';
+  };
+}

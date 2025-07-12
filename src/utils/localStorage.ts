@@ -1,4 +1,4 @@
-import type { DeploymentConfig, DaemonSetConfig, Namespace, ConfigMap, Secret, ServiceAccount, ProjectSettings, DockerHubSecret } from '../types';
+import type { DeploymentConfig, DaemonSetConfig, Namespace, ConfigMap, Secret, ServiceAccount, ProjectSettings, DockerHubSecret, KubernetesRole, KubernetesClusterRole } from '../types';
 
 // Job interface from JobManager component
 export interface Job {
@@ -35,6 +35,8 @@ export interface KubeConfig {
   secrets: Secret[];
   dockerHubSecrets: DockerHubSecret[];
   serviceAccounts: ServiceAccount[];
+  roles: KubernetesRole[];
+  clusterRoles: KubernetesClusterRole[];
   namespaces: Namespace[];
   projectSettings: ProjectSettings;
   generatedYaml?: string;
@@ -121,6 +123,8 @@ export function saveConfig(config: Partial<KubeConfig>): boolean {
       secrets: config.secrets || [],
       dockerHubSecrets: config.dockerHubSecrets || [],
       serviceAccounts: config.serviceAccounts || [],
+      roles: config.roles || [],
+      clusterRoles: config.clusterRoles || [],
       namespaces: config.namespaces || [],
       projectSettings: config.projectSettings || {
         name: 'my-project',

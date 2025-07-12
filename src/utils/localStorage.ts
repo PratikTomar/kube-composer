@@ -1,4 +1,4 @@
-import type { DeploymentConfig, DaemonSetConfig, Namespace, ConfigMap, Secret, ServiceAccount, ProjectSettings } from '../types';
+import type { DeploymentConfig, DaemonSetConfig, Namespace, ConfigMap, Secret, ServiceAccount, ProjectSettings, DockerHubSecret } from '../types';
 
 // Job interface from JobManager component
 export interface Job {
@@ -33,6 +33,7 @@ export interface KubeConfig {
   jobs: Job[];
   configMaps: ConfigMap[];
   secrets: Secret[];
+  dockerHubSecrets: DockerHubSecret[];
   serviceAccounts: ServiceAccount[];
   namespaces: Namespace[];
   projectSettings: ProjectSettings;
@@ -118,6 +119,7 @@ export function saveConfig(config: Partial<KubeConfig>): boolean {
       jobs: config.jobs || [],
       configMaps: config.configMaps || [],
       secrets: config.secrets || [],
+      dockerHubSecrets: config.dockerHubSecrets || [],
       serviceAccounts: config.serviceAccounts || [],
       namespaces: config.namespaces || [],
       projectSettings: config.projectSettings || {
@@ -154,6 +156,7 @@ export function saveConfig(config: Partial<KubeConfig>): boolean {
       jobs: config.jobs?.length || 0,
       configMaps: config.configMaps?.length || 0,
       secrets: config.secrets?.length || 0,
+      dockerHubSecrets: config.dockerHubSecrets?.length || 0,
       namespaces: config.namespaces?.length || 0,
       hasYaml: !!config.generatedYaml,
       size: configString.length
@@ -201,6 +204,7 @@ export function loadConfig(): Partial<KubeConfig> | null {
       jobs: config.jobs?.length || 0,
       configMaps: config.configMaps?.length || 0,
       secrets: config.secrets?.length || 0,
+      dockerHubSecrets: config.dockerHubSecrets?.length || 0,
       namespaces: config.namespaces?.length || 0,
       hasYaml: !!config.generatedYaml,
       lastSaved: config.metadata?.lastSaved

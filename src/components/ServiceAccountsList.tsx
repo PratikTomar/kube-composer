@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Settings, Copy, Trash2, AlertTriangle, Calendar, Users, Key } from 'lucide-react';
+import { Settings, Copy, Trash2, AlertTriangle, Calendar, Users, Key, Tag, Shield } from 'lucide-react';
 import { K8sServiceAccountIcon } from './KubernetesIcons';
 import type { ServiceAccount } from '../types';
 
@@ -50,12 +50,12 @@ export function ServiceAccountsList({
 
   if (serviceAccounts.length === 0) {
     return (
-      <div className="p-4 text-center">
-        <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-          <K8sServiceAccountIcon className="w-6 h-6 text-gray-400" />
+      <div className="p-6 text-center">
+        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <K8sServiceAccountIcon className="w-8 h-8 text-gray-400" />
         </div>
-        <h3 className="text-base font-medium text-gray-900 mb-1">No Service Accounts</h3>
-        <p className="text-xs text-gray-500">
+        <h3 className="text-lg font-medium text-gray-900 mb-2">No Service Accounts</h3>
+        <p className="text-sm text-gray-500 mb-4">
           Create Service Accounts to manage authentication and authorization for your applications
         </p>
       </div>
@@ -63,141 +63,178 @@ export function ServiceAccountsList({
   }
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Service Accounts List */}
-      <div className="flex-1 p-2">
-        <div className="space-y-1">
-          {serviceAccounts.map((serviceAccount, index) => (
-            <div
-              key={`${serviceAccount.namespace}-${serviceAccount.name}`}
-              className={`bg-white rounded border cursor-pointer transition-all duration-200 hover:shadow-sm ${
-                selectedIndex === index
-                  ? 'border-cyan-300 bg-cyan-50 shadow-sm'
-                  : 'border-gray-200 hover:border-gray-300'
-              }`}
-              onClick={() => onSelect(index)}
-            >
-              <div className="p-2">
-                {/* Header with icon and name */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2 min-w-0 flex-1">
-                    <div className="flex-shrink-0">
-                      <div className={`w-6 h-6 rounded flex items-center justify-center ${
-                        selectedIndex === index ? 'bg-cyan-600' : 'bg-gray-100'
-                      }`}>
-                        <K8sServiceAccountIcon className={`w-3 h-3 ${
-                          selectedIndex === index ? 'text-white' : 'text-gray-600'
-                        }`} />
-                      </div>
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center space-x-2">
-                        <h3 className="text-sm font-semibold text-gray-900 truncate">
-                          {serviceAccount.name}
-                        </h3>
-                        <span className="px-1.5 py-0.5 bg-cyan-100 text-cyan-800 rounded text-xs font-medium">
-                          {serviceAccount.namespace}
-                        </span>
-                      </div>
-                      <div className="flex items-center text-xs text-gray-500 space-x-2 mt-0.5">
-                        <div className="flex items-center space-x-1">
-                          <Calendar className="w-2.5 h-2.5" />
-                          <span>{new Date(serviceAccount.createdAt).toLocaleDateString()}</span>
-                        </div>
-                        <span className={`px-1 py-0.5 rounded text-xs font-medium ${
-                          serviceAccount.automountServiceAccountToken !== false 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-yellow-100 text-yellow-800'
-                        }`}>
-                          {serviceAccount.automountServiceAccountToken !== false ? 'Auto-mount' : 'No auto-mount'}
-                        </span>
-                        {/* Secrets summary inline */}
-                        {(serviceAccount.secrets && serviceAccount.secrets.length > 0) || 
-                         (serviceAccount.imagePullSecrets && serviceAccount.imagePullSecrets.length > 0) ? (
-                          <div className="flex items-center space-x-1">
-                            {serviceAccount.secrets && serviceAccount.secrets.length > 0 && (
-                              <div className="flex items-center space-x-0.5">
-                                <Key className="w-2.5 h-2.5 text-gray-400" />
-                                <span className="text-xs">{serviceAccount.secrets.length}</span>
-                              </div>
-                            )}
-                            {serviceAccount.imagePullSecrets && serviceAccount.imagePullSecrets.length > 0 && (
-                              <div className="flex items-center space-x-0.5">
-                                <Users className="w-2.5 h-2.5 text-gray-400" />
-                                <span className="text-xs">{serviceAccount.imagePullSecrets.length}</span>
-                              </div>
-                            )}
-                          </div>
-                        ) : null}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Action Buttons */}
-                  <div className="flex items-center space-x-0.5 flex-shrink-0 ml-2">
-                    {deleteConfirm === serviceAccount.name ? (
-                      // Delete confirmation buttons
-                      <div className="flex items-center space-x-1">
-                        <button
-                          onClick={handleCancelDelete}
-                          className="px-1.5 py-0.5 text-xs bg-gray-100 text-gray-600 rounded hover:bg-gray-200 transition-colors duration-200"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          onClick={(e) => handleConfirmDelete(serviceAccount.name, e)}
-                          className="px-1.5 py-0.5 text-xs bg-red-600 text-white rounded hover:bg-red-700 transition-colors duration-200 flex items-center space-x-0.5"
-                        >
-                          <AlertTriangle className="w-2.5 h-2.5" />
-                          <span>Delete</span>
-                        </button>
-                      </div>
-                    ) : (
-                      // Normal action buttons
-                      <>
-                        <button
-                          onClick={(e) => handleEditClick(index, e)}
-                          className="p-1 text-gray-400 hover:text-cyan-600 rounded transition-colors duration-200"
-                          title="Edit Service Account"
-                        >
-                          <Settings className="w-3 h-3" />
-                        </button>
-                        <button
-                          onClick={(e) => handleDuplicateClick(index, e)}
-                          className="p-1 text-gray-400 hover:text-blue-600 rounded transition-colors duration-200"
-                          title="Duplicate Service Account"
-                        >
-                          <Copy className="w-3 h-3" />
-                        </button>
-                        <button
-                          onClick={(e) => handleDeleteClick(serviceAccount.name, e)}
-                          className="p-1 text-gray-400 hover:text-red-600 rounded transition-colors duration-200"
-                          title="Delete Service Account"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </button>
-                      </>
-                    )}
-                  </div>
+    <div className="space-y-3 p-4">
+      {serviceAccounts.map((serviceAccount, index) => (
+        <div
+          key={`${serviceAccount.namespace}-${serviceAccount.name}`}
+          className={`p-3 rounded-lg border cursor-pointer transition-all duration-200 ${
+            selectedIndex === index
+              ? 'bg-cyan-50 border-cyan-200 ring-1 ring-cyan-200'
+              : 'bg-white border-gray-200 hover:bg-gray-50'
+          }`}
+          onClick={() => onSelect(index)}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3 min-w-0 flex-1">
+              <div className="flex-shrink-0">
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                  selectedIndex === index ? 'bg-cyan-600' : 'bg-gray-100'
+                }`}>
+                  <K8sServiceAccountIcon className={`w-4 h-4 ${
+                    selectedIndex === index ? 'text-white' : 'text-gray-600'
+                  }`} />
                 </div>
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center space-x-2">
+                  <div className="font-medium text-gray-900 truncate">
+                    {serviceAccount.name}
+                  </div>
+                  <span className="px-2 py-1 bg-cyan-100 text-cyan-800 rounded text-xs font-medium">
+                    {serviceAccount.namespace}
+                  </span>
+                </div>
+                <div className="text-sm text-gray-500 flex items-center space-x-2 mt-1">
+                  <Calendar className="w-3 h-3" />
+                  <span>{new Date(serviceAccount.createdAt).toLocaleDateString()}</span>
+                  <span>•</span>
+                  <span className={`px-1 py-0.5 rounded text-xs font-medium ${
+                    serviceAccount.automountServiceAccountToken !== false 
+                      ? 'bg-green-100 text-green-800' 
+                      : 'bg-yellow-100 text-yellow-800'
+                  }`}>
+                    {serviceAccount.automountServiceAccountToken !== false ? 'Auto-mount' : 'No auto-mount'}
+                  </span>
+                </div>
+              </div>
+            </div>
+            
+            {/* Action Buttons */}
+            <div className="flex items-center space-x-1 flex-shrink-0">
+              {deleteConfirm === serviceAccount.name ? (
+                // Delete confirmation buttons
+                <div className="flex items-center space-x-1">
+                  <button
+                    onClick={handleCancelDelete}
+                    className="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded hover:bg-gray-200 transition-colors duration-200"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={(e) => handleConfirmDelete(serviceAccount.name, e)}
+                    className="px-2 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 transition-colors duration-200 flex items-center space-x-1"
+                  >
+                    <AlertTriangle className="w-3 h-3" />
+                    <span>Delete</span>
+                  </button>
+                </div>
+              ) : (
+                // Normal action buttons
+                <>
+                  <button
+                    onClick={(e) => handleEditClick(index, e)}
+                    className="p-1 text-gray-400 hover:text-cyan-600 rounded transition-colors duration-200"
+                    title="Edit Service Account"
+                  >
+                    <Settings className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={(e) => handleDuplicateClick(index, e)}
+                    className="p-1 text-gray-400 hover:text-blue-600 rounded transition-colors duration-200"
+                    title="Duplicate Service Account"
+                  >
+                    <Copy className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={(e) => handleDeleteClick(serviceAccount.name, e)}
+                    className="p-1 text-gray-400 hover:text-red-600 rounded transition-colors duration-200"
+                    title="Delete Service Account"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
 
-                {/* Delete confirmation warning */}
-                {deleteConfirm === serviceAccount.name && (
-                  <div className="mt-1 p-1.5 bg-red-50 border border-red-200 rounded text-xs text-red-700">
-                    <div className="flex items-center space-x-1 mb-0.5">
-                      <AlertTriangle className="w-2.5 h-2.5" />
-                      <span className="font-medium">Are you sure?</span>
-                    </div>
-                    <div>
-                      This will delete the Service Account and may affect applications that use it for authentication.
-                    </div>
+          {/* Additional Information */}
+          <div className="mt-2 space-y-1">
+            {/* Secrets and Image Pull Secrets */}
+            {(serviceAccount.secrets && serviceAccount.secrets.length > 0) || 
+             (serviceAccount.imagePullSecrets && serviceAccount.imagePullSecrets.length > 0) ? (
+              <div className="flex items-center space-x-3">
+                {serviceAccount.secrets && serviceAccount.secrets.length > 0 && (
+                  <div className="flex items-center space-x-1">
+                    <Key className="w-3 h-3 text-orange-500" />
+                    <span className="text-xs text-gray-500">Secrets:</span>
+                    <span className="text-xs font-medium text-orange-600">
+                      {serviceAccount.secrets.length}
+                    </span>
+                  </div>
+                )}
+                {serviceAccount.imagePullSecrets && serviceAccount.imagePullSecrets.length > 0 && (
+                  <div className="flex items-center space-x-1">
+                    <Users className="w-3 h-3 text-blue-500" />
+                    <span className="text-xs text-gray-500">Image Pull:</span>
+                    <span className="text-xs font-medium text-blue-600">
+                      {serviceAccount.imagePullSecrets.length}
+                    </span>
                   </div>
                 )}
               </div>
+            ) : (
+              <div className="flex items-center space-x-1">
+                <Shield className="w-3 h-3 text-gray-400" />
+                <span className="text-xs text-gray-500">No secrets attached</span>
+              </div>
+            )}
+
+            {/* Labels */}
+            {Object.keys(serviceAccount.labels).length > 0 && (
+              <div className="flex items-center space-x-1">
+                <Tag className="w-3 h-3 text-blue-500" />
+                <span className="text-xs text-gray-500">Labels:</span>
+                <div className="flex flex-wrap gap-1">
+                  {Object.entries(serviceAccount.labels).slice(0, 2).map(([key, value]) => (
+                    <span key={key} className="px-1 py-0.5 bg-blue-100 text-blue-800 rounded text-xs">
+                      {key}: {value}
+                    </span>
+                  ))}
+                  {Object.keys(serviceAccount.labels).length > 2 && (
+                    <span className="text-xs text-gray-500">
+                      +{Object.keys(serviceAccount.labels).length - 2} more
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Annotations */}
+            {Object.keys(serviceAccount.annotations).length > 0 && (
+              <div className="flex items-center space-x-1">
+                <Tag className="w-3 h-3 text-purple-500" />
+                <span className="text-xs text-gray-500">Annotations:</span>
+                <span className="text-xs text-purple-600 font-medium">
+                  {Object.keys(serviceAccount.annotations).length} annotation{Object.keys(serviceAccount.annotations).length !== 1 ? 's' : ''}
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Delete confirmation warning */}
+          {deleteConfirm === serviceAccount.name && (
+            <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-700">
+              <div className="flex items-center space-x-1 mb-1">
+                <AlertTriangle className="w-3 h-3" />
+                <span className="font-medium">Are you sure?</span>
+              </div>
+              <div>
+                This will delete the Service Account and may affect applications that use it for authentication.
+              </div>
             </div>
-          ))}
+          )}
         </div>
-      </div>
+      ))}
     </div>
   );
 } 

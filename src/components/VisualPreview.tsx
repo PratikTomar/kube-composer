@@ -357,14 +357,14 @@ export function VisualPreview({
         currentY += rowHeight;
       });
 
-      // Process service accounts in a compact layout
+      // Process service accounts in an improved layout
       if (group.serviceAccounts.length > 0) {
         const baseY = currentY;
         const colorClass = colorPalette[0]; // Use consistent color for service accounts
         
-        // Create a compact grid layout for service accounts
-        const serviceAccountsPerRow = 3;
-        const serviceAccountSpacing = 220; // Reduced spacing between service accounts
+        // Create a much better spaced grid layout for service accounts
+        const serviceAccountsPerRow = 2; // Keep 2 per row for better spacing
+        const serviceAccountSpacing = 500; // Much more spacing between service accounts
         
         group.serviceAccounts.forEach((serviceAccount, saIndex) => {
           const row = Math.floor(saIndex / serviceAccountsPerRow);
@@ -388,7 +388,10 @@ export function VisualPreview({
             syncStatus = 'outofsync';
           }
 
-          // Add service account node in compact grid
+          // Calculate the row base Y position with much better spacing
+          const rowBaseY = baseY + (row * 250); // Much more vertical spacing between rows
+          
+          // Add service account node in improved grid
           nodes.push({
             id: serviceAccountId,
             name: serviceAccount.name,
@@ -398,7 +401,7 @@ export function VisualPreview({
             syncStatus: syncStatus,
             position: { 
               x: col * serviceAccountSpacing, 
-              y: baseY + (row * 120) // Reduced vertical spacing
+              y: rowBaseY
             },
             dependencies: [],
             children: [],
@@ -411,7 +414,7 @@ export function VisualPreview({
             colorClass: colorClass
           });
 
-          // Add associated secrets if any (positioned to the left)
+          // Add associated secrets if any (positioned below and to the left)
           serviceAccount.secrets?.forEach((secretRef, secIndex) => {
             const secret = secrets.find(s => s.name === secretRef.name);
             if (secret) {
@@ -423,8 +426,8 @@ export function VisualPreview({
                 status: 'healthy',
                 syncStatus: 'synced',
                 position: { 
-                  x: col * serviceAccountSpacing - 200, 
-                  y: baseY + (row * 120) + (secIndex * 40) // Compact secret positioning
+                  x: col * serviceAccountSpacing - 180, // Much better horizontal offset
+                  y: rowBaseY + 120 + (secIndex * 80) // Position much further below with better vertical spacing
                 },
                 dependencies: [serviceAccountId],
                 children: [],
@@ -436,7 +439,7 @@ export function VisualPreview({
             }
           });
 
-          // Add associated image pull secrets if any (positioned to the right)
+          // Add associated image pull secrets if any (positioned below and to the right)
           serviceAccount.imagePullSecrets?.forEach((secretRef, ipsIndex) => {
             const secret = secrets.find(s => s.name === secretRef.name);
             if (secret) {
@@ -448,8 +451,8 @@ export function VisualPreview({
                 status: 'healthy',
                 syncStatus: 'synced',
                 position: { 
-                  x: col * serviceAccountSpacing + 200, 
-                  y: baseY + (row * 120) + (ipsIndex * 40) // Compact secret positioning
+                  x: col * serviceAccountSpacing + 180, // Much better horizontal offset
+                  y: rowBaseY + 120 + (ipsIndex * 80) // Position much further below with better vertical spacing
                 },
                 dependencies: [serviceAccountId],
                 children: [],
@@ -462,9 +465,15 @@ export function VisualPreview({
           });
         });
 
-        // Update currentY based on the number of rows needed
+        // Update currentY based on the number of rows needed with much better spacing calculation
         const totalRows = Math.ceil(group.serviceAccounts.length / serviceAccountsPerRow);
-        currentY += totalRows * 120 + 40; // Reduced spacing
+        const maxSecretsPerServiceAccount = Math.max(
+          ...group.serviceAccounts.map(sa => (sa.secrets?.length || 0) + (sa.imagePullSecrets?.length || 0)),
+          0
+        );
+        // Add extra space for secrets positioned below service accounts
+        const extraSpaceForSecrets = maxSecretsPerServiceAccount > 0 ? maxSecretsPerServiceAccount * 80 + 80 : 0;
+        currentY += totalRows * 250 + extraSpaceForSecrets + 100; // Much improved spacing calculation
       }
 
       // Process namespaces
@@ -834,15 +843,17 @@ export function VisualPreview({
         currentY += totalRows * 120 + 40; // Compact spacing
       }
 
-      // Add standalone service accounts in grid layout
+      // Add standalone service accounts in much improved grid layout
       if (filterType === 'serviceaccounts') {
-        const serviceAccountsPerRow = 3;
-        const serviceAccountSpacing = 250;
+        const serviceAccountsPerRow = 2; // Keep 2 per row for better spacing
+        const serviceAccountSpacing = 500; // Much more spacing between service accounts
         
         filteredServiceAccounts.forEach((serviceAccount, index) => {
           const row = Math.floor(index / serviceAccountsPerRow);
           const col = index % serviceAccountsPerRow;
+          const rowBaseY = currentY + (row * 250); // Much better vertical spacing
           
+          // Add service account node
           nodes.push({
             id: `serviceaccount-${serviceAccount.name}`,
             name: serviceAccount.name,
@@ -852,7 +863,7 @@ export function VisualPreview({
             syncStatus: 'synced',
             position: { 
               x: col * serviceAccountSpacing, 
-              y: currentY + (row * 120) // Compact spacing
+              y: rowBaseY
             },
             dependencies: [],
             children: [],
@@ -862,11 +873,67 @@ export function VisualPreview({
             },
             colorClass: colorPalette[2]
           });
+
+          // Add associated secrets if any (positioned below and to the left)
+          serviceAccount.secrets?.forEach((secretRef, secIndex) => {
+            const secret = secrets.find(s => s.name === secretRef.name);
+            if (secret) {
+              nodes.push({
+                id: `secret-${secretRef.name}-standalone-sa-${index}`,
+                name: secretRef.name,
+                type: 'secret',
+                namespace: secret.namespace,
+                status: 'healthy',
+                syncStatus: 'synced',
+                position: { 
+                  x: col * serviceAccountSpacing - 180, // Much better horizontal offset
+                  y: rowBaseY + 120 + (secIndex * 80) // Position much further below with better vertical spacing
+                },
+                dependencies: [`serviceaccount-${serviceAccount.name}`],
+                children: [],
+                metadata: {
+                  dataKeys: Object.keys(secret.data).length
+                },
+                colorClass: colorPalette[2]
+              });
+            }
+          });
+
+          // Add associated image pull secrets if any (positioned below and to the right)
+          serviceAccount.imagePullSecrets?.forEach((secretRef, ipsIndex) => {
+            const secret = secrets.find(s => s.name === secretRef.name);
+            if (secret) {
+              nodes.push({
+                id: `imagepullsecret-${secretRef.name}-standalone-sa-${index}`,
+                name: `${secretRef.name} (Image Pull)`,
+                type: 'secret',
+                namespace: secret.namespace,
+                status: 'healthy',
+                syncStatus: 'synced',
+                position: { 
+                  x: col * serviceAccountSpacing + 180, // Much better horizontal offset
+                  y: rowBaseY + 120 + (ipsIndex * 80) // Position much further below with better vertical spacing
+                },
+                dependencies: [`serviceaccount-${serviceAccount.name}`],
+                children: [],
+                metadata: {
+                  dataKeys: Object.keys(secret.data).length
+                },
+                colorClass: colorPalette[2]
+              });
+            }
+          });
         });
         
-        // Update currentY based on the number of rows needed
+        // Update currentY based on the number of rows needed with much better spacing calculation
         const totalRows = Math.ceil(filteredServiceAccounts.length / serviceAccountsPerRow);
-        currentY += totalRows * 120 + 40; // Compact spacing
+        const maxSecretsPerServiceAccount = Math.max(
+          ...filteredServiceAccounts.map(sa => (sa.secrets?.length || 0) + (sa.imagePullSecrets?.length || 0)),
+          0
+        );
+        // Add extra space for secrets positioned below service accounts
+        const extraSpaceForSecrets = maxSecretsPerServiceAccount > 0 ? maxSecretsPerServiceAccount * 80 + 80 : 0;
+        currentY += totalRows * 250 + extraSpaceForSecrets + 100; // Much improved spacing calculation
       }
 
       // Add standalone jobs/cronjobs in grid layout

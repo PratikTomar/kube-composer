@@ -21,5 +21,11 @@ export default defineConfig({
   server: {
     port: 5173,
     host: true
+  },
+  resolve: {
+    extensions: ['.js', '.ts', '.jsx', '.tsx']
+  },
+  esbuild: {
+    logOverride: { 'this-is-undefined-in-esm': 'silent' }
   }
 })

@@ -183,3 +183,16 @@ export interface CronJobConfig {
   jobTemplate: JobConfig;
   createdAt?: string;
 }
+
+export interface DockerHubSecret {
+  name: string;
+  namespace: string;
+  dockerServer: string;
+  username: string;
+  password: string;
+  email: string;
+  description?: string;
+  labels: Record<string, string>;
+  annotations: Record<string, string>;
+  createdAt: string;
+}

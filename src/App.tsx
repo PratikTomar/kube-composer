@@ -11,6 +11,8 @@ import { NamespacesList } from './components/NamespacesList';
 import { ConfigMapsList } from './components/ConfigMapsList';
 import { SecretsList } from './components/SecretsList';
 import { ServiceAccountsList } from './components/ServiceAccountsList';
+import { RolesList } from './components/RolesList';
+import { ClusterRolesList } from './components/ClusterRolesList';
 import { VisualPreview } from './components/VisualPreview';
 import { Footer } from './components/Footer';
 import { SocialShare } from './components/SocialShare';
@@ -19,6 +21,8 @@ import { NamespaceManager } from './components/NamespaceManager';
 import { ConfigMapManager } from './components/ConfigMapManager';
 import { SecretManager } from './components/SecretManager';
 import { ServiceAccountManager } from './components/ServiceAccountManager';
+import { RoleManager } from './components/RoleManager';
+import { ClusterRoleManager } from './components/ClusterRoleManager';
 import { ProjectSettingsManager } from './components/ProjectSettingsManager';
 import { YouTubePopup } from './components/YouTubePopup';
 import { DockerRunPopup } from './components/DockerRunPopup';
@@ -26,7 +30,7 @@ import { generateMultiDeploymentYaml } from './utils/yamlGenerator';
 import { JobManager, Job } from './components/JobManager';
 import { JobList } from './components/jobs/JobList';
 import { CronJobList } from './components/jobs/CronJobList';
-import type { DeploymentConfig, DaemonSetConfig, Namespace, ConfigMap, Secret, ServiceAccount, ProjectSettings, JobConfig, CronJobConfig } from './types';
+import type { DeploymentConfig, DaemonSetConfig, Namespace, ConfigMap, Secret, ServiceAccount, ProjectSettings, JobConfig, CronJobConfig, KubernetesRole, KubernetesClusterRole } from './types';
 import {
   K8sDeploymentIcon,
   K8sNamespaceIcon,
@@ -41,7 +45,7 @@ import {
 } from './components/KubernetesIcons';
 
 type PreviewMode = 'visual' | 'yaml' | 'summary' | 'argocd' | 'flow';
-type SidebarTab = 'deployments' | 'daemonsets' | 'namespaces' | 'storage' | 'security' | 'jobs' | 'configmaps' | 'secrets';
+type SidebarTab = 'deployments' | 'daemonsets' | 'namespaces' | 'storage' | 'security' | 'jobs' | 'configmaps' | 'secrets' | 'roles';
 
 function App() {
   const hideDemoIcons = import.meta.env.VITE_HIDE_DEMO_ICONS === 'true';
@@ -67,6 +71,8 @@ function App() {
   const [configMaps, setConfigMaps] = useState<ConfigMap[]>([]);
   const [secrets, setSecrets] = useState<Secret[]>([]);
   const [serviceAccounts, setServiceAccounts] = useState<ServiceAccount[]>([]);
+  const [roles, setRoles] = useState<KubernetesRole[]>([]);
+  const [clusterRoles, setClusterRoles] = useState<KubernetesClusterRole[]>([]);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [selectedDeployment, setSelectedDeployment] = useState<number>(0);
   const [selectedDaemonSet, setSelectedDaemonSet] = useState<number>(0);
@@ -74,11 +80,13 @@ function App() {
   const [selectedConfigMap, setSelectedConfigMap] = useState<number>(0);
   const [selectedSecret, setSelectedSecret] = useState<number>(0);
   const [selectedServiceAccount, setSelectedServiceAccount] = useState<number>(0);
+  const [selectedRole, setSelectedRole] = useState<number>(0);
+  const [selectedClusterRole, setSelectedClusterRole] = useState<number>(0);
   const [previewMode, setPreviewMode] = useState<PreviewMode>('flow');
   const [sidebarTab, setSidebarTab] = useState<SidebarTab>('deployments');
   const [showAllResources, setShowAllResources] = useState<boolean>(true); // Show all resources by default
   const [storageSubTab, setStorageSubTab] = useState<'configmaps' | 'secrets'>('configmaps');
-  const [securitySubTab, setSecuritySubTab] = useState<'serviceaccounts'>('serviceaccounts');
+  const [securitySubTab, setSecuritySubTab] = useState<'serviceaccounts' | 'roles' | 'clusterroles'>('serviceaccounts');
   const [jobsSubTab, setJobsSubTab] = useState<'jobs' | 'cronjobs'>('jobs');
   const [showForm, setShowForm] = useState(false);
   const [showNamespaceManager, setShowNamespaceManager] = useState(false);
@@ -87,6 +95,10 @@ function App() {
   const [editingSecretIndex, setEditingSecretIndex] = useState<number | undefined>(undefined);
   const [showServiceAccountManager, setShowServiceAccountManager] = useState(false);
   const [editingServiceAccountIndex, setEditingServiceAccountIndex] = useState<number | undefined>(undefined);
+  const [showRoleManager, setShowRoleManager] = useState(false);
+  const [editingRoleIndex, setEditingRoleIndex] = useState<number | undefined>(undefined);
+  const [showClusterRoleManager, setShowClusterRoleManager] = useState(false);
+  const [editingClusterRoleIndex, setEditingClusterRoleIndex] = useState<number | undefined>(undefined);
   const [showJobManager, setShowJobManager] = useState(false);
   const [jobTypeToCreate, setJobTypeToCreate] = useState<'job' | 'cronjob'>('job');
   const [showProjectSettings, setShowProjectSettings] = useState(false);
@@ -116,6 +128,8 @@ function App() {
         configMaps,
         secrets,
         serviceAccounts,
+        roles,
+        clusterRoles,
         namespaces,
         projectSettings,
         generatedYaml
@@ -130,7 +144,7 @@ function App() {
       console.warn('Force save failed:', e);
       return false;
     }
-  }, [deployments, daemonSets, jobs, configMaps, secrets, serviceAccounts, namespaces, projectSettings, generatedYaml]);
+  }, [deployments, daemonSets, jobs, configMaps, secrets, serviceAccounts, roles, clusterRoles, namespaces, projectSettings, generatedYaml]);
 
   // Auto-save function
   const autoSave = useCallback(() => {
@@ -147,6 +161,8 @@ function App() {
           configMaps,
           secrets,
           serviceAccounts,
+          roles,
+          clusterRoles,
           namespaces,
           projectSettings,
           generatedYaml
@@ -159,13 +175,13 @@ function App() {
         console.warn('Auto-save failed:', e);
       }
     }, 3000); // 3 second delay
-  }, [deployments, daemonSets, jobs, configMaps, secrets, serviceAccounts, namespaces, projectSettings, generatedYaml]);
+  }, [deployments, daemonSets, jobs, configMaps, secrets, serviceAccounts, roles, clusterRoles, namespaces, projectSettings, generatedYaml]);
 
   // Update generated YAML when configuration changes
   useEffect(() => {
     const yaml = getPreviewYaml();
     setGeneratedYaml(yaml);
-  }, [deployments, daemonSets, jobs, configMaps, secrets, serviceAccounts, namespaces, projectSettings]);
+  }, [deployments, daemonSets, jobs, configMaps, secrets, serviceAccounts, roles, clusterRoles, namespaces, projectSettings]);
 
   // Trigger auto-save when any configuration changes
   useEffect(() => {
@@ -184,6 +200,8 @@ function App() {
         if (saved.configMaps) setConfigMaps(saved.configMaps);
         if (saved.secrets) setSecrets(saved.secrets);
         if (saved.serviceAccounts) setServiceAccounts(saved.serviceAccounts);
+        if (saved.roles) setRoles(saved.roles);
+        if (saved.clusterRoles) setClusterRoles(saved.clusterRoles);
         if (saved.jobs) setJobs(saved.jobs);
         if (saved.generatedYaml) setGeneratedYaml(saved.generatedYaml);
         console.log('Configuration loaded from localStorage');
@@ -667,6 +685,94 @@ function App() {
     setShowServiceAccountManager(true);
   };
 
+  // Role management functions
+  const handleAddRole = (role: KubernetesRole) => {
+    setRoles([...roles, role]);
+  };
+
+  const handleUpdateRole = (role: KubernetesRole, index: number) => {
+    const newRoles = [...roles];
+    newRoles[index] = role;
+    setRoles(newRoles);
+  };
+
+  const handleDeleteRole = (roleName: string) => {
+    const index = roles.findIndex(role => role.metadata.name === roleName);
+    if (index > -1) {
+      const newRoles = roles.filter(role => role.metadata.name !== roleName);
+      setRoles(newRoles);
+      
+      // Adjust selected index if needed
+      if (selectedRole >= newRoles.length) {
+        setSelectedRole(Math.max(0, newRoles.length - 1));
+      }
+    }
+  };
+
+  const handleDuplicateRole = (index: number) => {
+    const roleToClone = roles[index];
+    const clonedRole: KubernetesRole = {
+      ...roleToClone,
+      metadata: {
+        ...roleToClone.metadata,
+        name: `${roleToClone.metadata.name}-copy`
+      }
+    };
+    setRoles([...roles, clonedRole]);
+    setSelectedRole(roles.length);
+    setEditingRoleIndex(roles.length);
+    setShowRoleManager(true);
+  };
+
+  const handleEditRole = (index: number) => {
+    setEditingRoleIndex(index);
+    setShowRoleManager(true);
+  };
+
+  // ClusterRole management functions
+  const handleAddClusterRole = (clusterRole: KubernetesClusterRole) => {
+    setClusterRoles([...clusterRoles, clusterRole]);
+  };
+
+  const handleUpdateClusterRole = (clusterRole: KubernetesClusterRole, index: number) => {
+    const newClusterRoles = [...clusterRoles];
+    newClusterRoles[index] = clusterRole;
+    setClusterRoles(newClusterRoles);
+  };
+
+  const handleDeleteClusterRole = (clusterRoleName: string) => {
+    const index = clusterRoles.findIndex(clusterRole => clusterRole.metadata.name === clusterRoleName);
+    if (index > -1) {
+      const newClusterRoles = clusterRoles.filter(clusterRole => clusterRole.metadata.name !== clusterRoleName);
+      setClusterRoles(newClusterRoles);
+      
+      // Adjust selected index if needed
+      if (selectedClusterRole >= newClusterRoles.length) {
+        setSelectedClusterRole(Math.max(0, newClusterRoles.length - 1));
+      }
+    }
+  };
+
+  const handleDuplicateClusterRole = (index: number) => {
+    const clusterRoleToClone = clusterRoles[index];
+    const clonedClusterRole: KubernetesClusterRole = {
+      ...clusterRoleToClone,
+      metadata: {
+        ...clusterRoleToClone.metadata,
+        name: `${clusterRoleToClone.metadata.name}-copy`
+      }
+    };
+    setClusterRoles([...clusterRoles, clonedClusterRole]);
+    setSelectedClusterRole(clusterRoles.length);
+    setEditingClusterRoleIndex(clusterRoles.length);
+    setShowClusterRoleManager(true);
+  };
+
+  const handleEditClusterRole = (index: number) => {
+    setEditingClusterRoleIndex(index);
+    setShowClusterRoleManager(true);
+  };
+
   // Job management functions
   const handleAddJob = (job: Job) => {
     // Convert job labels from array to object format for global label merging
@@ -810,7 +916,7 @@ function App() {
     // Fix: Only map regular jobs to jobConfigs, not cronjobs
     const jobConfigs = jobs.filter(j => j.type === 'job').map(jobToJobConfig);
     const cronJobConfigs = jobs.filter(j => j.type === 'cronjob').map(jobToCronJobConfig);
-    const yaml = generateMultiDeploymentYaml(validDeployments, namespaces, configMaps, secrets, projectSettings, jobConfigs, cronJobConfigs, validDaemonSets, serviceAccounts);
+    const yaml = generateMultiDeploymentYaml(validDeployments, namespaces, configMaps, secrets, projectSettings, jobConfigs, cronJobConfigs, validDaemonSets, serviceAccounts, [], roles, clusterRoles);
     
     let finalYaml = yaml;
     if (
@@ -821,7 +927,9 @@ function App() {
       namespaces.length <= 1 &&
       configMaps.length === 0 &&
       secrets.length === 0 &&
-      serviceAccounts.length === 0
+      serviceAccounts.length === 0 &&
+      roles.length === 0 &&
+      clusterRoles.length === 0
     ) {
       finalYaml = '# No resources configured\n# Create your first deployment, daemonset, job, service account, configmap, or secret to see the generated YAML';
     }
@@ -883,7 +991,7 @@ function App() {
   }
 
   // Function to determine filter type based on current sidebar tab and sub-tabs
-  const getFilterType = (): 'all' | 'deployments' | 'daemonsets' | 'namespaces' | 'configmaps' | 'secrets' | 'serviceaccounts' | 'jobs' | 'cronjobs' => {
+  const getFilterType = (): 'all' | 'deployments' | 'daemonsets' | 'namespaces' | 'configmaps' | 'secrets' | 'serviceaccounts' | 'roles' | 'clusterroles' | 'jobs' | 'cronjobs' => {
     // Show all resources when showAllResources is true
     if (showAllResources) return 'all';
     
@@ -903,6 +1011,8 @@ function App() {
     }
     if (sidebarTab === 'security') {
       if (securitySubTab === 'serviceaccounts') return 'serviceaccounts';
+      if (securitySubTab === 'roles') return 'roles';
+      if (securitySubTab === 'clusterroles') return 'clusterroles';
       return 'serviceaccounts'; // default
     }
     return 'all'; // Show all resources by default
@@ -923,6 +1033,10 @@ function App() {
       setStorageSubTab('secrets');
     } else if (subTab === 'serviceaccounts') {
       setSecuritySubTab('serviceaccounts');
+    } else if (subTab === 'roles') {
+      setSecuritySubTab('roles');
+    } else if (subTab === 'clusterroles') {
+      setSecuritySubTab('clusterroles');
     } else if (subTab === 'jobs') {
       setJobsSubTab('jobs');
     } else if (subTab === 'cronjobs') {
@@ -1440,12 +1554,18 @@ function App() {
                   Service Accounts
                 </button>
 
-                {/* Future RBAC items - disabled for now */}
+                {/* RBAC Roles */}
                 <button
-                  disabled
-                  className="flex items-center w-full px-2 py-2 text-sm font-medium rounded-md text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-50"
+                  onClick={() => handleMenuClick('security', 'roles')}
+                  className={`flex items-center w-full px-2 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+                    sidebarTab === 'security' && securitySubTab === 'roles'
+                      ? 'bg-purple-50 text-purple-700 dark:bg-purple-900/20 dark:text-purple-300 shadow-sm border border-purple-100 dark:border-purple-800' 
+                      : 'text-gray-700 dark:text-gray-200 hover:bg-purple-50/50 dark:hover:bg-purple-900/10 hover:text-purple-600 dark:hover:text-purple-300'
+                  }`}
                 >
-                  <K8sSecurityIcon className="mr-3 flex-shrink-0 h-6 w-6 text-gray-400 dark:text-gray-600" />
+                  <K8sSecurityIcon className={`mr-3 flex-shrink-0 h-6 w-6 ${
+                    sidebarTab === 'security' && securitySubTab === 'roles' ? 'text-purple-600 dark:text-purple-400' : 'text-gray-500 dark:text-gray-400'
+                  }`} />
                   Roles
                 </button>
 
@@ -1458,10 +1578,16 @@ function App() {
                 </button>
 
                 <button
-                  disabled
-                  className="flex items-center w-full px-2 py-2 text-sm font-medium rounded-md text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-50"
+                  onClick={() => handleMenuClick('security', 'clusterroles')}
+                  className={`flex items-center w-full px-2 py-2 text-sm font-medium rounded-md transition-colors duration-200 ${
+                    sidebarTab === 'security' && securitySubTab === 'clusterroles'
+                      ? 'bg-purple-50 text-purple-700 dark:bg-purple-900/50 dark:text-purple-400'
+                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
+                  }`}
                 >
-                  <K8sSecurityIcon className="mr-3 flex-shrink-0 h-6 w-6 text-gray-400 dark:text-gray-600" />
+                  <K8sSecurityIcon className={`mr-3 flex-shrink-0 h-6 w-6 ${
+                    sidebarTab === 'security' && securitySubTab === 'clusterroles' ? 'text-purple-600 dark:text-purple-400' : 'text-gray-500 dark:text-gray-400'
+                  }`} />
                   ClusterRoles
                 </button>
 
@@ -1728,6 +1854,60 @@ function App() {
                     />
                   </>
                 )}
+                {securitySubTab === 'roles' && (
+                  <>
+                    <div className="p-4 border-b border-gray-200">
+                      <button
+                        onClick={() => {
+                          setEditingRoleIndex(undefined);
+                          setShowRoleManager(true);
+                        }}
+                        className="w-full inline-flex items-center justify-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors duration-200 text-sm font-medium"
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add Role
+                      </button>
+                    </div>
+                    <RolesList
+                      roles={roles}
+                      selectedIndex={selectedRole}
+                      onSelect={(index) => {
+                        setSelectedRole(index);
+                        setSidebarOpen(false);
+                      }}
+                      onEdit={handleEditRole}
+                      onDelete={handleDeleteRole}
+                      onDuplicate={handleDuplicateRole}
+                    />
+                  </>
+                )}
+                {securitySubTab === 'clusterroles' && (
+                  <>
+                    <div className="p-4 border-b border-gray-200">
+                      <button
+                        onClick={() => {
+                          setEditingClusterRoleIndex(undefined);
+                          setShowClusterRoleManager(true);
+                        }}
+                        className="w-full inline-flex items-center justify-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors duration-200 text-sm font-medium"
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add ClusterRole
+                      </button>
+                    </div>
+                    <ClusterRolesList
+                      clusterRoles={clusterRoles}
+                      selectedIndex={selectedClusterRole}
+                      onSelect={(index) => {
+                        setSelectedClusterRole(index);
+                        setSidebarOpen(false);
+                      }}
+                      onEdit={handleEditClusterRole}
+                      onDelete={handleDeleteClusterRole}
+                      onDuplicate={handleDuplicateClusterRole}
+                    />
+                  </>
+                )}
               </>
             )}
           </div>
@@ -1812,8 +1992,8 @@ function App() {
               </div>
             </div>
             <div className="p-4 sm:p-6 pb-8">
-              {previewMode === 'flow' && <VisualPreview deployments={deployments} daemonSets={daemonSets} namespaces={namespaces} configMaps={configMaps} secrets={secrets} serviceAccounts={serviceAccounts} jobs={jobs} containerRef={containerRef} filterType={getFilterType()} />}
-              {previewMode === 'summary' && <ResourceSummary deployments={deployments} daemonSets={daemonSets} namespaces={namespaces} configMaps={configMaps} secrets={secrets} serviceAccounts={serviceAccounts} jobs={jobs} />}
+              {previewMode === 'flow' && <VisualPreview deployments={deployments} daemonSets={daemonSets} namespaces={namespaces} configMaps={configMaps} secrets={secrets} serviceAccounts={serviceAccounts} roles={roles} clusterRoles={clusterRoles} jobs={jobs} containerRef={containerRef} filterType={getFilterType()} />}
+              {previewMode === 'summary' && <ResourceSummary deployments={deployments} daemonSets={daemonSets} namespaces={namespaces} configMaps={configMaps} secrets={secrets} serviceAccounts={serviceAccounts} roles={roles} clusterRoles={clusterRoles} jobs={jobs} />}
               {previewMode === 'yaml' && <YamlPreview yaml={generatedYaml} />}
             </div>
           </div>
@@ -1957,6 +2137,37 @@ function App() {
         />
       )}
 
+      {/* Role Manager Modal */}
+      {showRoleManager && (
+        <RoleManager
+          roles={roles}
+          namespaces={availableNamespaces}
+          onAddRole={handleAddRole}
+          onUpdateRole={handleUpdateRole}
+          onDeleteRole={handleDeleteRole}
+          onClose={() => {
+            setShowRoleManager(false);
+            setEditingRoleIndex(undefined);
+          }}
+          editingIndex={editingRoleIndex}
+        />
+      )}
+
+      {/* ClusterRole Manager Modal */}
+      {showClusterRoleManager && (
+        <ClusterRoleManager
+          clusterRoles={clusterRoles}
+          onAddClusterRole={handleAddClusterRole}
+          onUpdateClusterRole={handleUpdateClusterRole}
+          onDeleteClusterRole={handleDeleteClusterRole}
+          onClose={() => {
+            setShowClusterRoleManager(false);
+            setEditingClusterRoleIndex(undefined);
+          }}
+          editingIndex={editingClusterRoleIndex}
+        />
+      )}
+
       {/* Job Manager Modal */}
       {showJobManager && (
         <JobManager
@@ -2081,7 +2292,7 @@ function App() {
                   Clear All Configuration?
                 </h4>
                 <p className="text-gray-600 dark:text-gray-300 mb-6">
-                  This action will permanently remove all your deployments, daemonsets, jobs, configmaps, secrets, service accounts, and namespaces. This action cannot be undone.
+                  This action will permanently remove all your deployments, daemonsets, jobs, configmaps, secrets, service accounts, roles, cluster roles, and namespaces. This action cannot be undone.
                 </p>
                 
                 {/* Configuration Summary */}
@@ -2115,6 +2326,14 @@ function App() {
                     <div className="flex items-center justify-between">
                       <span className="text-gray-600 dark:text-gray-300">Service Accounts:</span>
                       <span className="font-semibold text-gray-900 dark:text-white">{serviceAccounts.length}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-600 dark:text-gray-300">Roles:</span>
+                      <span className="font-semibold text-gray-900 dark:text-white">{roles.length}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-600 dark:text-gray-300">ClusterRoles:</span>
+                      <span className="font-semibold text-gray-900 dark:text-white">{clusterRoles.length}</span>
                     </div>
                   </div>
                 </div>
@@ -2167,6 +2386,8 @@ function App() {
                         setEditingServiceAccountIndex(undefined);
                         setSelectedJob(-1);
                         setSelectedCronJob(-1);
+                        setRoles([]);
+                        setClusterRoles([]);
                         
                         console.log('Configuration cleared successfully');
                         alert('Configuration cleared successfully!');

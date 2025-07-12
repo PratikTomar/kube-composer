@@ -20,9 +20,9 @@ import {
   X,
   Play
 } from 'lucide-react';
-import type { DeploymentConfig, DaemonSetConfig, Namespace, ConfigMap, Secret, ServiceAccount } from '../types';
+import type { DeploymentConfig, DaemonSetConfig, Namespace, ConfigMap, Secret, ServiceAccount, KubernetesRole, KubernetesClusterRole } from '../types';
 import type { Job } from './JobManager';
-import { generateKubernetesYaml, generateDaemonSetYaml, generateConfigMapYaml, generateSecretYaml, generateNamespaceYaml, generateServiceAccountYaml, generateJobYaml, generateCronJobYaml } from '../utils/yamlGenerator';
+import { generateKubernetesYaml, generateDaemonSetYaml, generateConfigMapYaml, generateSecretYaml, generateNamespaceYaml, generateServiceAccountYaml, generateJobYaml, generateCronJobYaml, generateRoleYaml, generateClusterRoleYaml } from '../utils/yamlGenerator';
 import { YamlPreview } from './YamlPreview';
 
 interface VisualPreviewProps {
@@ -32,15 +32,17 @@ interface VisualPreviewProps {
   configMaps: ConfigMap[];
   secrets: Secret[];
   serviceAccounts: ServiceAccount[];
+  roles: KubernetesRole[];
+  clusterRoles: KubernetesClusterRole[];
   jobs: Job[];
   containerRef?: React.RefObject<HTMLDivElement>;
-  filterType?: 'all' | 'deployments' | 'daemonsets' | 'namespaces' | 'configmaps' | 'secrets' | 'serviceaccounts' | 'jobs' | 'cronjobs';
+  filterType?: 'all' | 'deployments' | 'daemonsets' | 'namespaces' | 'configmaps' | 'secrets' | 'serviceaccounts' | 'roles' | 'clusterroles' | 'jobs' | 'cronjobs';
 }
 
 interface FlowNode {
   id: string;
   name: string;
-  type: 'deployment' | 'daemonset' | 'service' | 'pod' | 'configmap' | 'secret' | 'ingress' | 'namespace' | 'external' | 'serviceaccount' | 'job' | 'cronjob';
+  type: 'deployment' | 'daemonset' | 'service' | 'pod' | 'configmap' | 'secret' | 'ingress' | 'namespace' | 'external' | 'serviceaccount' | 'role' | 'job' | 'cronjob';
   namespace: string;
   status: 'healthy' | 'warning' | 'error' | 'pending' | 'syncing';
   syncStatus: 'synced' | 'outofsync' | 'unknown';
@@ -60,6 +62,10 @@ interface FlowNode {
     schedule?: string;
     completions?: number;
     parallelism?: number;
+    rules?: number;
+    apiGroups?: string[];
+    resources?: string[];
+    verbs?: string[];
   };
   colorClass?: string;
 }
@@ -71,6 +77,8 @@ export function VisualPreview({
   configMaps, 
   secrets, 
   serviceAccounts,
+  roles,
+  clusterRoles,
   jobs,
   containerRef,
   filterType = 'all'
@@ -106,6 +114,8 @@ export function VisualPreview({
     const filteredConfigMaps = filterType === 'all' || filterType === 'configmaps' ? configMaps : [];
     const filteredSecrets = filterType === 'all' || filterType === 'secrets' ? secrets : [];
     const filteredServiceAccounts = filterType === 'all' || filterType === 'serviceaccounts' ? serviceAccounts : [];
+    const filteredRoles = filterType === 'all' || filterType === 'roles' ? roles : [];
+    const filteredClusterRoles = filterType === 'all' || filterType === 'clusterroles' ? clusterRoles : [];
     const filteredJobs = filterType === 'all' || filterType === 'jobs' || filterType === 'cronjobs' ? jobs : [];
 
     // Group by namespace
@@ -115,13 +125,15 @@ export function VisualPreview({
       daemonSets: filteredDaemonSets.filter(d => d.namespace === ns.name && d.appName),
       configMaps: filteredConfigMaps.filter(cm => cm.namespace === ns.name),
       secrets: filteredSecrets.filter(s => s.namespace === ns.name),
-      serviceAccounts: filteredServiceAccounts.filter(sa => sa.namespace === ns.name)
+      serviceAccounts: filteredServiceAccounts.filter(sa => sa.namespace === ns.name),
+      roles: filteredRoles.filter(r => r.metadata.namespace === ns.name)
     })).filter(group => 
       group.deployments.length > 0 || 
       group.daemonSets.length > 0 ||
       group.configMaps.length > 0 || 
       group.secrets.length > 0 ||
       group.serviceAccounts.length > 0 ||
+      group.roles.length > 0 ||
       // Include namespace groups even if they only have standalone resources
       (filterType === 'namespaces' && group.namespace)
     );
@@ -476,6 +488,72 @@ export function VisualPreview({
         currentY += totalRows * 250 + extraSpaceForSecrets + 100; // Much improved spacing calculation
       }
 
+      // Process roles
+      if (group.roles.length > 0) {
+        const rolesPerRow = 2;
+        const roleSpacing = 280;
+        
+        group.roles.forEach((role, roleIndex) => {
+          const row = Math.floor(roleIndex / rolesPerRow);
+          const col = roleIndex % rolesPerRow;
+          const roleId = `role-${role.metadata.name}`;
+          
+          // Calculate role status
+          const hasName = role.metadata.name && role.metadata.name.trim() !== '';
+          const hasRules = role.rules && role.rules.length > 0;
+          const hasValidRules = hasRules && role.rules.every(r => 
+            r.resources && r.resources.length > 0 && r.verbs && r.verbs.length > 0
+          );
+          let roleStatus: 'healthy' | 'warning' | 'error' | 'pending' | 'syncing';
+          let syncStatus: 'synced' | 'outofsync' | 'unknown';
+          
+          if (hasName && hasValidRules) {
+            roleStatus = 'healthy';
+            syncStatus = 'synced';
+          } else if (hasName && hasRules) {
+            roleStatus = 'warning';
+            syncStatus = 'outofsync';
+          } else {
+            roleStatus = 'error';
+            syncStatus = 'outofsync';
+          }
+
+          // Extract unique API groups, resources, and verbs across all rules
+          const allApiGroups = Array.from(new Set(role.rules.flatMap(r => r.apiGroups || []))).map(g => g || 'core');
+          const allResources = Array.from(new Set(role.rules.flatMap(r => r.resources || [])));
+          const allVerbs = Array.from(new Set(role.rules.flatMap(r => r.verbs || [])));
+
+          // Add role node
+          nodes.push({
+            id: roleId,
+            name: role.metadata.name,
+            type: 'role',
+            namespace: role.metadata.namespace,
+            status: roleStatus,
+            syncStatus: syncStatus,
+            position: { 
+              x: col * roleSpacing, 
+              y: currentY + (row * 180) // Increased spacing for role details
+            },
+            dependencies: [],
+            children: [],
+            metadata: {
+              rules: role.rules.length,
+              apiGroups: allApiGroups.slice(0, 3), // Show up to 3 API groups
+              resources: allResources.slice(0, 3), // Show up to 3 resources
+              verbs: allVerbs.slice(0, 3), // Show up to 3 verbs
+              lastSync: new Date().toISOString(),
+              syncRevision: `v${Date.now()}`
+            },
+            colorClass: colorPalette[5] // Use purple color for roles
+          });
+        });
+
+        // Update currentY based on the number of rows needed
+        const totalRoleRows = Math.ceil(group.roles.length / rolesPerRow);
+        currentY += totalRoleRows * 180 + 40; // Increased spacing for roles
+      }
+
       // Process namespaces
       if (group.namespace) {
         const namespaceId = `namespace-${group.namespace.name}`;
@@ -570,7 +648,7 @@ export function VisualPreview({
     });
 
     // Handle standalone resources that don't need to be grouped by namespace
-    if (filterType === 'deployments' || filterType === 'daemonsets' || filterType === 'configmaps' || filterType === 'secrets' || filterType === 'serviceaccounts' || filterType === 'jobs' || filterType === 'cronjobs') {
+    if (filterType === 'deployments' || filterType === 'daemonsets' || filterType === 'configmaps' || filterType === 'secrets' || filterType === 'serviceaccounts' || filterType === 'roles' || filterType === 'clusterroles' || filterType === 'jobs' || filterType === 'cronjobs') {
       // Add standalone deployments
       if (filterType === 'deployments') {
         filteredDeployments.forEach((deployment, depIndex) => {
@@ -936,6 +1014,134 @@ export function VisualPreview({
         currentY += totalRows * 250 + extraSpaceForSecrets + 100; // Much improved spacing calculation
       }
 
+      // Add standalone roles in grid layout
+      if (filterType === 'roles') {
+        const rolesPerRow = 2;
+        const roleSpacing = 300;
+        
+        filteredRoles.forEach((role, index) => {
+          const row = Math.floor(index / rolesPerRow);
+          const col = index % rolesPerRow;
+          
+          // Calculate role status
+          const hasName = role.metadata.name && role.metadata.name.trim() !== '';
+          const hasRules = role.rules && role.rules.length > 0;
+          const hasValidRules = hasRules && role.rules.every(r => 
+            r.resources && r.resources.length > 0 && r.verbs && r.verbs.length > 0
+          );
+          let roleStatus: 'healthy' | 'warning' | 'error' | 'pending' | 'syncing';
+          let syncStatus: 'synced' | 'outofsync' | 'unknown';
+          
+          if (hasName && hasValidRules) {
+            roleStatus = 'healthy';
+            syncStatus = 'synced';
+          } else if (hasName && hasRules) {
+            roleStatus = 'warning';
+            syncStatus = 'outofsync';
+          } else {
+            roleStatus = 'error';
+            syncStatus = 'outofsync';
+          }
+
+          // Extract unique API groups, resources, and verbs across all rules
+          const allApiGroups = Array.from(new Set(role.rules.flatMap(r => r.apiGroups || []))).map(g => g || 'core');
+          const allResources = Array.from(new Set(role.rules.flatMap(r => r.resources || [])));
+          const allVerbs = Array.from(new Set(role.rules.flatMap(r => r.verbs || [])));
+
+          nodes.push({
+            id: `role-${role.metadata.name}`,
+            name: role.metadata.name,
+            type: 'role',
+            namespace: role.metadata.namespace,
+            status: roleStatus,
+            syncStatus: syncStatus,
+            position: { 
+              x: col * roleSpacing, 
+              y: currentY + (row * 200) // Increased spacing for role details
+            },
+            dependencies: [],
+            children: [],
+            metadata: {
+              rules: role.rules.length,
+              apiGroups: allApiGroups.slice(0, 3), // Show up to 3 API groups
+              resources: allResources.slice(0, 3), // Show up to 3 resources
+              verbs: allVerbs.slice(0, 3), // Show up to 3 verbs
+              lastSync: new Date().toISOString(),
+              syncRevision: `v${Date.now()}`
+            },
+            colorClass: colorPalette[5] // Use purple color for roles
+          });
+        });
+        
+        // Update currentY based on the number of rows needed
+        const totalRows = Math.ceil(filteredRoles.length / rolesPerRow);
+        currentY += totalRows * 200 + 40; // Increased spacing for roles
+      }
+
+      // Add standalone cluster roles in grid layout
+      if (filterType === 'clusterroles') {
+        const clusterRolesPerRow = 2;
+        const clusterRoleSpacing = 300;
+        
+        filteredClusterRoles.forEach((clusterRole, index) => {
+          const row = Math.floor(index / clusterRolesPerRow);
+          const col = index % clusterRolesPerRow;
+          
+          // Calculate cluster role status
+          const hasName = clusterRole.metadata.name && clusterRole.metadata.name.trim() !== '';
+          const hasRules = clusterRole.rules && clusterRole.rules.length > 0;
+          const hasValidRules = hasRules && clusterRole.rules.every(r => 
+            r.resources && r.resources.length > 0 && r.verbs && r.verbs.length > 0
+          );
+          let clusterRoleStatus: 'healthy' | 'warning' | 'error' | 'pending' | 'syncing';
+          let syncStatus: 'synced' | 'outofsync' | 'unknown';
+          
+          if (hasName && hasValidRules) {
+            clusterRoleStatus = 'healthy';
+            syncStatus = 'synced';
+          } else if (hasName && hasRules) {
+            clusterRoleStatus = 'warning';
+            syncStatus = 'outofsync';
+          } else {
+            clusterRoleStatus = 'error';
+            syncStatus = 'outofsync';
+          }
+
+          // Extract unique API groups, resources, and verbs across all rules
+          const allApiGroups = Array.from(new Set(clusterRole.rules.flatMap(r => r.apiGroups || []))).map(g => g || 'core');
+          const allResources = Array.from(new Set(clusterRole.rules.flatMap(r => r.resources || [])));
+          const allVerbs = Array.from(new Set(clusterRole.rules.flatMap(r => r.verbs || [])));
+
+          nodes.push({
+            id: `clusterrole-${clusterRole.metadata.name}`,
+            name: clusterRole.metadata.name,
+            type: 'role', // Use 'role' type for visual consistency
+            namespace: 'cluster-wide', // Special namespace indicator
+            status: clusterRoleStatus,
+            syncStatus: syncStatus,
+            position: { 
+              x: col * clusterRoleSpacing, 
+              y: currentY + (row * 200) // Increased spacing for cluster role details
+            },
+            dependencies: [],
+            children: [],
+            metadata: {
+              rules: clusterRole.rules.length,
+              apiGroups: allApiGroups.slice(0, 3), // Show up to 3 API groups
+              resources: allResources.slice(0, 3), // Show up to 3 resources
+              verbs: allVerbs.slice(0, 3), // Show up to 3 verbs
+              lastSync: new Date().toISOString(),
+              syncRevision: `v${Date.now()}`
+            },
+            colorClass: colorPalette[6] // Use different color for cluster roles
+          });
+        });
+        
+        // Update currentY based on the number of rows needed
+        const totalRows = Math.ceil(filteredClusterRoles.length / clusterRolesPerRow);
+        currentY += totalRows * 200 + 40; // Increased spacing for cluster roles
+      }
+
       // Add standalone jobs/cronjobs in grid layout
       if (filterType === 'jobs' || filterType === 'cronjobs') {
         const jobsToShow = filterType === 'jobs' 
@@ -997,8 +1203,77 @@ export function VisualPreview({
       }
     }
 
+    // Process ClusterRoles (cluster-scoped, positioned at the end to avoid conflicts)
+    if (filteredClusterRoles.length > 0 && (filterType === 'all' || filterType === 'clusterroles')) {
+      // Add some spacing before cluster roles section
+      currentY += 60;
+      
+      const clusterRolesPerRow = 2;
+      const clusterRoleSpacing = 300;
+      
+      filteredClusterRoles.forEach((clusterRole, clusterRoleIndex) => {
+        const row = Math.floor(clusterRoleIndex / clusterRolesPerRow);
+        const col = clusterRoleIndex % clusterRolesPerRow;
+        const clusterRoleId = `clusterrole-${clusterRole.metadata.name}`;
+        
+        // Calculate cluster role status
+        const hasName = clusterRole.metadata.name && clusterRole.metadata.name.trim() !== '';
+        const hasRules = clusterRole.rules && clusterRole.rules.length > 0;
+        const hasValidRules = hasRules && clusterRole.rules.every(r => 
+          r.resources && r.resources.length > 0 && r.verbs && r.verbs.length > 0
+        );
+        let clusterRoleStatus: 'healthy' | 'warning' | 'error' | 'pending' | 'syncing';
+        let syncStatus: 'synced' | 'outofsync' | 'unknown';
+        
+        if (hasName && hasValidRules) {
+          clusterRoleStatus = 'healthy';
+          syncStatus = 'synced';
+        } else if (hasName && hasRules) {
+          clusterRoleStatus = 'warning';
+          syncStatus = 'outofsync';
+        } else {
+          clusterRoleStatus = 'error';
+          syncStatus = 'outofsync';
+        }
+
+        // Extract unique API groups, resources, and verbs across all rules
+        const allApiGroups = Array.from(new Set(clusterRole.rules.flatMap(r => r.apiGroups || []))).map(g => g || 'core');
+        const allResources = Array.from(new Set(clusterRole.rules.flatMap(r => r.resources || [])));
+        const allVerbs = Array.from(new Set(clusterRole.rules.flatMap(r => r.verbs || [])));
+
+        // Add cluster role node
+        nodes.push({
+          id: clusterRoleId,
+          name: clusterRole.metadata.name,
+          type: 'role', // Use 'role' type for visual consistency
+          namespace: 'cluster-wide', // Special namespace indicator
+          status: clusterRoleStatus,
+          syncStatus: syncStatus,
+          position: { 
+            x: col * clusterRoleSpacing, 
+            y: currentY + (row * 200) // Increased spacing for cluster role details
+          },
+          dependencies: [],
+          children: [],
+          metadata: {
+            rules: clusterRole.rules.length,
+            apiGroups: allApiGroups.slice(0, 3), // Show up to 3 API groups
+            resources: allResources.slice(0, 3), // Show up to 3 resources
+            verbs: allVerbs.slice(0, 3), // Show up to 3 verbs
+            lastSync: new Date().toISOString(),
+            syncRevision: `v${Date.now()}`
+          },
+          colorClass: colorPalette[6] // Use different color for cluster roles
+        });
+      });
+
+      // Update currentY based on the number of rows needed
+      const totalClusterRoleRows = Math.ceil(filteredClusterRoles.length / clusterRolesPerRow);
+      currentY += totalClusterRoleRows * 200 + 40; // Increased spacing for cluster roles
+    }
+
     return nodes;
-  }, [deployments, daemonSets, namespaces, configMaps, secrets, serviceAccounts, jobs, filterType]);
+  }, [deployments, daemonSets, namespaces, configMaps, secrets, serviceAccounts, roles, clusterRoles, jobs, filterType]);
 
   // Bounding box calculation
   const padding = 40;
@@ -1064,6 +1339,8 @@ export function VisualPreview({
         return <Settings className="w-4 h-4 text-green-500" />;
       case 'serviceaccount':
         return <Users className="w-4 h-4 text-cyan-500" />;
+      case 'role':
+        return <Key className="w-4 h-4 text-purple-500" />;
       case 'job':
         return <Play className="w-4 h-4 text-orange-500" />;
       case 'cronjob':
@@ -1173,6 +1450,16 @@ export function VisualPreview({
       const sa = serviceAccounts.find(sa => sa.name === node.name);
       if (sa) return generateServiceAccountYaml([sa]);
     }
+    if (node.type === 'role') {
+      // Check if it's a ClusterRole first (cluster-wide namespace)
+      if (node.namespace === 'cluster-wide') {
+        const clusterRole = clusterRoles.find(cr => cr.metadata.name === node.name);
+        if (clusterRole) return generateClusterRoleYaml([clusterRole]);
+      }
+      // Otherwise it's a regular Role
+      const role = roles.find(r => r.metadata.name === node.name);
+      if (role) return generateRoleYaml([role]);
+    }
     if (node.type === 'job') {
       const job = jobs.find(job => job.name === node.name && job.type === 'job');
       if (job) {
@@ -1256,13 +1543,17 @@ export function VisualPreview({
   // Check if there are any resources for the current filter
   const hasFilteredResources = () => {
     if (filterType === 'all') {
-      return validDeployments.length > 0 || validDaemonSets.length > 0 || validServiceAccounts.length > 0 || validJobs.length > 0;
+      return validDeployments.length > 0 || validDaemonSets.length > 0 || validServiceAccounts.length > 0 || validJobs.length > 0 || roles.length > 0 || clusterRoles.length > 0;
     } else if (filterType === 'deployments') {
       return validDeployments.length > 0;
     } else if (filterType === 'daemonsets') {
       return validDaemonSets.length > 0;
     } else if (filterType === 'serviceaccounts') {
       return validServiceAccounts.length > 0;
+    } else if (filterType === 'roles') {
+      return roles.length > 0;
+    } else if (filterType === 'clusterroles') {
+      return clusterRoles.length > 0;
     } else if (filterType === 'jobs') {
       return validJobs.filter(job => job.type === 'job').length > 0;
     } else if (filterType === 'cronjobs') {
@@ -1426,6 +1717,44 @@ export function VisualPreview({
                     <Key className="w-3 h-3" />
                     <span>{node.metadata.imagePullSecrets} image pull secrets</span>
                   </div>
+                )}
+                {/* Role-specific metadata */}
+                {node.type === 'role' && (
+                  <>
+                    {node.metadata.rules !== undefined && (
+                      <div className="flex items-center space-x-1">
+                        <Key className="w-3 h-3" />
+                        <span>{node.metadata.rules} rule{node.metadata.rules !== 1 ? 's' : ''}</span>
+                      </div>
+                    )}
+                    {node.metadata.apiGroups && node.metadata.apiGroups.length > 0 && (
+                      <div className="flex items-center space-x-1">
+                        <Settings className="w-3 h-3" />
+                        <span title={node.metadata.apiGroups.join(', ')}>
+                          {node.metadata.apiGroups.slice(0, 2).join(', ')}
+                          {node.metadata.apiGroups.length > 2 && ` +${node.metadata.apiGroups.length - 2}`}
+                        </span>
+                      </div>
+                    )}
+                    {node.metadata.resources && node.metadata.resources.length > 0 && (
+                      <div className="flex items-center space-x-1">
+                        <Server className="w-3 h-3" />
+                        <span title={node.metadata.resources.join(', ')}>
+                          {node.metadata.resources.slice(0, 2).join(', ')}
+                          {node.metadata.resources.length > 2 && ` +${node.metadata.resources.length - 2}`}
+                        </span>
+                      </div>
+                    )}
+                    {node.metadata.verbs && node.metadata.verbs.length > 0 && (
+                      <div className="flex items-center space-x-1">
+                        <Network className="w-3 h-3" />
+                        <span title={node.metadata.verbs.join(', ')}>
+                          {node.metadata.verbs.slice(0, 2).join(', ')}
+                          {node.metadata.verbs.length > 2 && ` +${node.metadata.verbs.length - 2}`}
+                        </span>
+                      </div>
+                    )}
+                  </>
                 )}
                 {node.metadata.lastSync && (
                   <div className="flex items-center space-x-1">

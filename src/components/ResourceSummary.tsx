@@ -1,5 +1,5 @@
 import { Server, CheckCircle, AlertCircle, Users, Settings, Key, Play, Clock } from 'lucide-react';
-import type { DeploymentConfig, DaemonSetConfig, Namespace, ConfigMap, Secret, ServiceAccount } from '../types';
+import type { DeploymentConfig, DaemonSetConfig, Namespace, ConfigMap, Secret, ServiceAccount, KubernetesRole, KubernetesClusterRole } from '../types';
 import type { Job } from './JobManager';
 
 interface ResourceSummaryProps {
@@ -9,6 +9,8 @@ interface ResourceSummaryProps {
   configMaps: ConfigMap[];
   secrets: Secret[];
   serviceAccounts: ServiceAccount[];
+  roles: KubernetesRole[];
+  clusterRoles: KubernetesClusterRole[];
   jobs: Job[];
 }
 
@@ -19,6 +21,8 @@ export function ResourceSummary({
   configMaps, 
   secrets, 
   serviceAccounts,
+  roles,
+  clusterRoles,
   jobs
 }: ResourceSummaryProps) {
   const getTotalResourceCount = () => {
@@ -46,6 +50,8 @@ export function ResourceSummary({
     count += serviceAccounts.length;
     count += namespaces.length;
     count += jobs.length;
+    count += roles.length;
+    count += clusterRoles.length;
     
     return count;
   };
@@ -105,6 +111,41 @@ export function ResourceSummary({
       }
     });
     
+    // Check roles
+    roles.forEach((role, index) => {
+      if (!role.metadata.name) issues.push(`Role ${index + 1}: Name is required`);
+      if (!role.metadata.namespace) issues.push(`Role ${index + 1}: Namespace is required`);
+      if (!role.rules || role.rules.length === 0) {
+        issues.push(`Role ${index + 1}: At least one rule is required`);
+      } else {
+        role.rules.forEach((rule, ruleIndex) => {
+          if (!rule.resources || rule.resources.length === 0) {
+            issues.push(`Role ${index + 1}, Rule ${ruleIndex + 1}: Resources are required`);
+          }
+          if (!rule.verbs || rule.verbs.length === 0) {
+            issues.push(`Role ${index + 1}, Rule ${ruleIndex + 1}: Verbs are required`);
+          }
+        });
+      }
+    });
+    
+    // Check cluster roles
+    clusterRoles.forEach((clusterRole, index) => {
+      if (!clusterRole.metadata.name) issues.push(`ClusterRole ${index + 1}: Name is required`);
+      if (!clusterRole.rules || clusterRole.rules.length === 0) {
+        issues.push(`ClusterRole ${index + 1}: At least one rule is required`);
+      } else {
+        clusterRole.rules.forEach((rule, ruleIndex) => {
+          if (!rule.resources || rule.resources.length === 0) {
+            issues.push(`ClusterRole ${index + 1}, Rule ${ruleIndex + 1}: Resources are required`);
+          }
+          if (!rule.verbs || rule.verbs.length === 0) {
+            issues.push(`ClusterRole ${index + 1}, Rule ${ruleIndex + 1}: Verbs are required`);
+          }
+        });
+      }
+    });
+    
     return {
       isValid: issues.length === 0,
       issues
@@ -117,6 +158,8 @@ export function ResourceSummary({
   const validDaemonSets = daemonSets.filter(d => d.appName);
   const validServiceAccounts = serviceAccounts.filter(sa => sa.name);
   const validJobs = jobs.filter(job => job.name);
+  const validRoles = roles.filter(role => role.metadata.name);
+  const validClusterRoles = clusterRoles.filter(clusterRole => clusterRole.metadata.name);
 
   return (
     <div className="space-y-6">
@@ -174,6 +217,8 @@ export function ResourceSummary({
           </div>
           <div className="text-sm text-cyan-700 space-y-1">
             <div>Service Accounts: {validServiceAccounts.length}</div>
+            <div>Roles: {validRoles.length}</div>
+            <div>ClusterRoles: {validClusterRoles.length}</div>
             <div>Secrets: {secrets.length}</div>
             <div>Total Secrets: {validServiceAccounts.reduce((sum, sa) => sum + (sa.secrets?.length || 0) + (sa.imagePullSecrets?.length || 0), 0)}</div>
           </div>
@@ -252,6 +297,54 @@ export function ResourceSummary({
                   {job.replicas && (
                     <div>Parallelism: {job.replicas}</div>
                   )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Roles Summary */}
+      {validRoles.length > 0 && (
+        <div className="space-y-4">
+          <h4 className="font-medium text-gray-900">Roles</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {validRoles.map((role, index) => (
+              <div key={index} className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                <div className="flex items-center space-x-2 mb-2">
+                  <Key className="w-5 h-5 text-purple-600" />
+                  <span className="font-medium text-purple-900">{role.metadata.name}</span>
+                </div>
+                <div className="text-sm text-purple-700 space-y-1">
+                  <div>Namespace: {role.metadata.namespace}</div>
+                  <div>Rules: {role.rules?.length || 0}</div>
+                  <div>API Groups: {Array.from(new Set(role.rules?.flatMap(r => r.apiGroups || []).map(g => g || 'core') || [])).length}</div>
+                  <div>Resources: {Array.from(new Set(role.rules?.flatMap(r => r.resources || []) || [])).length}</div>
+                  <div>Verbs: {Array.from(new Set(role.rules?.flatMap(r => r.verbs || []) || [])).length}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ClusterRoles Summary */}
+      {validClusterRoles.length > 0 && (
+        <div className="space-y-4">
+          <h4 className="font-medium text-gray-900">ClusterRoles</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {validClusterRoles.map((clusterRole, index) => (
+              <div key={index} className="bg-teal-50 p-4 rounded-lg border border-teal-200">
+                <div className="flex items-center space-x-2 mb-2">
+                  <Key className="w-5 h-5 text-teal-600" />
+                  <span className="font-medium text-teal-900">{clusterRole.metadata.name}</span>
+                </div>
+                <div className="text-sm text-teal-700 space-y-1">
+                  <div>Scope: Cluster-wide</div>
+                  <div>Rules: {clusterRole.rules?.length || 0}</div>
+                  <div>API Groups: {Array.from(new Set(clusterRole.rules?.flatMap(r => r.apiGroups || []).map(g => g || 'core') || [])).length}</div>
+                  <div>Resources: {Array.from(new Set(clusterRole.rules?.flatMap(r => r.resources || []) || [])).length}</div>
+                  <div>Verbs: {Array.from(new Set(clusterRole.rules?.flatMap(r => r.verbs || []) || [])).length}</div>
                 </div>
               </div>
             ))}

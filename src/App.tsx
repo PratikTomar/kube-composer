@@ -84,6 +84,7 @@ function App() {
   const [showNamespaceManager, setShowNamespaceManager] = useState(false);
   const [showConfigMapManager, setShowConfigMapManager] = useState(false);
   const [showSecretManager, setShowSecretManager] = useState(false);
+  const [editingSecretIndex, setEditingSecretIndex] = useState<number | undefined>(undefined);
   const [showServiceAccountManager, setShowServiceAccountManager] = useState(false);
   const [editingServiceAccountIndex, setEditingServiceAccountIndex] = useState<number | undefined>(undefined);
   const [showJobManager, setShowJobManager] = useState(false);
@@ -516,6 +517,17 @@ function App() {
     setSelectedSecret(secrets.length);
   };
 
+  const handleUpdateSecret = (secret: Secret, index: number) => {
+    const secretWithGlobalLabels = {
+      ...secret,
+      labels: cleanAndMergeLabels(secret.labels)
+    };
+    const updatedSecrets = [...secrets];
+    updatedSecrets[index] = secretWithGlobalLabels;
+    setSecrets(updatedSecrets);
+    setShowSecretManager(false);
+  };
+
   const handleDeleteSecret = (secretName: string) => {
     setSecrets(secrets.filter(s => s.name !== secretName));
     
@@ -548,6 +560,8 @@ function App() {
     setSecrets([...secrets, duplicatedSecret]);
     setSelectedSecret(secrets.length);
   };
+
+
 
   // Service Account management functions
   const handleAddServiceAccount = (serviceAccount: ServiceAccount) => {
@@ -1593,7 +1607,10 @@ function App() {
                   <>
                     <div className="p-4 border-b border-gray-200">
                       <button
-                        onClick={() => setShowSecretManager(true)}
+                        onClick={() => {
+                          setEditingSecretIndex(undefined);
+                          setShowSecretManager(true);
+                        }}
                         className="w-full inline-flex items-center justify-center px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors duration-200 text-sm font-medium"
                       >
                         <Plus className="w-4 h-4 mr-2" />
@@ -1607,7 +1624,10 @@ function App() {
                         setSelectedSecret(index);
                         setSidebarOpen(false);
                       }}
-                      onEdit={() => setShowSecretManager(true)}
+                      onEdit={(index) => {
+                        setEditingSecretIndex(index);
+                        setShowSecretManager(true);
+                      }}
                       onDelete={handleDeleteSecret}
                       onDuplicate={handleDuplicateSecret}
                     />
@@ -1910,10 +1930,16 @@ function App() {
           secrets={secrets}
           namespaces={availableNamespaces}
           onAddSecret={handleAddSecret}
-          onDeleteSecret={handleDeleteSecret}
-          onClose={() => setShowSecretManager(false)}
+          onUpdateSecret={handleUpdateSecret}
+          onClose={() => {
+            setShowSecretManager(false);
+            setEditingSecretIndex(undefined);
+          }}
+          editingIndex={editingSecretIndex}
         />
       )}
+
+
 
       {/* Service Account Manager Modal */}
       {showServiceAccountManager && (

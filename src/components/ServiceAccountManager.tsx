@@ -204,11 +204,11 @@ export function ServiceAccountManager({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+      <div className="bg-white rounded-xl shadow-lg w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col border border-gray-200">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-cyan-600 rounded-lg flex items-center justify-center">
+            <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
               <Users className="w-6 h-6 text-white" />
             </div>
             <div>
@@ -232,7 +232,7 @@ export function ServiceAccountManager({
         <div className="flex-1 overflow-y-auto p-6">
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Basic Information */}
-            <div className="bg-gray-50 rounded-lg p-4 space-y-4">
+            <div className="bg-white rounded-lg p-4 space-y-4 border border-gray-200 shadow-sm">
               <h4 className="font-medium text-gray-900 flex items-center">
                 <Settings className="w-4 h-4 mr-2" />
                 Basic Information
@@ -247,7 +247,7 @@ export function ServiceAccountManager({
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500 ${
+                    className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                       errors.name ? 'border-red-300 bg-red-50' : 'border-gray-300'
                     }`}
                     placeholder="my-service-account"
@@ -267,7 +267,7 @@ export function ServiceAccountManager({
                   <select
                     value={namespace}
                     onChange={(e) => setNamespace(e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500 ${
+                    className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                       errors.namespace ? 'border-red-300 bg-red-50' : 'border-gray-300'
                     }`}
                   >
@@ -288,7 +288,7 @@ export function ServiceAccountManager({
             </div>
 
             {/* Service Account Settings */}
-            <div className="bg-gray-50 rounded-lg p-4 space-y-4">
+            <div className="bg-white rounded-lg p-4 space-y-4 border border-gray-200 shadow-sm">
               <h4 className="font-medium text-gray-900 flex items-center">
                 <Key className="w-4 h-4 mr-2" />
                 Service Account Settings
@@ -300,7 +300,7 @@ export function ServiceAccountManager({
                   id="automountToken"
                   checked={automountServiceAccountToken}
                   onChange={(e) => setAutomountServiceAccountToken(e.target.checked)}
-                  className="h-4 w-4 text-cyan-600 focus:ring-cyan-500 border-gray-300 rounded"
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                 />
                 <label htmlFor="automountToken" className="ml-2 block text-sm text-gray-900">
                   Auto-mount service account token
@@ -312,13 +312,13 @@ export function ServiceAccountManager({
             </div>
 
             {/* Secrets */}
-            <div className="bg-gray-50 rounded-lg p-4 space-y-4">
+            <div className="bg-white rounded-lg p-4 space-y-4 border border-gray-200 shadow-sm">
               <div className="flex items-center justify-between">
                 <h4 className="font-medium text-gray-900">Secrets</h4>
                 <button
                   type="button"
                   onClick={addSecret}
-                  className="px-3 py-1 bg-cyan-600 text-white rounded-md hover:bg-cyan-700 transition-colors duration-200 text-sm"
+                  className="px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-200 text-sm"
                 >
                   <Plus className="w-4 h-4 inline mr-1" />
                   Add Secret
@@ -331,7 +331,7 @@ export function ServiceAccountManager({
                     <select
                       value={secret.name}
                       onChange={(e) => updateSecret(index, e.target.value)}
-                      className={`flex-1 px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500 ${
+                      className={`flex-1 px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                         errors[`secret-${index}`] ? 'border-red-300 bg-red-50' : 'border-gray-300'
                       }`}
                     >
@@ -365,13 +365,13 @@ export function ServiceAccountManager({
             </div>
 
             {/* Image Pull Secrets */}
-            <div className="bg-gray-50 rounded-lg p-4 space-y-4">
+            <div className="bg-white rounded-lg p-4 space-y-4 border border-gray-200 shadow-sm">
               <div className="flex items-center justify-between">
                 <h4 className="font-medium text-gray-900">Image Pull Secrets</h4>
                 <button
                   type="button"
                   onClick={addImagePullSecret}
-                  className="px-3 py-1 bg-cyan-600 text-white rounded-md hover:bg-cyan-700 transition-colors duration-200 text-sm"
+                  className="px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-200 text-sm"
                 >
                   <Plus className="w-4 h-4 inline mr-1" />
                   Add Image Pull Secret
@@ -384,7 +384,7 @@ export function ServiceAccountManager({
                     <select
                       value={secret.name}
                       onChange={(e) => updateImagePullSecret(index, e.target.value)}
-                      className={`flex-1 px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500 ${
+                      className={`flex-1 px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                         errors[`imagePullSecret-${index}`] ? 'border-red-300 bg-red-50' : 'border-gray-300'
                       }`}
                     >
@@ -418,13 +418,13 @@ export function ServiceAccountManager({
             </div>
 
             {/* Labels */}
-            <div className="bg-gray-50 rounded-lg p-4 space-y-4">
+            <div className="bg-white rounded-lg p-4 space-y-4 border border-gray-200 shadow-sm">
               <div className="flex items-center justify-between">
                 <h4 className="font-medium text-gray-900">Labels</h4>
                 <button
                   type="button"
                   onClick={addLabel}
-                  className="px-3 py-1 bg-cyan-600 text-white rounded-md hover:bg-cyan-700 transition-colors duration-200 text-sm"
+                  className="px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-200 text-sm"
                 >
                   <Plus className="w-4 h-4 inline mr-1" />
                   Add Label
@@ -439,7 +439,7 @@ export function ServiceAccountManager({
                       placeholder="Key"
                       value={label.key}
                       onChange={(e) => updateLabel(index, 'key', e.target.value)}
-                      className={`flex-1 px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500 ${
+                      className={`flex-1 px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                         errors[`label-${index}`] ? 'border-red-300 bg-red-50' : 'border-gray-300'
                       }`}
                     />
@@ -448,7 +448,7 @@ export function ServiceAccountManager({
                       placeholder="Value"
                       value={label.value}
                       onChange={(e) => updateLabel(index, 'value', e.target.value)}
-                      className={`flex-1 px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500 ${
+                      className={`flex-1 px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                         errors[`label-${index}`] ? 'border-red-300 bg-red-50' : 'border-gray-300'
                       }`}
                     />
@@ -475,13 +475,13 @@ export function ServiceAccountManager({
             </div>
 
             {/* Annotations */}
-            <div className="bg-gray-50 rounded-lg p-4 space-y-4">
+            <div className="bg-white rounded-lg p-4 space-y-4 border border-gray-200 shadow-sm">
               <div className="flex items-center justify-between">
                 <h4 className="font-medium text-gray-900">Annotations</h4>
                 <button
                   type="button"
                   onClick={addAnnotation}
-                  className="px-3 py-1 bg-cyan-600 text-white rounded-md hover:bg-cyan-700 transition-colors duration-200 text-sm"
+                  className="px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-200 text-sm"
                 >
                   <Plus className="w-4 h-4 inline mr-1" />
                   Add Annotation
@@ -496,7 +496,7 @@ export function ServiceAccountManager({
                       placeholder="Key"
                       value={annotation.key}
                       onChange={(e) => updateAnnotation(index, 'key', e.target.value)}
-                      className={`flex-1 px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500 ${
+                      className={`flex-1 px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                         errors[`annotation-${index}`] ? 'border-red-300 bg-red-50' : 'border-gray-300'
                       }`}
                     />
@@ -505,7 +505,7 @@ export function ServiceAccountManager({
                       placeholder="Value"
                       value={annotation.value}
                       onChange={(e) => updateAnnotation(index, 'value', e.target.value)}
-                      className={`flex-1 px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500 ${
+                      className={`flex-1 px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                         errors[`annotation-${index}`] ? 'border-red-300 bg-red-50' : 'border-gray-300'
                       }`}
                     />
@@ -538,14 +538,14 @@ export function ServiceAccountManager({
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500 transition-colors duration-200"
+            className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
           >
             Cancel
           </button>
           <button
             type="submit"
             onClick={handleSubmit}
-            className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-cyan-600 hover:bg-cyan-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500 transition-colors duration-200"
+            className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
           >
             {isEditing ? 'Update Service Account' : 'Create Service Account'}
           </button>

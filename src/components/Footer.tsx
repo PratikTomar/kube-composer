@@ -4,7 +4,7 @@ export function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900 text-white relative">
+    <footer className="bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900 text-white relative" role="contentinfo">
       {/* Bottom Bar */}
       <div className="border-t border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">

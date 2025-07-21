@@ -283,3 +283,22 @@ export interface KubernetesClusterRoleBinding {
     apiGroup: 'rbac.authorization.k8s.io';
   };
 }
+
+export interface Subject {
+  kind: 'User' | 'Group' | 'ServiceAccount';
+  name: string;
+  namespace?: string; // Required only for ServiceAccount
+  apiGroup?: string; // "rbac.authorization.k8s.io" for User/Group, empty for ServiceAccount
+}
+
+export interface RoleBinding {
+  name: string;
+  namespace?: string; // Optional for ClusterRoleBinding
+  isClusterRoleBinding: boolean;
+  roleRef: {
+    apiGroup: string; // Always "rbac.authorization.k8s.io"
+    kind: 'Role' | 'ClusterRole';
+    name: string;
+  };
+  subjects: Subject[];
+}

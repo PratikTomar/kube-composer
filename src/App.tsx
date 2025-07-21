@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Download, FileText, List, Plus, Menu, X, Database, Settings, Key, PlayCircle, Container as Docker, FolderOpen, GitBranch, Clock, Link2, Copy, Trash2, AlertTriangle } from 'lucide-react';
+import { Download, FileText, List, Plus, Menu, X, Database, Settings, Key, PlayCircle, Container as Docker, FolderOpen, GitBranch, Link2, Copy, Trash2, AlertTriangle } from 'lucide-react';
 import { loadConfig, saveConfig, clearConfig } from './utils/localStorage';
 import { DeploymentForm } from './components/DeploymentForm';
 import { DaemonSetForm } from './components/DaemonSetForm';

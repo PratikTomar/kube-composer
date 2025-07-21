@@ -1270,7 +1270,7 @@ data:
       }));
     });
     // Add CronJobs
-    cronjobs.forEach((cronjob, index) => {
+    cronjobs.forEach((cronjob) => {
       allResources.push('---');
       allResources.push('');
       // Merge global labels with cronjob labels

@@ -70,9 +70,6 @@ const RoleWizardManager: React.FC<RoleWizardManagerProps> = ({
   const [editingRuleIndex, setEditingRuleIndex] = useState<number | null>(null);
   const [ruleDraft, setRuleDraft] = useState<PolicyRule>({ apiGroups: [''], resources: [], verbs: [] });
 
-  // Add state for templates dropdown in rule wizard
-  const [showRuleTemplates, setShowRuleTemplates] = useState(false);
-
   // Add state for templates dropdown in permissions step
   const [showStepTemplates, setShowStepTemplates] = useState(false);
   const [selectedTemplateIdx, setSelectedTemplateIdx] = useState<number | null>(null);
@@ -136,24 +133,6 @@ const RoleWizardManager: React.FC<RoleWizardManagerProps> = ({
       });
       return newErrors;
     });
-  };
-
-  const updateRule = (index: number, field: keyof PolicyRule, value: any) => {
-    setRoleData(prev => {
-      const newRules = [...prev.rules];
-      newRules[index] = { ...newRules[index], [field]: value };
-      return { ...prev, rules: newRules };
-    });
-    
-    // Clear specific rule error when user starts fixing it
-    const errorKey = `rule-${index}-${field}`;
-    if (errors[errorKey]) {
-      setErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors[errorKey];
-        return newErrors;
-      });
-    }
   };
 
   // Labels management
@@ -225,30 +204,6 @@ const RoleWizardManager: React.FC<RoleWizardManagerProps> = ({
     closeRuleWizard();
   };
 
-  // Add handler to apply a template to the rule wizard
-  const handleApplyRuleTemplate = (template: any) => {
-    // Add template rules to existing rules
-    const newRules = [...roleData.rules, ...template.rules];
-    setRoleData(prev => ({
-      ...prev,
-      rules: newRules
-    }));
-    
-    // Close templates modal
-    setShowRuleTemplates(false);
-    
-    // Show success feedback (you can add a toast notification here if you have one)
-    console.log(`Applied template "${template.name}" - added ${template.rules.length} rules`);
-    
-    // Optional: Scroll to rules section to show the new rules
-    setTimeout(() => {
-      const rulesSection = document.querySelector('[data-step="permissions"]');
-      if (rulesSection) {
-        rulesSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-    }, 100);
-  };
-
   // New function to handle the simplified template structure
   const handleApplyTemplate = (templateId: string) => {
     const templateRules = {
@@ -301,7 +256,7 @@ const RoleWizardManager: React.FC<RoleWizardManagerProps> = ({
       }));
       
       // Close templates modal
-      setShowRuleTemplates(false);
+      setShowStepTemplates(false);
       
       // Show success feedback
       console.log(`Applied template "${templateId}" - added ${rules.length} rules`);
@@ -318,18 +273,6 @@ const RoleWizardManager: React.FC<RoleWizardManagerProps> = ({
 
   const handleEditRule = (index: number) => {
     startRuleWizard(roleData.rules[index], index);
-  };
-
-  const handleAddTemplateRules = () => {
-    if (selectedTemplateIdx !== null) {
-      const template = COMMON_ROLE_TEMPLATES[selectedTemplateIdx];
-      setRoleData(prev => ({
-        ...prev,
-        rules: [...prev.rules, ...template.rules.map(r => ({ ...r }))]
-      }));
-      setShowStepTemplates(false);
-      setSelectedTemplateIdx(null);
-    }
   };
 
   // Validation

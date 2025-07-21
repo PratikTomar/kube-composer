@@ -12,7 +12,6 @@ interface RoleBindingManagerProps {
   initialBinding?: RoleBinding;
   onSubmit?: (binding: RoleBinding) => void;
   onCancel?: () => void;
-  onCreateRole?: () => void;
 }
 
 const defaultRoleBinding: RoleBinding = {
@@ -43,7 +42,7 @@ function getApiGroupForKind(kind: string) {
   return '';
 }
 
-const RoleBindingManager: React.FC<RoleBindingManagerProps> = ({ namespaces = [], roles = [], clusterRoles = [], serviceAccounts = [], initialBinding, onSubmit, onCancel, onCreateRole }) => {
+const RoleBindingManager: React.FC<RoleBindingManagerProps> = ({ namespaces = [], roles = [], clusterRoles = [], serviceAccounts = [], initialBinding, onSubmit, onCancel }) => {
   const [step, setStep] = useState(0);
   const [binding, setBinding] = useState<RoleBinding>(initialBinding ? { ...initialBinding } : { ...defaultRoleBinding });
   const [errors, setErrors] = useState<{ [key: string]: string }>({});

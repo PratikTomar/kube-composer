@@ -44,6 +44,9 @@ import {
 } from './components/KubernetesIcons';
 import { RoleBindingManager } from './components/RoleBindingManager';
 
+// Move this outside the component to avoid breaking the Rules of Hooks
+const isPlayground = typeof window !== 'undefined' && window.location.search.includes('q=playground');
+
 type PreviewMode = 'visual' | 'yaml' | 'summary' | 'argocd' | 'flow';
 type SidebarTab = 'deployments' | 'daemonsets' | 'namespaces' | 'storage' | 'security' | 'jobs' | 'configmaps' | 'secrets' | 'roles';
 
@@ -84,7 +87,7 @@ function App() {
   const [selectedServiceAccount, setSelectedServiceAccount] = useState<number>(0);
   const [selectedRole, setSelectedRole] = useState<number>(0);
 
-  const [previewMode, setPreviewMode] = useState<PreviewMode>('flow');
+  const [previewMode, setPreviewMode] = useState<PreviewMode>(isPlayground ? 'yaml' : 'flow');
   const [sidebarTab, setSidebarTab] = useState<SidebarTab>('deployments');
   const [showAllResources, setShowAllResources] = useState<boolean>(true); // Show all resources by default
   const [storageSubTab, setStorageSubTab] = useState<'configmaps' | 'secrets'>('configmaps');
@@ -188,8 +191,24 @@ function App() {
 
   // Update generated YAML when configuration changes
   useEffect(() => {
-    const yaml = getPreviewYaml();
-    setGeneratedYaml(yaml);
+    // If in playground mode and no resources, keep the default YAML
+    const isPlayground = typeof window !== 'undefined' && window.location.search.includes('q=playground');
+    const noResources =
+      deployments.length === 0 &&
+      daemonSets.length === 0 &&
+      jobs.length === 0 &&
+      configMaps.length === 0 &&
+      secrets.length === 0 &&
+      serviceAccounts.length === 0 &&
+      roles.length === 0 &&
+      clusterRoles.length === 0 &&
+      roleBindings.length === 0;
+    if (isPlayground && noResources) {
+      setGeneratedYaml(`# Playground Mode\n# Example Deployment\napiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: playground-deployment\nspec:\n  replicas: 1\n  selector:\n    matchLabels:\n      app: playground\n  template:\n    metadata:\n      labels:\n        app: playground\n    spec:\n      containers:\n        - name: playground\n          image: nginx:latest\n`);
+    } else {
+      const yaml = getPreviewYaml();
+      setGeneratedYaml(yaml);
+    }
   }, [deployments, daemonSets, jobs, configMaps, secrets, serviceAccounts, roles, clusterRoles, namespaces, projectSettings, roleBindings]);
 
   // Trigger auto-save when any configuration changes

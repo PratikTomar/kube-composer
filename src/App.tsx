@@ -215,6 +215,8 @@ function App() {
         if (saved.generatedYaml) setGeneratedYaml(saved.generatedYaml);
         if (saved.roleBindings) setRoleBindings(saved.roleBindings);
         console.log('Configuration loaded from localStorage');
+      } else if (typeof window !== 'undefined' && window.location.search.includes('q=playground')) {
+        setGeneratedYaml(`# Playground Mode\n# Example Deployment\napiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: playground-deployment\nspec:\n  replicas: 1\n  selector:\n    matchLabels:\n      app: playground\n  template:\n    metadata:\n      labels:\n        app: playground\n    spec:\n      containers:\n        - name: playground\n          image: nginx:latest\n`);
       }
     } catch (e) {
       console.warn('Failed to load saved configuration:', e);

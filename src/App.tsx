@@ -2591,13 +2591,6 @@ function App() {
                 initialBinding={editingRoleBindingIndex !== undefined ? roleBindings[editingRoleBindingIndex] : undefined}
                 onSubmit={editingRoleBindingIndex !== undefined ? (binding: RoleBinding) => handleUpdateRoleBinding(binding, editingRoleBindingIndex) : handleAddRoleBinding}
                 onCancel={() => { setShowRoleBindingManager(false); setEditingRoleBindingIndex(undefined); }}
-                onCreateRole={() => {
-                                  setIsClusterRoleMode(false);
-                setShowRoleWizard(true);
-                setEditingRoleIndex(undefined);
-                setShowRoleBindingManager(false);
-                setReopenRoleBindingAfterRole(true);
-                }}
               />
             </div>
           </div>

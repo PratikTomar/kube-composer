@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { generateRoleYaml, generateClusterRoleYaml } from '../utils/yamlGenerator';
 import type { KubernetesRole, KubernetesClusterRole, PolicyRule } from '../types';
 import { Check, ChevronLeft, ChevronRight, Plus, Trash2, Info } from 'lucide-react';
-import { API_GROUPS, ALL_VERBS, COMMON_ROLE_TEMPLATES } from '../data/kubernetesRBAC';
+import { API_GROUPS, ALL_VERBS } from '../data/kubernetesRBAC';
 
 interface RoleWizardManagerProps {
   namespaces?: string[];
@@ -72,7 +72,6 @@ const RoleWizardManager: React.FC<RoleWizardManagerProps> = ({
 
   // Add state for templates dropdown in permissions step
   const [showStepTemplates, setShowStepTemplates] = useState(false);
-  const [selectedTemplateIdx, setSelectedTemplateIdx] = useState<number | null>(null);
 
   useEffect(() => {
     if (initialRole) {

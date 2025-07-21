@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Share2, Twitter, Facebook, Linkedin, Link, Check, Star, Github } from 'lucide-react';
+import { Share2, Twitter, Facebook, Linkedin, Link, Check, Star, Github, AlertTriangle } from 'lucide-react';
 
 interface SocialShareProps {
   className?: string;
@@ -149,7 +149,7 @@ export function SocialShare({ className = '' }: SocialShareProps) {
 
   return (
     <div className={`flex items-center space-x-1 ${className}`}>
-      {/* Only show GitHub star button if playground mode, else show all */}
+      {/* GitHub star button */}
       <a
         href="https://github.com/same7ammar/kube-composer"
         target="_blank"
@@ -182,6 +182,18 @@ export function SocialShare({ className = '' }: SocialShareProps) {
             </span>
           )}
         </div>
+      </a>
+      {/* Report Issue button */}
+      <a
+        href="https://github.com/same7ammar/kube-composer/issues/new?labels=bug,playground&template=bug_report.md&title=[Playground]%20"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="group inline-flex items-center space-x-2 px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-all duration-200 text-xs font-medium shadow-md hover:shadow-lg transform hover:scale-105"
+        title="Report an issue on GitHub"
+        aria-label="Report an issue on GitHub"
+      >
+        <AlertTriangle className="w-4 h-4 text-yellow-200 group-hover:text-yellow-100 group-hover:scale-110 transition-all duration-200" />
+        <span className="group-hover:text-yellow-100 transition-colors duration-200">Report Issue</span>
       </a>
       {!isPlayground && (
         <>

@@ -18,9 +18,10 @@ import {
   GitBranch,
   GitCommit,
   X,
-  Play
+  Play,
+  Link2
 } from 'lucide-react';
-import type { DeploymentConfig, DaemonSetConfig, Namespace, ConfigMap, Secret, ServiceAccount, KubernetesRole, KubernetesClusterRole } from '../types';
+import type { DeploymentConfig, DaemonSetConfig, Namespace, ConfigMap, Secret, ServiceAccount, KubernetesRole, KubernetesClusterRole, RoleBinding } from '../types';
 import type { Job } from './JobManager';
 import { generateKubernetesYaml, generateDaemonSetYaml, generateConfigMapYaml, generateSecretYaml, generateNamespaceYaml, generateServiceAccountYaml, generateJobYaml, generateCronJobYaml, generateRoleYaml, generateClusterRoleYaml } from '../utils/yamlGenerator';
 import { YamlPreview } from './YamlPreview';
@@ -35,14 +36,15 @@ interface VisualPreviewProps {
   roles: KubernetesRole[];
   clusterRoles: KubernetesClusterRole[];
   jobs: Job[];
+  roleBindings: RoleBinding[];
   containerRef?: React.RefObject<HTMLDivElement>;
-  filterType?: 'all' | 'deployments' | 'daemonsets' | 'namespaces' | 'configmaps' | 'secrets' | 'serviceaccounts' | 'roles' | 'clusterroles' | 'jobs' | 'cronjobs';
+  filterType?: 'all' | 'deployments' | 'daemonsets' | 'namespaces' | 'configmaps' | 'secrets' | 'serviceaccounts' | 'roles' | 'clusterroles' | 'rolebindings' | 'jobs' | 'cronjobs';
 }
 
 interface FlowNode {
   id: string;
   name: string;
-  type: 'deployment' | 'daemonset' | 'service' | 'pod' | 'configmap' | 'secret' | 'ingress' | 'namespace' | 'external' | 'serviceaccount' | 'role' | 'job' | 'cronjob';
+  type: 'deployment' | 'daemonset' | 'service' | 'pod' | 'configmap' | 'secret' | 'ingress' | 'namespace' | 'external' | 'serviceaccount' | 'role' | 'job' | 'cronjob' | 'rolebinding';
   namespace: string;
   status: 'healthy' | 'warning' | 'error' | 'pending' | 'syncing';
   syncStatus: 'synced' | 'outofsync' | 'unknown';
@@ -80,6 +82,7 @@ export function VisualPreview({
   roles,
   clusterRoles,
   jobs,
+  roleBindings,
   containerRef,
   filterType = 'all'
 }: VisualPreviewProps) {
@@ -117,6 +120,7 @@ export function VisualPreview({
     const filteredRoles = filterType === 'all' || filterType === 'roles' ? roles : [];
     const filteredClusterRoles = filterType === 'all' || filterType === 'clusterroles' ? clusterRoles : [];
     const filteredJobs = filterType === 'all' || filterType === 'jobs' || filterType === 'cronjobs' ? jobs : [];
+    const filteredRoleBindings = filterType === 'all' || filterType === 'rolebindings' ? roleBindings : [];
 
     // Group by namespace
     const namespaceGroups = filteredNamespaces.map(ns => ({
@@ -126,7 +130,8 @@ export function VisualPreview({
       configMaps: filteredConfigMaps.filter(cm => cm.namespace === ns.name),
       secrets: filteredSecrets.filter(s => s.namespace === ns.name),
       serviceAccounts: filteredServiceAccounts.filter(sa => sa.namespace === ns.name),
-      roles: filteredRoles.filter(r => r.metadata.namespace === ns.name)
+      roles: filteredRoles.filter(r => r.metadata.namespace === ns.name),
+      roleBindings: filteredRoleBindings.filter(rb => !rb.isClusterRoleBinding && rb.namespace === ns.name)
     })).filter(group => 
       group.deployments.length > 0 || 
       group.daemonSets.length > 0 ||
@@ -134,7 +139,7 @@ export function VisualPreview({
       group.secrets.length > 0 ||
       group.serviceAccounts.length > 0 ||
       group.roles.length > 0 ||
-      // Include namespace groups even if they only have standalone resources
+      group.roleBindings.length > 0 ||
       (filterType === 'namespaces' && group.namespace)
     );
 
@@ -554,6 +559,41 @@ export function VisualPreview({
         currentY += totalRoleRows * 180 + 40; // Increased spacing for roles
       }
 
+      // Process RoleBindings (namespace-scoped only)
+      if (group.roleBindings.length > 0) {
+        const roleBindingsPerRow = 2;
+        const roleBindingSpacing = 260;
+        
+        group.roleBindings.forEach((rb, rbIndex) => {
+          const row = Math.floor(rbIndex / roleBindingsPerRow);
+          const col = rbIndex % roleBindingsPerRow;
+          const rbId = `rolebinding-${rb.name}-${rb.namespace}`;
+          
+          nodes.push({
+            id: rbId,
+            name: rb.name,
+            type: 'rolebinding',
+            namespace: rb.namespace || '',
+            status: 'healthy',
+            syncStatus: 'synced',
+            position: {
+              x: col * roleBindingSpacing,
+              y: currentY + (row * 120)
+            },
+            dependencies: [],
+            children: [],
+            metadata: {
+              lastSync: new Date().toISOString(),
+              syncRevision: `v${Date.now()}`
+            },
+            colorClass: colorPalette[3] // Purple for RoleBinding
+          });
+        });
+        
+        const totalRBRows = Math.ceil(group.roleBindings.length / roleBindingsPerRow);
+        currentY += totalRBRows * 120 + 20;
+      }
+
       // Process namespaces
       if (group.namespace) {
         const namespaceId = `namespace-${group.namespace.name}`;
@@ -646,6 +686,40 @@ export function VisualPreview({
 
       currentY += rowHeight * 0.2;
     });
+
+    // Add cluster-wide RoleBindings (ClusterRoleBinding) at the end
+    const clusterRoleBindings = filteredRoleBindings.filter(rb => rb.isClusterRoleBinding);
+    if (clusterRoleBindings.length > 0 && (filterType === 'all' || filterType === 'rolebindings')) {
+      currentY += 60;
+      const crbPerRow = 2;
+      const crbSpacing = 260;
+      clusterRoleBindings.forEach((rb, index) => {
+        const row = Math.floor(index / crbPerRow);
+        const col = index % crbPerRow;
+        const rbId = `clusterrolebinding-${rb.name}`;
+        nodes.push({
+          id: rbId,
+          name: rb.name,
+          type: 'rolebinding',
+          namespace: 'cluster-wide',
+          status: 'healthy',
+          syncStatus: 'synced',
+          position: {
+            x: col * crbSpacing,
+            y: currentY + (row * 120)
+          },
+          dependencies: [],
+          children: [],
+          metadata: {
+            lastSync: new Date().toISOString(),
+            syncRevision: `v${Date.now()}`
+          },
+          colorClass: colorPalette[0]
+        });
+      });
+      const totalCRBRows = Math.ceil(clusterRoleBindings.length / crbPerRow);
+      currentY += totalCRBRows * 120 + 20;
+    }
 
     // Handle standalone resources that don't need to be grouped by namespace
     if (filterType === 'deployments' || filterType === 'daemonsets' || filterType === 'configmaps' || filterType === 'secrets' || filterType === 'serviceaccounts' || filterType === 'roles' || filterType === 'clusterroles' || filterType === 'jobs' || filterType === 'cronjobs') {
@@ -1272,8 +1346,42 @@ export function VisualPreview({
       currentY += totalClusterRoleRows * 200 + 40; // Increased spacing for cluster roles
     }
 
+    // Add standalone RoleBindings support for the rolebindings filter
+    if (filterType === 'rolebindings') {
+      const roleBindingsPerRow = 2;
+      const roleBindingSpacing = 300;
+      
+      filteredRoleBindings.forEach((rb, index) => {
+        const row = Math.floor(index / roleBindingsPerRow);
+        const col = index % roleBindingsPerRow;
+        
+        nodes.push({
+          id: `rolebinding-${rb.name}-${rb.namespace || 'cluster'}`,
+          name: rb.name,
+          type: 'rolebinding',
+          namespace: rb.isClusterRoleBinding ? 'cluster-wide' : (rb.namespace || ''),
+          status: 'healthy',
+          syncStatus: 'synced',
+          position: { 
+            x: col * roleBindingSpacing, 
+            y: currentY + (row * 200)
+          },
+          dependencies: [],
+          children: [],
+          metadata: {
+            lastSync: new Date().toISOString(),
+            syncRevision: `v${Date.now()}`
+          },
+          colorClass: rb.isClusterRoleBinding ? colorPalette[0] : colorPalette[3]
+        });
+      });
+      
+      const totalRows = Math.ceil(filteredRoleBindings.length / roleBindingsPerRow);
+      currentY += totalRows * 200 + 40;
+    }
+
     return nodes;
-  }, [deployments, daemonSets, namespaces, configMaps, secrets, serviceAccounts, roles, clusterRoles, jobs, filterType]);
+  }, [deployments, daemonSets, namespaces, configMaps, secrets, serviceAccounts, roles, clusterRoles, jobs, roleBindings, filterType]);
 
   // Bounding box calculation
   const padding = 40;
@@ -1354,6 +1462,8 @@ export function VisualPreview({
         return <Database className="w-4 h-4 text-gray-500" />;
       case 'external':
         return <ExternalLink className="w-4 h-4 text-blue-600" />;
+      case 'rolebinding':
+        return <Link2 className="w-4 h-4 text-blue-500" />;
       default:
         return <Info className="w-4 h-4 text-gray-400" />;
     }
@@ -1543,7 +1653,7 @@ export function VisualPreview({
   // Check if there are any resources for the current filter
   const hasFilteredResources = () => {
     if (filterType === 'all') {
-      return validDeployments.length > 0 || validDaemonSets.length > 0 || validServiceAccounts.length > 0 || validJobs.length > 0 || roles.length > 0 || clusterRoles.length > 0;
+      return validDeployments.length > 0 || validDaemonSets.length > 0 || validServiceAccounts.length > 0 || validJobs.length > 0 || roles.length > 0 || clusterRoles.length > 0 || roleBindings.length > 0;
     } else if (filterType === 'deployments') {
       return validDeployments.length > 0;
     } else if (filterType === 'daemonsets') {
@@ -1554,6 +1664,8 @@ export function VisualPreview({
       return roles.length > 0;
     } else if (filterType === 'clusterroles') {
       return clusterRoles.length > 0;
+    } else if (filterType === 'rolebindings') {
+      return roleBindings.length > 0;
     } else if (filterType === 'jobs') {
       return validJobs.filter(job => job.type === 'job').length > 0;
     } else if (filterType === 'cronjobs') {

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Share2, Twitter, Facebook, Linkedin, Link, Check, Star, Github } from 'lucide-react';
+import { Share2, Twitter, Facebook, Linkedin, Link, Check, Star, Github, AlertTriangle } from 'lucide-react';
 
 interface SocialShareProps {
   className?: string;
@@ -144,12 +144,12 @@ export function SocialShare({ className = '' }: SocialShareProps) {
 
   // Check if native share is available
   const isNativeShareAvailable = typeof navigator !== 'undefined' && 'share' in navigator && typeof navigator.share === 'function';
+  // Check if playground mode
+  const isPlayground = typeof window !== 'undefined' && window.location.search.includes('q=playground');
 
   return (
     <div className={`flex items-center space-x-1 ${className}`}>
-      <span className="text-xs font-medium text-gray-600 hidden sm:inline">Share:</span>
-      
-      {/* Enhanced GitHub Star Button with Star Count */}
+      {/* GitHub star button */}
       <a
         href="https://github.com/same7ammar/kube-composer"
         target="_blank"
@@ -183,68 +183,80 @@ export function SocialShare({ className = '' }: SocialShareProps) {
           )}
         </div>
       </a>
-      
-      {/* Native Share (mobile) */}
-      {isNativeShareAvailable && (
-        <button
-          onClick={handleNativeShare}
-          className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200"
-          title="Share Kube Composer"
-          aria-label="Share this tool"
-        >
-          <Share2 className="w-4 h-4" />
-        </button>
+      {/* Report Issue button */}
+      <a
+        href="https://github.com/same7ammar/kube-composer/issues/new?labels=bug,playground&template=bug_report.md&title=[Playground]%20"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="group inline-flex items-center space-x-2 px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-all duration-200 text-xs font-medium shadow-md hover:shadow-lg transform hover:scale-105"
+        title="Report an issue on GitHub"
+        aria-label="Report an issue on GitHub"
+      >
+        <AlertTriangle className="w-4 h-4 text-yellow-200 group-hover:text-yellow-100 group-hover:scale-110 transition-all duration-200" />
+        <span className="group-hover:text-yellow-100 transition-colors duration-200">Report Issue</span>
+      </a>
+      {!isPlayground && (
+        <>
+          <span className="text-xs font-medium text-gray-600 hidden sm:inline">Share:</span>
+          {/* Native Share (mobile) */}
+          {isNativeShareAvailable && (
+            <button
+              onClick={handleNativeShare}
+              className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200"
+              title="Share Kube Composer"
+              aria-label="Share this tool"
+            >
+              <Share2 className="w-4 h-4" />
+            </button>
+          )}
+          {/* Twitter */}
+          <a
+            href={shareUrls.twitter}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="p-1.5 text-gray-500 hover:text-blue-400 hover:bg-blue-50 rounded-lg transition-colors duration-200"
+            title="Share on Twitter"
+            aria-label="Share Kube Composer on Twitter"
+          >
+            <Twitter className="w-4 h-4" />
+          </a>
+          {/* Facebook */}
+          <a
+            href={shareUrls.facebook}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200"
+            title="Share on Facebook"
+            aria-label="Share Kube Composer on Facebook"
+          >
+            <Facebook className="w-4 h-4" />
+          </a>
+          {/* LinkedIn */}
+          <a
+            href={shareUrls.linkedin}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="p-1.5 text-gray-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors duration-200"
+            title="Share on LinkedIn"
+            aria-label="Share Kube Composer on LinkedIn"
+          >
+            <Linkedin className="w-4 h-4" />
+          </a>
+          {/* Copy Link */}
+          <button
+            onClick={handleCopyLink}
+            className="p-1.5 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors duration-200"
+            title={copied ? 'Link copied!' : 'Copy link'}
+            aria-label="Copy link to Kube Composer"
+          >
+            {copied ? (
+              <Check className="w-4 h-4 text-green-600" />
+            ) : (
+              <Link className="w-4 h-4" />
+            )}
+          </button>
+        </>
       )}
-      
-      {/* Twitter */}
-      <a
-        href={shareUrls.twitter}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="p-1.5 text-gray-500 hover:text-blue-400 hover:bg-blue-50 rounded-lg transition-colors duration-200"
-        title="Share on Twitter"
-        aria-label="Share Kube Composer on Twitter"
-      >
-        <Twitter className="w-4 h-4" />
-      </a>
-      
-      {/* Facebook */}
-      <a
-        href={shareUrls.facebook}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200"
-        title="Share on Facebook"
-        aria-label="Share Kube Composer on Facebook"
-      >
-        <Facebook className="w-4 h-4" />
-      </a>
-      
-      {/* LinkedIn */}
-      <a
-        href={shareUrls.linkedin}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="p-1.5 text-gray-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors duration-200"
-        title="Share on LinkedIn"
-        aria-label="Share Kube Composer on LinkedIn"
-      >
-        <Linkedin className="w-4 h-4" />
-      </a>
-      
-      {/* Copy Link */}
-      <button
-        onClick={handleCopyLink}
-        className="p-1.5 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors duration-200"
-        title={copied ? 'Link copied!' : 'Copy link'}
-        aria-label="Copy link to Kube Composer"
-      >
-        {copied ? (
-          <Check className="w-4 h-4 text-green-600" />
-        ) : (
-          <Link className="w-4 h-4" />
-        )}
-      </button>
     </div>
   );
 }

@@ -203,8 +203,7 @@ export function ResourceSummary({
           <div className="text-sm text-blue-700 space-y-1">
             <div>Deployments: {validDeployments.length}</div>
             <div>DaemonSets: {validDaemonSets.length}</div>
-            <div>Jobs: {validJobs.filter(job => job.type === 'job').length}</div>
-            <div>CronJobs: {validJobs.filter(job => job.type === 'cronjob').length}</div>
+            <div>Jobs: {validJobs.length}</div>
             <div>Total Containers: {validDeployments.reduce((sum, d) => sum + (d.containers?.length || 0), 0) + validDaemonSets.reduce((sum, d) => sum + (d.containers?.length || 0), 0) + validJobs.reduce((sum, job) => sum + (job.containers?.length || 0), 0)}</div>
           </div>
         </div>

@@ -191,6 +191,7 @@ export function YamlPreview({ yaml, name }: YamlPreviewProps) {
           {/* Action buttons */}
           <button
             onClick={handleDownload}
+            aria-label="Download YAML file"
             className="inline-flex items-center px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200 text-sm font-medium"
             title="Download YAML file"
           >
@@ -200,6 +201,7 @@ export function YamlPreview({ yaml, name }: YamlPreviewProps) {
           
           <button
             onClick={handleCopy}
+            aria-label="Copy YAML to clipboard"
             className="inline-flex items-center px-3 py-1.5 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors duration-200 text-sm font-medium"
             title="Copy to clipboard"
           >
@@ -219,7 +221,7 @@ export function YamlPreview({ yaml, name }: YamlPreviewProps) {
       </div>
 
       {/* YAML content */}
-      <div className="bg-gray-900 rounded-xl overflow-hidden border border-gray-700 shadow-lg">
+      <div className="bg-gray-900 rounded-xl overflow-hidden border border-gray-700 shadow-lg" aria-label="YAML preview">
         {/* Header bar */}
         <div className="bg-gray-800 px-4 py-2 border-b border-gray-700">
           <div className="flex items-center space-x-2">
@@ -232,7 +234,7 @@ export function YamlPreview({ yaml, name }: YamlPreviewProps) {
 
         {/* Code content */}
         <div className="relative">
-          <pre className={`p-4 text-sm text-gray-100 overflow-x-auto ${wordWrap ? 'whitespace-pre-wrap' : 'whitespace-pre'}`}>
+          <pre className={`p-4 text-sm text-gray-100 overflow-x-auto ${wordWrap ? 'whitespace-pre-wrap' : 'whitespace-pre'}`} aria-label="YAML preview">
             <code className="font-mono leading-relaxed">
               {yamlLines.map((line, index) => (
                 <div key={index} className="flex">

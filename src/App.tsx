@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Download, FileText, List, Plus, Menu, X, Database, Settings, Key, PlayCircle, Container as Docker, FolderOpen, GitBranch, Clock } from 'lucide-react';
+import { Download, FileText, List, Plus, Menu, X, Database, Settings, Key, PlayCircle, Container as Docker, FolderOpen, GitBranch, Link2, Copy, Trash2, AlertTriangle } from 'lucide-react';
 import { loadConfig, saveConfig, clearConfig } from './utils/localStorage';
 import { DeploymentForm } from './components/DeploymentForm';
 import { DaemonSetForm } from './components/DaemonSetForm';
@@ -12,7 +12,7 @@ import { ConfigMapsList } from './components/ConfigMapsList';
 import { SecretsList } from './components/SecretsList';
 import { ServiceAccountsList } from './components/ServiceAccountsList';
 import { RolesList } from './components/RolesList';
-import { ClusterRolesList } from './components/ClusterRolesList';
+
 import { VisualPreview } from './components/VisualPreview';
 import { Footer } from './components/Footer';
 import { SocialShare } from './components/SocialShare';
@@ -21,8 +21,7 @@ import { NamespaceManager } from './components/NamespaceManager';
 import { ConfigMapManager } from './components/ConfigMapManager';
 import { SecretManager } from './components/SecretManager';
 import { ServiceAccountManager } from './components/ServiceAccountManager';
-import { RoleManager } from './components/RoleManager';
-import { ClusterRoleManager } from './components/ClusterRoleManager';
+import RoleWizardManager from './components/RoleWizardManager';
 import { ProjectSettingsManager } from './components/ProjectSettingsManager';
 import { YouTubePopup } from './components/YouTubePopup';
 import { DockerRunPopup } from './components/DockerRunPopup';
@@ -30,7 +29,7 @@ import { generateMultiDeploymentYaml } from './utils/yamlGenerator';
 import { JobManager, Job } from './components/JobManager';
 import { JobList } from './components/jobs/JobList';
 import { CronJobList } from './components/jobs/CronJobList';
-import type { DeploymentConfig, DaemonSetConfig, Namespace, ConfigMap, Secret, ServiceAccount, ProjectSettings, JobConfig, CronJobConfig, KubernetesRole, KubernetesClusterRole } from './types';
+import type { DeploymentConfig, DaemonSetConfig, Namespace, ConfigMap, Secret, ServiceAccount, ProjectSettings, JobConfig, CronJobConfig, KubernetesRole, KubernetesClusterRole, RoleBinding } from './types';
 import {
   K8sDeploymentIcon,
   K8sNamespaceIcon,
@@ -43,12 +42,18 @@ import {
   K8sSecurityIcon,
   K8sServiceAccountIcon
 } from './components/KubernetesIcons';
+import { RoleBindingManager } from './components/RoleBindingManager';
+
+// Move this outside the component to avoid breaking the Rules of Hooks
+const isPlayground = typeof window !== 'undefined' && window.location.search.includes('q=playground');
 
 type PreviewMode = 'visual' | 'yaml' | 'summary' | 'argocd' | 'flow';
 type SidebarTab = 'deployments' | 'daemonsets' | 'namespaces' | 'storage' | 'security' | 'jobs' | 'configmaps' | 'secrets' | 'roles';
 
 function App() {
   const hideDemoIcons = import.meta.env.VITE_HIDE_DEMO_ICONS === 'true';
+  // Add a flag to hide header actions if ?q=plaground or ?q=playground is present
+  const hideHeaderActions = typeof window !== 'undefined' && (window.location.search.includes('q=plaground') || window.location.search.includes('q=playground'));
   
   // Initialize state with loading flag
   const [isLoading, setIsLoading] = useState(true);
@@ -81,12 +86,12 @@ function App() {
   const [selectedSecret, setSelectedSecret] = useState<number>(0);
   const [selectedServiceAccount, setSelectedServiceAccount] = useState<number>(0);
   const [selectedRole, setSelectedRole] = useState<number>(0);
-  const [selectedClusterRole, setSelectedClusterRole] = useState<number>(0);
-  const [previewMode, setPreviewMode] = useState<PreviewMode>('flow');
+
+  const [previewMode, setPreviewMode] = useState<PreviewMode>(isPlayground ? 'yaml' : 'flow');
   const [sidebarTab, setSidebarTab] = useState<SidebarTab>('deployments');
   const [showAllResources, setShowAllResources] = useState<boolean>(true); // Show all resources by default
   const [storageSubTab, setStorageSubTab] = useState<'configmaps' | 'secrets'>('configmaps');
-  const [securitySubTab, setSecuritySubTab] = useState<'serviceaccounts' | 'roles' | 'clusterroles'>('serviceaccounts');
+  const [securitySubTab, setSecuritySubTab] = useState<'serviceaccounts' | 'roles' | 'rolebindings'>('serviceaccounts');
   const [jobsSubTab, setJobsSubTab] = useState<'jobs' | 'cronjobs'>('jobs');
   const [showForm, setShowForm] = useState(false);
   const [showNamespaceManager, setShowNamespaceManager] = useState(false);
@@ -95,10 +100,9 @@ function App() {
   const [editingSecretIndex, setEditingSecretIndex] = useState<number | undefined>(undefined);
   const [showServiceAccountManager, setShowServiceAccountManager] = useState(false);
   const [editingServiceAccountIndex, setEditingServiceAccountIndex] = useState<number | undefined>(undefined);
-  const [showRoleManager, setShowRoleManager] = useState(false);
+  const [showRoleWizard, setShowRoleWizard] = useState(false);
   const [editingRoleIndex, setEditingRoleIndex] = useState<number | undefined>(undefined);
-  const [showClusterRoleManager, setShowClusterRoleManager] = useState(false);
-  const [editingClusterRoleIndex, setEditingClusterRoleIndex] = useState<number | undefined>(undefined);
+  const [isClusterRoleMode, setIsClusterRoleMode] = useState(false);
   const [showJobManager, setShowJobManager] = useState(false);
   const [jobTypeToCreate, setJobTypeToCreate] = useState<'job' | 'cronjob'>('job');
   const [showProjectSettings, setShowProjectSettings] = useState(false);
@@ -113,6 +117,13 @@ function App() {
   const [selectedJob, setSelectedJob] = useState<number>(-1);
   const [selectedCronJob, setSelectedCronJob] = useState<number>(-1);
   const [generatedYaml, setGeneratedYaml] = useState<string>('');
+  const [roleBindings, setRoleBindings] = useState<RoleBinding[]>([]);
+  const [showRoleBindingManager, setShowRoleBindingManager] = useState(false);
+  const [editingRoleBindingIndex, setEditingRoleBindingIndex] = useState<number | undefined>(undefined);
+  // Add a state to track if RoleManager was opened from RoleBindingManager
+  const [reopenRoleBindingAfterRole, setReopenRoleBindingAfterRole] = useState(false);
+  const [selectedRoleBindingIndex, setSelectedRoleBindingIndex] = useState<number>(-1);
+  const [deleteRoleBindingConfirm, setDeleteRoleBindingConfirm] = useState<number | null>(null);
 
   // Auto-save functionality
   const autoSaveTimeoutRef = useRef<number | null>(null);
@@ -165,7 +176,8 @@ function App() {
           clusterRoles,
           namespaces,
           projectSettings,
-          generatedYaml
+          generatedYaml,
+          roleBindings
         };
         const success = saveConfig(config);
         if (success) {
@@ -175,13 +187,29 @@ function App() {
         console.warn('Auto-save failed:', e);
       }
     }, 3000); // 3 second delay
-  }, [deployments, daemonSets, jobs, configMaps, secrets, serviceAccounts, roles, clusterRoles, namespaces, projectSettings, generatedYaml]);
+  }, [deployments, daemonSets, jobs, configMaps, secrets, serviceAccounts, roles, clusterRoles, namespaces, projectSettings, generatedYaml, roleBindings]);
 
   // Update generated YAML when configuration changes
   useEffect(() => {
-    const yaml = getPreviewYaml();
-    setGeneratedYaml(yaml);
-  }, [deployments, daemonSets, jobs, configMaps, secrets, serviceAccounts, roles, clusterRoles, namespaces, projectSettings]);
+    // If in playground mode and no resources, keep the default YAML
+    const isPlayground = typeof window !== 'undefined' && window.location.search.includes('q=playground');
+    const noResources =
+      deployments.length === 0 &&
+      daemonSets.length === 0 &&
+      jobs.length === 0 &&
+      configMaps.length === 0 &&
+      secrets.length === 0 &&
+      serviceAccounts.length === 0 &&
+      roles.length === 0 &&
+      clusterRoles.length === 0 &&
+      roleBindings.length === 0;
+    if (isPlayground && noResources) {
+      setGeneratedYaml(`# Playground Mode\n# Example Deployment\napiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: playground-deployment\nspec:\n  replicas: 1\n  selector:\n    matchLabels:\n      app: playground\n  template:\n    metadata:\n      labels:\n        app: playground\n    spec:\n      containers:\n        - name: playground\n          image: nginx:latest\n`);
+    } else {
+      const yaml = getPreviewYaml();
+      setGeneratedYaml(yaml);
+    }
+  }, [deployments, daemonSets, jobs, configMaps, secrets, serviceAccounts, roles, clusterRoles, namespaces, projectSettings, roleBindings]);
 
   // Trigger auto-save when any configuration changes
   useEffect(() => {
@@ -204,7 +232,10 @@ function App() {
         if (saved.clusterRoles) setClusterRoles(saved.clusterRoles);
         if (saved.jobs) setJobs(saved.jobs);
         if (saved.generatedYaml) setGeneratedYaml(saved.generatedYaml);
+        if (saved.roleBindings) setRoleBindings(saved.roleBindings);
         console.log('Configuration loaded from localStorage');
+      } else if (typeof window !== 'undefined' && window.location.search.includes('q=playground')) {
+        setGeneratedYaml(`# Playground Mode\n# Example Deployment\napiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: playground-deployment\nspec:\n  replicas: 1\n  selector:\n    matchLabels:\n      app: playground\n  template:\n    metadata:\n      labels:\n        app: playground\n    spec:\n      containers:\n        - name: playground\n          image: nginx:latest\n`);
       }
     } catch (e) {
       console.warn('Failed to load saved configuration:', e);
@@ -720,14 +751,9 @@ function App() {
     };
     setRoles([...roles, clonedRole]);
     setSelectedRole(roles.length);
-    setEditingRoleIndex(roles.length);
-    setShowRoleManager(true);
   };
 
-  const handleEditRole = (index: number) => {
-    setEditingRoleIndex(index);
-    setShowRoleManager(true);
-  };
+
 
   // ClusterRole management functions
   const handleAddClusterRole = (clusterRole: KubernetesClusterRole) => {
@@ -740,38 +766,9 @@ function App() {
     setClusterRoles(newClusterRoles);
   };
 
-  const handleDeleteClusterRole = (clusterRoleName: string) => {
-    const index = clusterRoles.findIndex(clusterRole => clusterRole.metadata.name === clusterRoleName);
-    if (index > -1) {
-      const newClusterRoles = clusterRoles.filter(clusterRole => clusterRole.metadata.name !== clusterRoleName);
-      setClusterRoles(newClusterRoles);
-      
-      // Adjust selected index if needed
-      if (selectedClusterRole >= newClusterRoles.length) {
-        setSelectedClusterRole(Math.max(0, newClusterRoles.length - 1));
-      }
-    }
-  };
 
-  const handleDuplicateClusterRole = (index: number) => {
-    const clusterRoleToClone = clusterRoles[index];
-    const clonedClusterRole: KubernetesClusterRole = {
-      ...clusterRoleToClone,
-      metadata: {
-        ...clusterRoleToClone.metadata,
-        name: `${clusterRoleToClone.metadata.name}-copy`
-      }
-    };
-    setClusterRoles([...clusterRoles, clonedClusterRole]);
-    setSelectedClusterRole(clusterRoles.length);
-    setEditingClusterRoleIndex(clusterRoles.length);
-    setShowClusterRoleManager(true);
-  };
 
-  const handleEditClusterRole = (index: number) => {
-    setEditingClusterRoleIndex(index);
-    setShowClusterRoleManager(true);
-  };
+
 
   // Job management functions
   const handleAddJob = (job: Job) => {
@@ -916,7 +913,21 @@ function App() {
     // Fix: Only map regular jobs to jobConfigs, not cronjobs
     const jobConfigs = jobs.filter(j => j.type === 'job').map(jobToJobConfig);
     const cronJobConfigs = jobs.filter(j => j.type === 'cronjob').map(jobToCronJobConfig);
-    const yaml = generateMultiDeploymentYaml(validDeployments, namespaces, configMaps, secrets, projectSettings, jobConfigs, cronJobConfigs, validDaemonSets, serviceAccounts, [], roles, clusterRoles);
+    const yaml = generateMultiDeploymentYaml(
+      validDeployments,
+      namespaces,
+      configMaps,
+      secrets,
+      projectSettings,
+      jobConfigs,
+      cronJobConfigs,
+      validDaemonSets,
+      serviceAccounts,
+      [],
+      roles,
+      clusterRoles,
+      roleBindings // Pass roleBindings here
+    );
     
     let finalYaml = yaml;
     if (
@@ -929,7 +940,8 @@ function App() {
       secrets.length === 0 &&
       serviceAccounts.length === 0 &&
       roles.length === 0 &&
-      clusterRoles.length === 0
+      clusterRoles.length === 0 &&
+      roleBindings.length === 0 // Add this check
     ) {
       finalYaml = '# No resources configured\n# Create your first deployment, daemonset, job, service account, configmap, or secret to see the generated YAML';
     }
@@ -991,7 +1003,7 @@ function App() {
   }
 
   // Function to determine filter type based on current sidebar tab and sub-tabs
-  const getFilterType = (): 'all' | 'deployments' | 'daemonsets' | 'namespaces' | 'configmaps' | 'secrets' | 'serviceaccounts' | 'roles' | 'clusterroles' | 'jobs' | 'cronjobs' => {
+  const getFilterType = (): 'all' | 'deployments' | 'daemonsets' | 'namespaces' | 'configmaps' | 'secrets' | 'serviceaccounts' | 'roles' | 'rolebindings' | 'jobs' | 'cronjobs' => {
     // Show all resources when showAllResources is true
     if (showAllResources) return 'all';
     
@@ -1012,7 +1024,8 @@ function App() {
     if (sidebarTab === 'security') {
       if (securitySubTab === 'serviceaccounts') return 'serviceaccounts';
       if (securitySubTab === 'roles') return 'roles';
-      if (securitySubTab === 'clusterroles') return 'clusterroles';
+      if (securitySubTab === 'rolebindings') return 'rolebindings';
+
       return 'serviceaccounts'; // default
     }
     return 'all'; // Show all resources by default
@@ -1022,10 +1035,7 @@ function App() {
   const handleMenuClick = (tab: SidebarTab, subTab?: string) => {
     setSidebarTab(tab);
     setShowAllResources(false); // Show filtered view when clicking menu items
-    
-    // Set visual mode as default for all items
     setPreviewMode('flow');
-    
     // Handle sub-tabs
     if (subTab === 'configmaps') {
       setStorageSubTab('configmaps');
@@ -1035,8 +1045,9 @@ function App() {
       setSecuritySubTab('serviceaccounts');
     } else if (subTab === 'roles') {
       setSecuritySubTab('roles');
-    } else if (subTab === 'clusterroles') {
-      setSecuritySubTab('clusterroles');
+    } else if (subTab === 'rolebindings') {
+      setSecuritySubTab('rolebindings');
+
     } else if (subTab === 'jobs') {
       setJobsSubTab('jobs');
     } else if (subTab === 'cronjobs') {
@@ -1144,6 +1155,39 @@ function App() {
     );
   }
 
+  const handleAddRoleBinding = (binding: RoleBinding) => {
+    setRoleBindings([...roleBindings, binding]);
+    setShowRoleBindingManager(false);
+    setEditingRoleBindingIndex(undefined);
+  };
+  const handleUpdateRoleBinding = (binding: RoleBinding, index: number) => {
+    const updated = [...roleBindings];
+    updated[index] = binding;
+    setRoleBindings(updated);
+    setShowRoleBindingManager(false);
+    setEditingRoleBindingIndex(undefined);
+  };
+  const handleDeleteRoleBinding = (index: number) => {
+    setRoleBindings(roleBindings.filter((_, i) => i !== index));
+  };
+  const handleEditRoleBinding = (index: number) => {
+    setEditingRoleBindingIndex(index);
+    setShowRoleBindingManager(true);
+  };
+
+  // Add the handler for duplicating a RoleBinding
+  const handleDuplicateRoleBinding = (index: number) => {
+    const rbToDuplicate = roleBindings[index];
+    const duplicated: RoleBinding = {
+      ...rbToDuplicate,
+      name: `${rbToDuplicate.name}-copy`,
+      // Optionally, you could also add logic to ensure unique names
+    };
+    const newRoleBindings = [...roleBindings];
+    newRoleBindings.splice(index + 1, 0, duplicated);
+    setRoleBindings(newRoleBindings);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* SEO Head Component */}
@@ -1195,7 +1239,7 @@ function App() {
                   <SocialShare />
                 </div>
                 <div className="flex flex-col space-y-2 w-full">
-                  {!hideDemoIcons && (
+                  {!hideDemoIcons && !hideHeaderActions && (
                     <>
                       <button
                         onClick={() => setShowDockerPopup(true)}
@@ -1215,22 +1259,24 @@ function App() {
                       </button>
                     </>
                   )}
-                  <button
-                    onClick={handleDownload}
-                    disabled={!hasValidDeployments}
-                    className="inline-flex items-center justify-center px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 text-sm font-medium w-full max-w-sm mx-auto"
-                    title={hasValidDeployments ? 'Download all deployments as YAML' : 'No valid deployments to download'}
-                  >
-                    <Download className="w-4 h-4 mr-1" />
-                    <span>Download YAML</span>
-                  </button>
+                  {!hideHeaderActions && (
+                    <button
+                      onClick={handleDownload}
+                      disabled={!hasValidDeployments}
+                      className="inline-flex items-center justify-center px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 text-sm font-medium w-full max-w-sm mx-auto"
+                      title={hasValidDeployments ? 'Download all deployments as YAML' : 'No valid deployments to download'}
+                    >
+                      <Download className="w-4 h-4 mr-1" />
+                      <span>Download YAML</span>
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
             {/* Desktop: SocialShare inline + actions inline */}
             <div className="hidden sm:flex flex-row items-center space-x-2">
               <SocialShare />
-              {!hideDemoIcons && (
+              {!hideDemoIcons && !hideHeaderActions && (
                 <>
                   <button
                     onClick={() => setShowDockerPopup(true)}
@@ -1250,22 +1296,24 @@ function App() {
                   </button>
                 </>
               )}
-              <button
-                onClick={handleDownload}
-                disabled={!hasValidDeployments}
-                className="inline-flex items-center justify-center px-2 sm:px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 text-sm font-medium"
-                title={hasValidDeployments ? 'Download all deployments as YAML' : 'No valid deployments to download'}
-              >
-                <Download className="w-4 h-4 mr-1" />
-                <span>Download YAML</span>
-              </button>
+              {!hideHeaderActions && (
+                <button
+                  onClick={handleDownload}
+                  disabled={!hasValidDeployments}
+                  className="inline-flex items-center justify-center px-2 sm:px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 text-sm font-medium"
+                  title={hasValidDeployments ? 'Download all deployments as YAML' : 'No valid deployments to download'}
+                >
+                  <Download className="w-4 h-4 mr-1" />
+                  <span>Download YAML</span>
+                </button>
+              )}
             </div>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 flex min-h-0 overflow-hidden">
+      <main className="flex-1 flex min-h-0 overflow-hidden" role="main">
         {/* Mobile Sidebar Overlay */}
         {sidebarOpen && (
           <div 
@@ -1544,7 +1592,7 @@ function App() {
                   onClick={() => handleMenuClick('security', 'serviceaccounts')}
                   className={`flex items-center w-full px-2 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
                     sidebarTab === 'security' && securitySubTab === 'serviceaccounts'
-                      ? 'bg-cyan-50 text-cyan-700 dark:bg-cyan-900/20 dark:text-cyan-300 shadow-sm border border-cyan-100 dark:border-cyan-800' 
+                      ? 'bg-cyan-50 text-cyan-700 dark:bg-cyan-900/20 dark:text-cyan-300 shadow-sm border border-cyan-100 dark:border-cyan-800'
                       : 'text-gray-700 dark:text-gray-200 hover:bg-cyan-50/50 dark:hover:bg-cyan-900/10 hover:text-cyan-600 dark:hover:text-cyan-300'
                   }`}
                 >
@@ -1553,13 +1601,12 @@ function App() {
                   }`} />
                   Service Accounts
                 </button>
-
                 {/* RBAC Roles */}
                 <button
                   onClick={() => handleMenuClick('security', 'roles')}
                   className={`flex items-center w-full px-2 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
                     sidebarTab === 'security' && securitySubTab === 'roles'
-                      ? 'bg-purple-50 text-purple-700 dark:bg-purple-900/20 dark:text-purple-300 shadow-sm border border-purple-100 dark:border-purple-800' 
+                      ? 'bg-purple-50 text-purple-700 dark:bg-purple-900/20 dark:text-purple-300 shadow-sm border border-purple-100 dark:border-purple-800'
                       : 'text-gray-700 dark:text-gray-200 hover:bg-purple-50/50 dark:hover:bg-purple-900/10 hover:text-purple-600 dark:hover:text-purple-300'
                   }`}
                 >
@@ -1568,36 +1615,22 @@ function App() {
                   }`} />
                   Roles
                 </button>
-
+                {/* RoleBindings - enabled */}
                 <button
-                  disabled
-                  className="flex items-center w-full px-2 py-2 text-sm font-medium rounded-md text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-50"
+                  onClick={() => handleMenuClick('security', 'rolebindings')}
+                  className={`flex items-center w-full px-2 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+                    sidebarTab === 'security' && securitySubTab === 'rolebindings'
+                      ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300 shadow-sm border border-blue-100 dark:border-blue-800'
+                      : 'text-gray-700 dark:text-gray-200 hover:bg-blue-50/50 dark:hover:bg-blue-900/10 hover:text-blue-600 dark:hover:text-blue-300'
+                  }`}
                 >
-                  <K8sSecurityIcon className="mr-3 flex-shrink-0 h-6 w-6 text-gray-400 dark:text-gray-600" />
+                  <Link2 className={`mr-3 flex-shrink-0 h-6 w-6 ${
+                    sidebarTab === 'security' && securitySubTab === 'rolebindings' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'
+                  }`} />
                   RoleBindings
                 </button>
 
-                <button
-                  onClick={() => handleMenuClick('security', 'clusterroles')}
-                  className={`flex items-center w-full px-2 py-2 text-sm font-medium rounded-md transition-colors duration-200 ${
-                    sidebarTab === 'security' && securitySubTab === 'clusterroles'
-                      ? 'bg-purple-50 text-purple-700 dark:bg-purple-900/50 dark:text-purple-400'
-                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
-                  }`}
-                >
-                  <K8sSecurityIcon className={`mr-3 flex-shrink-0 h-6 w-6 ${
-                    sidebarTab === 'security' && securitySubTab === 'clusterroles' ? 'text-purple-600 dark:text-purple-400' : 'text-gray-500 dark:text-gray-400'
-                  }`} />
-                  ClusterRoles
-                </button>
 
-                <button
-                  disabled
-                  className="flex items-center w-full px-2 py-2 text-sm font-medium rounded-md text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-50"
-                >
-                  <K8sSecurityIcon className="mr-3 flex-shrink-0 h-6 w-6 text-gray-400 dark:text-gray-600" />
-                  ClusterRoleBindings
-                </button>
               </div>
             )}
           </div>
@@ -1860,7 +1893,8 @@ function App() {
                       <button
                         onClick={() => {
                           setEditingRoleIndex(undefined);
-                          setShowRoleManager(true);
+                          setIsClusterRoleMode(false);
+                          setShowRoleWizard(true);
                         }}
                         className="w-full inline-flex items-center justify-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors duration-200 text-sm font-medium"
                       >
@@ -1875,38 +1909,164 @@ function App() {
                         setSelectedRole(index);
                         setSidebarOpen(false);
                       }}
-                      onEdit={handleEditRole}
+                      onEdit={(index) => {
+                        setEditingRoleIndex(index);
+                        setIsClusterRoleMode(false);
+                        setShowRoleWizard(true);
+                      }}
                       onDelete={handleDeleteRole}
                       onDuplicate={handleDuplicateRole}
                     />
                   </>
                 )}
-                {securitySubTab === 'clusterroles' && (
-                  <>
-                    <div className="p-4 border-b border-gray-200">
-                      <button
-                        onClick={() => {
-                          setEditingClusterRoleIndex(undefined);
-                          setShowClusterRoleManager(true);
-                        }}
-                        className="w-full inline-flex items-center justify-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors duration-200 text-sm font-medium"
-                      >
-                        <Plus className="w-4 h-4 mr-2" />
-                        Add ClusterRole
-                      </button>
-                    </div>
-                    <ClusterRolesList
-                      clusterRoles={clusterRoles}
-                      selectedIndex={selectedClusterRole}
-                      onSelect={(index) => {
-                        setSelectedClusterRole(index);
-                        setSidebarOpen(false);
+
+                {securitySubTab === 'rolebindings' && (
+                  <div className="p-4">
+                    <button
+                      onClick={() => {
+                        setEditingRoleBindingIndex(undefined);
+                        setShowRoleBindingManager(true);
                       }}
-                      onEdit={handleEditClusterRole}
-                      onDelete={handleDeleteClusterRole}
-                      onDuplicate={handleDuplicateClusterRole}
-                    />
-                  </>
+                      className="w-full inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 text-sm font-medium mb-4"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add RoleBinding
+                    </button>
+                    <div className="mb-6">
+                      {roleBindings.length === 0 ? (
+                        <div className="p-6 text-center">
+                          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <Link2 className="w-8 h-8 text-gray-400" />
+                          </div>
+                          <h3 className="text-lg font-medium text-gray-900 mb-2">No RoleBindings</h3>
+                          <p className="text-sm text-gray-500 mb-4">
+                            Create RoleBindings to manage RBAC permissions for users, groups, and service accounts
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="space-y-2 p-4">
+                          {roleBindings.map((rb, i) => {
+                            const isSelected = selectedRoleBindingIndex === i;
+                            return (
+                              <div
+                                key={i}
+                                onClick={() => setSelectedRoleBindingIndex(i)}
+                                className={`p-2 border rounded-lg cursor-pointer transition-all duration-200 hover:shadow-md hover:bg-blue-50 focus-within:ring-2 focus-within:ring-blue-200 outline-none group
+                                  ${isSelected
+                                    ? rb.isClusterRoleBinding
+                                      ? 'border-blue-500 bg-blue-50 shadow-md'
+                                      : 'border-purple-500 bg-purple-50 shadow-md'
+                                    : 'border-gray-200 bg-white hover:border-blue-300'}
+                                `}
+                                tabIndex={0}
+                                aria-label={`RoleBinding ${rb.name || '(no name)'}`}
+                              >
+                                <div className="flex items-center space-x-2 min-w-0 flex-1 mb-1 justify-between">
+                                  <div className="flex items-center space-x-2 min-w-0">
+                                    <div className="flex-shrink-0">
+                                      <div className={`w-7 h-7 rounded-full flex items-center justify-center border ${rb.isClusterRoleBinding ? 'bg-blue-100 border-blue-300' : 'bg-purple-100 border-purple-300'}`}>
+                                        {rb.isClusterRoleBinding ? (
+                                          <Key className="w-4 h-4 text-blue-600" />
+                                        ) : (
+                                          <Key className="w-4 h-4 text-purple-600" />
+                                        )}
+                                      </div>
+                                    </div>
+                                    <h4
+                                      className="text-base font-bold text-gray-900 truncate group-hover:text-blue-700"
+                                      title={rb.name || '(no name)'}
+                                    >
+                                      {rb.name || <span className="italic text-gray-400">(no name)</span>}
+                                    </h4>
+                                  </div>
+                                  <div className="flex items-center space-x-1 flex-shrink-0 ml-2">
+                                    {deleteRoleBindingConfirm === i ? (
+                                      <div className="flex items-center space-x-1" onClick={e => e.stopPropagation()}>
+                                        <button
+                                          onClick={e => { e.stopPropagation(); setDeleteRoleBindingConfirm(null); }}
+                                          className="px-1.5 py-0.5 text-[10px] bg-gray-100 text-gray-600 rounded hover:bg-gray-200 transition-colors duration-200"
+                                        >
+                                          Cancel
+                                        </button>
+                                        <button
+                                          onClick={e => { e.stopPropagation(); handleDeleteRoleBinding(i); setDeleteRoleBindingConfirm(null); }}
+                                          className="px-1.5 py-0.5 text-[10px] bg-red-600 text-white rounded hover:bg-red-700 transition-colors duration-200 flex items-center space-x-1"
+                                        >
+                                          <AlertTriangle className="w-3 h-3" />
+                                          <span>Delete</span>
+                                        </button>
+                                      </div>
+                                    ) : (
+                                      <>
+                                        <button
+                                          onClick={e => { e.stopPropagation(); handleEditRoleBinding(i); }}
+                                          className="p-1 text-gray-400 hover:text-blue-600 rounded transition-colors duration-200"
+                                          title="Edit RoleBinding"
+                                          aria-label="Edit RoleBinding"
+                                        >
+                                          <Settings className="w-4 h-4" />
+                                        </button>
+                                        <button
+                                          onClick={e => { e.stopPropagation(); handleDuplicateRoleBinding(i); }}
+                                          className="p-1 text-gray-400 hover:text-green-600 rounded transition-colors duration-200"
+                                          title="Duplicate RoleBinding"
+                                          aria-label="Duplicate RoleBinding"
+                                        >
+                                          <Copy className="w-4 h-4" />
+                                        </button>
+                                        <button
+                                          onClick={e => { e.stopPropagation(); setDeleteRoleBindingConfirm(i); }}
+                                          className="p-1 text-gray-400 hover:text-red-600 rounded transition-colors duration-200"
+                                          title="Delete RoleBinding"
+                                          aria-label="Delete RoleBinding"
+                                        >
+                                          <Trash2 className="w-4 h-4" />
+                                        </button>
+                                      </>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="pl-9">
+                                  <div className="flex items-center space-x-1 text-[11px] text-gray-500 font-medium mb-0.5">
+                                    <span>{rb.isClusterRoleBinding ? 'ClusterRoleBinding' : 'RoleBinding'}</span>
+                                    <span>•</span>
+                                    <span>{rb.subjects.length} subj</span>
+                                  </div>
+                                  <div className="flex items-center space-x-1 text-[11px] text-gray-600 mb-0.5">
+                                    <span className="truncate" title={`Role: ${rb.roleRef.name} (${rb.roleRef.kind})`}>
+                                      <span className="font-semibold">Role:</span> {rb.roleRef.name} <span className="text-gray-400">({rb.roleRef.kind})</span>
+                                    </span>
+                                    {!rb.isClusterRoleBinding && rb.namespace && <>
+                                      <span>•</span>
+                                      <span className="truncate" title={`Namespace: ${rb.namespace}`}><span className="font-semibold">NS:</span> {rb.namespace}</span>
+                                    </>}
+                                  </div>
+                                  <div className="flex items-center space-x-1">
+                                    {!rb.isClusterRoleBinding && (
+                                      <span className="px-1.5 py-0.5 bg-purple-100 text-purple-800 rounded text-[10px] font-semibold tracking-wide border border-purple-200">{rb.namespace}</span>
+                                    )}
+                                    {rb.isClusterRoleBinding && (
+                                      <span className="px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded text-[10px] font-semibold tracking-wide border border-blue-200">cluster-wide</span>
+                                    )}
+                                  </div>
+                                </div>
+                                {/* Delete confirmation warning */}
+                                {deleteRoleBindingConfirm === i && (
+                                  <div className="mt-1 p-1 bg-red-50 border border-red-200 rounded text-[10px] text-red-700">
+                                    <div className="flex items-center space-x-1 mb-1">
+                                      <AlertTriangle className="w-3 h-3" />
+                                      <span className="font-medium">Are you sure?</span>
+                                    </div>
+                                    <div>This action cannot be undone.</div>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 )}
               </>
             )}
@@ -1958,13 +2118,8 @@ function App() {
 
                     <div className="flex items-center space-x-1 text-sm text-gray-700 font-medium">
                       <K8sJobIcon className="w-5 h-5 text-pink-500" />
-                      <span className="font-bold">{jobs.filter(j => j.type === 'job').length}</span>
-                      <span className="text-gray-500">job{jobs.filter(j => j.type === 'job').length !== 1 ? 's' : ''}</span>
-                    </div>
-                    <div className="flex items-center space-x-1 text-sm text-gray-700 font-medium">
-                      <Clock className="w-5 h-5 text-yellow-500" />
-                      <span className="font-bold">{jobs.filter(j => j.type === 'cronjob').length}</span>
-                      <span className="text-gray-500">cronjob{jobs.filter(j => j.type === 'cronjob').length !== 1 ? 's' : ''}</span>
+                      <span className="font-bold">{jobs.filter(j => j.type === 'job' || j.type === 'cronjob').length}</span>
+                      <span className="text-gray-500">job{jobs.filter(j => j.type === 'job' || j.type === 'cronjob').length !== 1 ? 's' : ''}</span>
                     </div>
                   </div>
                 </div>
@@ -1992,7 +2147,7 @@ function App() {
               </div>
             </div>
             <div className="p-4 sm:p-6 pb-8">
-              {previewMode === 'flow' && <VisualPreview deployments={deployments} daemonSets={daemonSets} namespaces={namespaces} configMaps={configMaps} secrets={secrets} serviceAccounts={serviceAccounts} roles={roles} clusterRoles={clusterRoles} jobs={jobs} containerRef={containerRef} filterType={getFilterType()} />}
+              {previewMode === 'flow' && <VisualPreview deployments={deployments} daemonSets={daemonSets} namespaces={namespaces} configMaps={configMaps} secrets={secrets} serviceAccounts={serviceAccounts} roles={roles} clusterRoles={clusterRoles} jobs={jobs} containerRef={containerRef} filterType={getFilterType()} roleBindings={roleBindings} />}
               {previewMode === 'summary' && <ResourceSummary deployments={deployments} daemonSets={daemonSets} namespaces={namespaces} configMaps={configMaps} secrets={secrets} serviceAccounts={serviceAccounts} roles={roles} clusterRoles={clusterRoles} jobs={jobs} />}
               {previewMode === 'yaml' && <YamlPreview yaml={generatedYaml} />}
             </div>
@@ -2137,36 +2292,7 @@ function App() {
         />
       )}
 
-      {/* Role Manager Modal */}
-      {showRoleManager && (
-        <RoleManager
-          roles={roles}
-          namespaces={availableNamespaces}
-          onAddRole={handleAddRole}
-          onUpdateRole={handleUpdateRole}
-          onDeleteRole={handleDeleteRole}
-          onClose={() => {
-            setShowRoleManager(false);
-            setEditingRoleIndex(undefined);
-          }}
-          editingIndex={editingRoleIndex}
-        />
-      )}
 
-      {/* ClusterRole Manager Modal */}
-      {showClusterRoleManager && (
-        <ClusterRoleManager
-          clusterRoles={clusterRoles}
-          onAddClusterRole={handleAddClusterRole}
-          onUpdateClusterRole={handleUpdateClusterRole}
-          onDeleteClusterRole={handleDeleteClusterRole}
-          onClose={() => {
-            setShowClusterRoleManager(false);
-            setEditingClusterRoleIndex(undefined);
-          }}
-          editingIndex={editingClusterRoleIndex}
-        />
-      )}
 
       {/* Job Manager Modal */}
       {showJobManager && (
@@ -2388,6 +2514,7 @@ function App() {
                         setSelectedCronJob(-1);
                         setRoles([]);
                         setClusterRoles([]);
+                        setRoleBindings([]);
                         
                         console.log('Configuration cleared successfully');
                         alert('Configuration cleared successfully!');
@@ -2412,6 +2539,80 @@ function App() {
                   </button>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* All modals at the root level */}
+      {showRoleWizard && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] min-h-[600px] overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                {editingRoleIndex !== undefined ? 'Edit Role' : 'Create Role'}
+              </h3>
+              <button onClick={() => { setShowRoleWizard(false); setEditingRoleIndex(undefined); }} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            <div className="flex-1 p-6 overflow-y-auto">
+              <RoleWizardManager
+                namespaces={availableNamespaces}
+                roles={roles}
+                clusterRoles={clusterRoles}
+                initialRole={editingRoleIndex !== undefined ? (isClusterRoleMode ? clusterRoles[editingRoleIndex] : roles[editingRoleIndex]) : undefined}
+                isClusterRole={isClusterRoleMode}
+                onSubmit={editingRoleIndex !== undefined 
+                  ? (role: KubernetesRole | KubernetesClusterRole) => {
+                      if (isClusterRoleMode) {
+                        handleUpdateClusterRole(role as KubernetesClusterRole, editingRoleIndex);
+                      } else {
+                        handleUpdateRole(role as KubernetesRole, editingRoleIndex);
+                      }
+                    }
+                  : (role: KubernetesRole | KubernetesClusterRole) => {
+                      if (isClusterRoleMode) {
+                        handleAddClusterRole(role as KubernetesClusterRole);
+                      } else {
+                        handleAddRole(role as KubernetesRole);
+                      }
+                    }
+                }
+                onCancel={() => { 
+                  setShowRoleWizard(false); 
+                  setEditingRoleIndex(undefined);
+                  if (reopenRoleBindingAfterRole) {
+                    setShowRoleBindingManager(true);
+                    setReopenRoleBindingAfterRole(false);
+                  }
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+      {showRoleBindingManager && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] min-h-[600px] overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                {editingRoleBindingIndex !== undefined ? 'Edit RoleBinding' : 'Create RoleBinding'}
+              </h3>
+              <button onClick={() => { setShowRoleBindingManager(false); setEditingRoleBindingIndex(undefined); }} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            <div className="flex-1 p-6 overflow-y-auto">
+              <RoleBindingManager
+                namespaces={availableNamespaces}
+                roles={roles.map(r => ({ name: r.metadata.name, namespace: r.metadata.namespace, description: r.metadata.annotations?.description }))}
+                clusterRoles={clusterRoles.map(r => ({ name: r.metadata.name, description: r.metadata.annotations?.description }))}
+                serviceAccounts={serviceAccounts}
+                initialBinding={editingRoleBindingIndex !== undefined ? roleBindings[editingRoleBindingIndex] : undefined}
+                onSubmit={editingRoleBindingIndex !== undefined ? (binding: RoleBinding) => handleUpdateRoleBinding(binding, editingRoleBindingIndex) : handleAddRoleBinding}
+                onCancel={() => { setShowRoleBindingManager(false); setEditingRoleBindingIndex(undefined); }}
+              />
             </div>
           </div>
         </div>

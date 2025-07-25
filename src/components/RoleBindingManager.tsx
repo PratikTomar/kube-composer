@@ -651,18 +651,18 @@ const RoleBindingManager: React.FC<RoleBindingManagerProps> = ({ namespaces = []
 
   // Modal container
   return (
-    <div className="max-w-2xl mx-auto bg-white rounded-xl shadow-lg p-4 mt-4 mb-6 border border-gray-200">
+    <div className="max-w-2xl mx-auto bg-white rounded-xl shadow-lg p-4 mt-4 mb-6 border border-gray-200 dark:bg-gray-900 dark:border-gray-700">
       {/* Step Indicator with Progress Bar */}
       <div className="flex flex-col items-center mb-4">
-        <div className="w-full max-w-xl bg-gray-50 rounded-lg shadow-sm px-3 py-2 flex items-center justify-between relative z-10 border border-gray-200">
+        <div className="w-full max-w-xl bg-gray-50 dark:bg-gray-800 rounded-lg shadow-sm px-3 py-2 flex items-center justify-between relative z-10 border border-gray-200 dark:border-gray-700">
           {steps.map((s, i) => (
             <div key={i} className="flex-1 flex flex-col items-center relative">
               <div className="relative flex items-center justify-center" style={{ zIndex: 2 }}>
                 <span
                   className={`w-8 h-8 flex items-center justify-center rounded-full border-2 transition-all duration-300 shadow-sm
                     ${i < step ? 'border-blue-600 bg-blue-600 text-white' : ''}
-                    ${i === step ? 'border-blue-600 bg-blue-600 text-white ring-2 ring-blue-200' : ''}
-                    ${i > step ? 'border-gray-300 bg-gray-100 text-gray-400' : ''}
+                    ${i === step ? 'border-blue-600 bg-blue-600 text-white ring-2 ring-blue-200 dark:ring-blue-400/40' : ''}
+                    ${i > step ? 'border-gray-300 bg-gray-100 text-gray-400  dark:border-gray-600 dark:bg-gray-800 dark:text-gray-500' : ''}
                   `}
                 >
                   {i < step ? (
@@ -672,8 +672,11 @@ const RoleBindingManager: React.FC<RoleBindingManagerProps> = ({ namespaces = []
                   )}
                 </span>
                 {i < steps.length - 1 && (
-                  <span className="absolute right-[-50%] top-1/2 transform -translate-y-1/2 w-full h-0.5 bg-gray-300 z-0" style={{ left: '100%', width: '130%' }} />
+                  <span className="absolute right-[-50%] top-1/2 transform -translate-y-1/2 w-full h-0.5 bg-gray-300 z-0 dark:bg-gray-700" style={{ left: '100%', width: '130%' }} />
                 )}
+
+              
+
               </div>
               <span className={`mt-1 text-xs text-center w-16 truncate transition-all duration-300
                 ${i === step ? 'font-semibold text-blue-700' : 'text-gray-500'}`}>{s.label}</span>

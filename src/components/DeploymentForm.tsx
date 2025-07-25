@@ -1,5 +1,5 @@
-import { Plus, Minus, Server, Settings, Database, Key, Trash2, Copy, Globe, Shield, FileText, Users, X } from 'lucide-react';
-import type { DeploymentConfig, Container, ConfigMap, Secret, EnvVar, ServiceAccount } from '../types';
+import { Copy, Database, FileText, Globe, Key, Minus, Plus, Server, Settings, Shield, Trash2, Users, X } from 'lucide-react';
+import type { ConfigMap, Container, DeploymentConfig, EnvVar, Secret, ServiceAccount } from '../types';
 
 interface DeploymentFormProps {
   config: DeploymentConfig;
@@ -286,25 +286,25 @@ export function DeploymentForm({ config, onChange, availableNamespaces, availabl
       <div className="space-y-4 sm:space-y-6">
         <div className="flex items-center space-x-2 text-base sm:text-lg font-semibold text-gray-900">
           <Server className="w-4 sm:w-5 h-4 sm:h-5 text-blue-600" />
-          <span>Basic Configuration</span>
+          <span className="dark:text-white">Basic Configuration</span>
         </div>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">
               Application Name *
             </label>
             <input
               type="text"
               value={config.appName}
               onChange={(e) => updateConfig({ appName: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base dark:border-gray-600 dark:bg-gray-700 dark:text-white"
               placeholder="my-app"
             />
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">
               Replicas
             </label>
             <input
@@ -312,18 +312,18 @@ export function DeploymentForm({ config, onChange, availableNamespaces, availabl
               min="1"
               value={config.replicas}
               onChange={(e) => updateConfig({ replicas: parseInt(e.target.value) || 1 })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base dark:border-gray-600 dark:bg-gray-700 dark:text-white"
             />
           </div>
           
           <div className="sm:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">
               Namespace
             </label>
             <select
               value={config.namespace}
               onChange={(e) => updateConfig({ namespace: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base dark:border-gray-600 dark:bg-gray-700 dark:text-white"
             >
               {availableNamespaces.map(namespace => (
                 <option key={namespace} value={namespace}>
@@ -335,7 +335,7 @@ export function DeploymentForm({ config, onChange, availableNamespaces, availabl
 
           <div className="sm:col-span-2">
             <div className="flex items-center justify-between mb-2">
-              <label className="block text-sm font-medium text-gray-700">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Service Account
               </label>
               {onNavigateToServiceAccounts && (
@@ -353,7 +353,7 @@ export function DeploymentForm({ config, onChange, availableNamespaces, availabl
               <select
                 value={config.serviceAccount || ''}
                 onChange={(e) => updateConfig({ serviceAccount: e.target.value || undefined })}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base dark:border-gray-600 dark:bg-gray-700 dark:text-white"
               >
                 <option value="">Default (no service account)</option>
                 {availableServiceAccounts
@@ -388,9 +388,9 @@ export function DeploymentForm({ config, onChange, availableNamespaces, availabl
       {/* Containers Configuration */}
       <div className="space-y-4 sm:space-y-6">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2 text-base sm:text-lg font-semibold text-gray-900">
+          <div className="flex items-center space-x-2 text-base sm:text-lg font-semibold text-gray-900 ">
             <Database className="w-4 sm:w-5 h-4 sm:h-5 text-purple-600" />
-            <span>Containers ({config.containers.length})</span>
+            <span className="dark:text-white">Containers ({config.containers.length})</span>
           </div>
           <button
             onClick={addContainer}
@@ -403,10 +403,10 @@ export function DeploymentForm({ config, onChange, availableNamespaces, availabl
 
         <div className="space-y-6">
           {config.containers.map((container, containerIndex) => (
-            <div key={containerIndex} className="border border-gray-200 rounded-xl p-6 bg-gray-50">
+            <div key={containerIndex} className="border border-gray-200 rounded-xl p-6 bg-gray-50 dark:border-gray-700 dark:bg-gray-800">
               {/* Container Header */}
               <div className="flex items-center justify-between mb-4">
-                <h4 className="text-lg font-medium text-gray-900">
+                <h4 className="text-lg font-medium text-gray-900 dark:text-white">
                   Container {containerIndex + 1}
                   {container.name && (
                     <span className="ml-2 text-sm text-gray-500">({container.name})</span>
@@ -435,50 +435,50 @@ export function DeploymentForm({ config, onChange, availableNamespaces, availabl
               {/* Container Basic Info */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">
                     Container Name *
                   </label>
                   <input
                     type="text"
                     value={container.name}
                     onChange={(e) => updateContainer(containerIndex, { name: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                     placeholder="web-server"
                   />
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">
                     Container Image *
                   </label>
                   <input
                     type="text"
                     value={container.image}
                     onChange={(e) => updateContainer(containerIndex, { image: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                     placeholder="nginx:latest"
                   />
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">
                     Container Port
                   </label>
                   <input
                     type="number"
                     value={container.port}
                     onChange={(e) => updateContainer(containerIndex, { port: parseInt(e.target.value) || 8080 })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                   />
                 </div>
               </div>
 
               {/* Container Resources */}
               <div className="mb-6">
-                <h5 className="text-sm font-medium text-gray-700 mb-3">Resource Limits</h5>
+                <h5 className="text-sm font-medium text-gray-700 mb-3 dark:text-gray-300">Resource Limits</h5>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                    <label className="block text-xs font-medium text-gray-600 mb-1 dark:text-gray-400">
                       CPU Request
                     </label>
                     <input
@@ -490,13 +490,13 @@ export function DeploymentForm({ config, onChange, availableNamespaces, availabl
                           requests: { ...container.resources.requests, cpu: e.target.value }
                         }
                       })}
-                      className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent text-sm"
+                      className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                       placeholder="100m"
                     />
                   </div>
                   
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                    <label className="block text-xs font-medium text-gray-600 mb-1 dark:text-gray-400">
                       Memory Request
                     </label>
                     <input
@@ -508,13 +508,13 @@ export function DeploymentForm({ config, onChange, availableNamespaces, availabl
                           requests: { ...container.resources.requests, memory: e.target.value }
                         }
                       })}
-                      className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent text-sm"
+                      className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                       placeholder="128Mi"
                     />
                   </div>
                   
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                    <label className="block text-xs font-medium text-gray-600 mb-1 dark:text-gray-400">
                       CPU Limit
                     </label>
                     <input
@@ -526,13 +526,13 @@ export function DeploymentForm({ config, onChange, availableNamespaces, availabl
                           limits: { ...container.resources.limits, cpu: e.target.value }
                         }
                       })}
-                      className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent text-sm"
+                      className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                       placeholder="500m"
                     />
                   </div>
                   
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                    <label className="block text-xs font-medium text-gray-600 mb-1 dark:text-gray-400">
                       Memory Limit
                     </label>
                     <input
@@ -544,7 +544,7 @@ export function DeploymentForm({ config, onChange, availableNamespaces, availabl
                           limits: { ...container.resources.limits, memory: e.target.value }
                         }
                       })}
-                      className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent text-sm"
+                      className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                       placeholder="256Mi"
                     />
                   </div>
@@ -554,7 +554,7 @@ export function DeploymentForm({ config, onChange, availableNamespaces, availabl
               {/* Container Environment Variables */}
               <div className="mb-6">
                 <div className="flex items-center justify-between mb-3">
-                  <h5 className="text-sm font-medium text-gray-700">Environment Variables</h5>
+                  <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300">Environment Variables</h5>
                   <button
                     onClick={() => addContainerEnvVar(containerIndex)}
                     className="inline-flex items-center px-2 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700 transition-colors duration-200"
@@ -567,23 +567,23 @@ export function DeploymentForm({ config, onChange, availableNamespaces, availabl
                 {container.env.length > 0 && (
                   <div className="space-y-3">
                     {container.env.map((envVar, envIndex) => (
-                      <div key={envIndex} className="border border-gray-200 rounded-lg p-3 bg-white">
+                      <div key={envIndex} className="border border-gray-200 rounded-lg p-3 bg-white dark:border-gray-700 dark:bg-gray-900">
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-3">
                           <div>
-                            <label className="block text-xs font-medium text-gray-600 mb-1">
+                            <label className="block text-xs font-medium text-gray-600 mb-1 dark:text-gray-400">
                               Variable Name *
                             </label>
                             <input
                               type="text"
                               value={envVar.name}
                               onChange={(e) => updateContainerEnvVar(containerIndex, envIndex, { name: e.target.value })}
-                              className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent text-sm"
+                              className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                               placeholder="DATABASE_URL"
                             />
                           </div>
                           
                           <div>
-                            <label className="block text-xs font-medium text-gray-600 mb-1">
+                            <label className="block text-xs font-medium text-gray-600 mb-1 dark:text-gray-400">
                               Value Source
                             </label>
                             <select
@@ -605,7 +605,7 @@ export function DeploymentForm({ config, onChange, availableNamespaces, availabl
                                   });
                                 }
                               }}
-                              className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent text-sm"
+                              className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                             >
                               <option value="direct">Direct Value</option>
                               <option value="configMap">ConfigMap</option>
@@ -616,7 +616,7 @@ export function DeploymentForm({ config, onChange, availableNamespaces, availabl
                           {envVar.valueFrom ? (
                             <>
                               <div>
-                                <label className="block text-xs font-medium text-gray-600 mb-1">
+                                <label className="block text-xs font-medium text-gray-600 mb-1 dark:text-gray-400">
                                   {envVar.valueFrom.type === 'configMap' ? 'ConfigMap' : 'Secret'} Name
                                 </label>
                                 <select
@@ -624,7 +624,7 @@ export function DeploymentForm({ config, onChange, availableNamespaces, availabl
                                   onChange={(e) => updateContainerEnvVar(containerIndex, envIndex, { 
                                     valueFrom: { ...envVar.valueFrom!, name: e.target.value } 
                                   })}
-                                  className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent text-sm"
+                                  className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                                 >
                                   <option value="">Select {envVar.valueFrom.type}</option>
                                   {envVar.valueFrom.type === 'configMap' 
@@ -639,7 +639,7 @@ export function DeploymentForm({ config, onChange, availableNamespaces, availabl
                               </div>
                               
                               <div>
-                                <label className="block text-xs font-medium text-gray-600 mb-1">
+                                <label className="block text-xs font-medium text-gray-600 mb-1 dark:text-gray-400">
                                   Key
                                 </label>
                                 <select
@@ -647,7 +647,7 @@ export function DeploymentForm({ config, onChange, availableNamespaces, availabl
                                   onChange={(e) => updateContainerEnvVar(containerIndex, envIndex, { 
                                     valueFrom: { ...envVar.valueFrom!, key: e.target.value } 
                                   })}
-                                  className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent text-sm"
+                                  className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                                   disabled={!envVar.valueFrom.name}
                                 >
                                   <option value="">Select key</option>
@@ -667,14 +667,14 @@ export function DeploymentForm({ config, onChange, availableNamespaces, availabl
                             </>
                           ) : (
                             <div className="sm:col-span-2">
-                              <label className="block text-xs font-medium text-gray-600 mb-1">
+                              <label className="block text-xs font-medium text-gray-600 mb-1 dark:text-gray-400">
                                 Value
                               </label>
                               <input
                                 type="text"
                                 value={envVar.value || ''}
                                 onChange={(e) => updateContainerEnvVar(containerIndex, envIndex, { value: e.target.value })}
-                                className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent text-sm"
+                                className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                                 placeholder="environment value"
                               />
                             </div>
@@ -698,7 +698,7 @@ export function DeploymentForm({ config, onChange, availableNamespaces, availabl
               {/* Container Volume Mounts */}
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <h5 className="text-sm font-medium text-gray-700">Volume Mounts</h5>
+                  <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300">Volume Mounts</h5>
                   <button
                     onClick={() => addContainerVolumeMount(containerIndex)}
                     className="inline-flex items-center px-2 py-1 bg-indigo-600 text-white rounded text-xs hover:bg-indigo-700 transition-colors duration-200"
@@ -722,7 +722,8 @@ export function DeploymentForm({ config, onChange, availableNamespaces, availabl
                               updateContainerVolumeMount(containerIndex, mountIndex, 'mountPath', defaultMountPath);
                             }
                           }}
-                          className="flex-1 px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent text-sm"
+                          className="flex-1 px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+
                         >
                           <option value="">Select volume</option>
                           {config.volumes.map(volume => (
@@ -735,7 +736,7 @@ export function DeploymentForm({ config, onChange, availableNamespaces, availabl
                           type="text"
                           value={mount.mountPath}
                           onChange={(e) => updateContainerVolumeMount(containerIndex, mountIndex, 'mountPath', e.target.value)}
-                          className="flex-1 px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent text-sm"
+                          className="flex-1 px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                           placeholder="/path/to/mount"
                         />
                         
@@ -758,7 +759,7 @@ export function DeploymentForm({ config, onChange, availableNamespaces, availabl
       {/* ConfigMaps Selection */}
       {filteredConfigMaps.length > 0 && (
         <div className="space-y-4 sm:space-y-6">
-          <div className="flex items-center space-x-2 text-base sm:text-lg font-semibold text-gray-900">
+          <div className="flex items-center space-x-2 text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
             <FileText className="w-4 sm:w-5 h-4 sm:h-5 text-green-600" />
             <span>ConfigMaps</span>
           </div>
@@ -848,7 +849,7 @@ export function DeploymentForm({ config, onChange, availableNamespaces, availabl
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2 text-base sm:text-lg font-semibold text-gray-900">
             <Database className="w-4 sm:w-5 h-4 sm:h-5 text-indigo-600" />
-            <span>Volumes</span>
+            <span className="dark:text-white">Volumes</span>
           </div>
           <button
             onClick={addVolume}
@@ -867,20 +868,20 @@ export function DeploymentForm({ config, onChange, availableNamespaces, availabl
                   type="text"
                   value={volume.name}
                   onChange={(e) => updateVolume(index, 'name', e.target.value)}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                   placeholder="Volume name"
                 />
                 <input
                   type="text"
                   value={volume.mountPath}
                   onChange={(e) => updateVolume(index, 'mountPath', e.target.value)}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                   placeholder="/path/to/mount"
                 />
                 <select
                   value={volume.type}
                   onChange={(e) => updateVolume(index, 'type', e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                 >
                   <option value="emptyDir">Empty Dir</option>
                   <option value="configMap">Config Map</option>
@@ -890,7 +891,7 @@ export function DeploymentForm({ config, onChange, availableNamespaces, availabl
                   <select
                     value={volume.configMapName || ''}
                     onChange={(e) => updateVolume(index, 'configMapName', e.target.value)}
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
+                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                   >
                     <option value="">Select ConfigMap</option>
                     {filteredConfigMaps.map(cm => (
@@ -902,7 +903,7 @@ export function DeploymentForm({ config, onChange, availableNamespaces, availabl
                   <select
                     value={volume.secretName || ''}
                     onChange={(e) => updateVolume(index, 'secretName', e.target.value)}
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
+                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                   >
                     <option value="">Select Secret</option>
                     {filteredSecrets.map(s => (
@@ -926,42 +927,42 @@ export function DeploymentForm({ config, onChange, availableNamespaces, availabl
       <div className="space-y-4 sm:space-y-6">
         <div className="flex items-center space-x-2 text-base sm:text-lg font-semibold text-gray-900">
           <Settings className="w-4 sm:w-5 h-4 sm:h-5 text-green-600" />
-          <span>Service Configuration</span>
+          <span className="dark:text-white">Service Configuration</span>
         </div>
         
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">
               Service Port
             </label>
             <input
               type="number"
               value={config.port}
               onChange={(e) => updateConfig({ port: parseInt(e.target.value) || 80 })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base dark:border-gray-600 dark:bg-gray-700 dark:text-white"
             />
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">
               Target Port
             </label>
             <input
               type="number"
               value={config.targetPort}
               onChange={(e) => updateConfig({ targetPort: parseInt(e.target.value) || 8080 })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base dark:border-gray-600 dark:bg-gray-700 dark:text-white"
             />
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">
               Service Type
             </label>
             <select
               value={config.serviceType}
               onChange={(e) => updateConfig({ serviceType: e.target.value as any })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base dark:border-gray-600 dark:bg-gray-700 dark:text-white"
             >
               <option value="ClusterIP">ClusterIP</option>
               <option value="NodePort">NodePort</option>
@@ -976,10 +977,10 @@ export function DeploymentForm({ config, onChange, availableNamespaces, availabl
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2 text-base sm:text-lg font-semibold text-gray-900">
             <Globe className="w-4 sm:w-5 h-4 sm:h-5 text-orange-600" />
-            <span>Ingress Configuration</span>
+            <span className="dark:text-white">Ingress Configuration</span>
           </div>
           <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-600">Enable Ingress</span>
+            <span className="text-sm text-gray-600 dark:text-gray-400">Enable Ingress</span>
             <button
               onClick={() => {
                 const newEnabled = !config.ingress.enabled;
@@ -1014,18 +1015,18 @@ export function DeploymentForm({ config, onChange, availableNamespaces, availabl
         </div>
 
         {config.ingress.enabled && (
-          <div className="space-y-6 border border-orange-200 rounded-xl p-6 bg-orange-50">
+          <div className="space-y-6 border border-orange-200 rounded-xl p-6 bg-orange-50 dark:bg-gray-800">
             {/* Basic Ingress Settings */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">
                   Ingress Class Name
                 </label>
                 <input
                   type="text"
                   value={config.ingress.className || ''}
                   onChange={(e) => updateIngress({ className: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm sm:text-base dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                   placeholder="nginx"
                 />
               </div>
@@ -1034,7 +1035,7 @@ export function DeploymentForm({ config, onChange, availableNamespaces, availabl
             {/* Ingress Annotations */}
             <div>
               <div className="flex items-center justify-between mb-3">
-                <h5 className="text-sm font-medium text-gray-700">Annotations</h5>
+                <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300">Annotations</h5>
                 <button
                   onClick={addIngressAnnotation}
                   className="inline-flex items-center px-2 py-1 bg-orange-600 text-white rounded text-xs hover:bg-orange-700 transition-colors duration-200"
@@ -1052,14 +1053,14 @@ export function DeploymentForm({ config, onChange, availableNamespaces, availabl
                         type="text"
                         value={key}
                         onChange={(e) => updateIngressAnnotationKey(key, e.target.value)}
-                        className="flex-1 px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-orange-500 focus:border-transparent text-sm"
+                        className="flex-1 px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-orange-500 focus:border-transparent text-sm  dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                         placeholder="nginx.ingress.kubernetes.io/rewrite-target"
                       />
                       <input
                         type="text"
                         value={value}
                         onChange={(e) => updateIngressAnnotationValue(key, e.target.value)}
-                        className="flex-1 px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-orange-500 focus:border-transparent text-sm"
+                        className="flex-1 px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-orange-500 focus:border-transparent text-sm  dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                         placeholder="/"
                       />
                       <button
@@ -1077,7 +1078,7 @@ export function DeploymentForm({ config, onChange, availableNamespaces, availabl
             {/* Ingress Rules */}
             <div>
               <div className="flex items-center justify-between mb-3">
-                <h5 className="text-sm font-medium text-gray-700">Rules</h5>
+                <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300">Rules</h5>
                 <button
                   onClick={addIngressRule}
                   className="inline-flex items-center px-2 py-1 bg-orange-600 text-white rounded text-xs hover:bg-orange-700 transition-colors duration-200"
@@ -1090,9 +1091,9 @@ export function DeploymentForm({ config, onChange, availableNamespaces, availabl
               {config.ingress.rules.length > 0 && (
                 <div className="space-y-4">
                   {config.ingress.rules.map((rule, ruleIndex) => (
-                    <div key={ruleIndex} className="border border-gray-200 rounded-lg p-4 bg-white">
+                    <div key={ruleIndex} className="border border-gray-200 rounded-lg p-4 bg-white dark:bg-gray-800">
                       <div className="flex items-center justify-between mb-3">
-                        <h6 className="text-sm font-medium text-gray-900">Rule {ruleIndex + 1}</h6>
+                        <h6 className="text-sm font-medium text-gray-900 dark:text-white">Rule {ruleIndex + 1}</h6>
                         <button
                           onClick={() => removeIngressRule(ruleIndex)}
                           disabled={config.ingress.enabled && config.ingress.rules.length <= 1}
@@ -1108,39 +1109,39 @@ export function DeploymentForm({ config, onChange, availableNamespaces, availabl
                       
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
                         <div>
-                          <label className="block text-xs font-medium text-gray-600 mb-1">
+                          <label className="block text-xs font-medium text-gray-600 mb-1 dark:text-gray-400">
                             Host
                           </label>
                           <input
                             type="text"
                             value={rule.host}
                             onChange={(e) => updateIngressRule(ruleIndex, 'host', e.target.value)}
-                            className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-orange-500 focus:border-transparent text-sm"
+                            className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-orange-500 focus:border-transparent text-sm  dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                             placeholder="example.com"
                           />
                         </div>
                         
                         <div>
-                          <label className="block text-xs font-medium text-gray-600 mb-1">
+                          <label className="block text-xs font-medium text-gray-600 mb-1 dark:text-gray-400">
                             Path
                           </label>
                           <input
                             type="text"
                             value={rule.path}
                             onChange={(e) => updateIngressRule(ruleIndex, 'path', e.target.value)}
-                            className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-orange-500 focus:border-transparent text-sm"
+                            className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-orange-500 focus:border-transparent text-sm  dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                             placeholder="/"
                           />
                         </div>
                         
                         <div>
-                          <label className="block text-xs font-medium text-gray-600 mb-1">
+                          <label className="block text-xs font-medium text-gray-600 mb-1 dark:text-gray-400">
                             Path Type
                           </label>
                           <select
                             value={rule.pathType}
                             onChange={(e) => updateIngressRule(ruleIndex, 'pathType', e.target.value)}
-                            className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-orange-500 focus:border-transparent text-sm"
+                            className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-orange-500 focus:border-transparent text-sm  dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                           >
                             <option value="Prefix">Prefix</option>
                             <option value="Exact">Exact</option>
@@ -1149,27 +1150,28 @@ export function DeploymentForm({ config, onChange, availableNamespaces, availabl
                         </div>
                         
                         <div>
-                          <label className="block text-xs font-medium text-gray-600 mb-1">
+                          <label className="block text-xs font-medium text-gray-600 mb-1 dark:text-gray-400">
                             Service Name
                           </label>
                           <input
                             type="text"
                             value={rule.serviceName}
                             onChange={(e) => updateIngressRule(ruleIndex, 'serviceName', e.target.value)}
-                            className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-orange-500 focus:border-transparent text-sm"
+                            className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-orange-500 focus:border-transparent text-sm  dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                             placeholder={`${config.appName || 'app'}-service`}
                           />
                         </div>
                         
                         <div>
-                          <label className="block text-xs font-medium text-gray-600 mb-1">
+                          <label className="block text-xs font-medium text-gray-600 mb-1 dark:text-gray-400">
+
                             Service Port
                           </label>
                           <input
                             type="number"
                             value={rule.servicePort}
                             onChange={(e) => updateIngressRule(ruleIndex, 'servicePort', parseInt(e.target.value) || 80)}
-                            className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-orange-500 focus:border-transparent text-sm"
+                            className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-orange-500 focus:border-transparent text-sm  dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                           />
                         </div>
                       </div>
@@ -1184,7 +1186,7 @@ export function DeploymentForm({ config, onChange, availableNamespaces, availabl
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center space-x-2">
                   <Shield className="w-4 h-4 text-green-600" />
-                  <h5 className="text-sm font-medium text-gray-700">TLS Configuration</h5>
+                  <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300">TLS Configuration</h5>
                 </div>
                 <button
                   onClick={addIngressTLS}
@@ -1198,9 +1200,9 @@ export function DeploymentForm({ config, onChange, availableNamespaces, availabl
               {config.ingress.tls.length > 0 && (
                 <div className="space-y-4">
                   {config.ingress.tls.map((tls, tlsIndex) => (
-                    <div key={tlsIndex} className="border border-green-200 rounded-lg p-4 bg-green-50">
+                    <div key={tlsIndex} className="border border-green-200 rounded-lg p-4 bg-green-50 dark:bg-gray-800">
                       <div className="flex items-center justify-between mb-3">
-                        <h6 className="text-sm font-medium text-gray-900">TLS Certificate {tlsIndex + 1}</h6>
+                        <h6 className="text-sm font-medium text-gray-900 dark:text-white">TLS Certificate {tlsIndex + 1}</h6>
                         <button
                           onClick={() => removeIngressTLS(tlsIndex)}
                           className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors duration-200"
@@ -1211,13 +1213,13 @@ export function DeploymentForm({ config, onChange, availableNamespaces, availabl
                       
                       <div className="space-y-3">
                         <div>
-                          <label className="block text-xs font-medium text-gray-600 mb-1">
+                          <label className="block text-xs font-medium text-gray-600 mb-1 dark:text-gray-400">
                             Secret Name
                           </label>
                           <select
                             value={tls.secretName}
                             onChange={(e) => updateIngressTLS(tlsIndex, 'secretName', e.target.value)}
-                            className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-green-500 focus:border-transparent text-sm"
+                            className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-green-500 focus:border-transparent text-sm  dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                           >
                             <option value="">Select Secret</option>
                             {filteredSecrets.filter(s => s.type === 'kubernetes.io/tls').map(s => (
@@ -1228,7 +1230,7 @@ export function DeploymentForm({ config, onChange, availableNamespaces, availabl
                         
                         <div>
                           <div className="flex items-center justify-between mb-2">
-                            <label className="block text-xs font-medium text-gray-600">
+                            <label className="block text-xs font-medium text-gray-600 dark:text-gray-400">
                               Hosts
                             </label>
                             <button
@@ -1247,7 +1249,7 @@ export function DeploymentForm({ config, onChange, availableNamespaces, availabl
                                   type="text"
                                   value={host}
                                   onChange={(e) => updateTLSHost(tlsIndex, hostIndex, e.target.value)}
-                                  className="flex-1 px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-green-500 focus:border-transparent text-sm"
+                                  className="flex-1 px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-green-500 focus:border-transparent text-sm  dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                                   placeholder="example.com"
                                 />
                                 <button

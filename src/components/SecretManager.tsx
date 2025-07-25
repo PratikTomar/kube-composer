@@ -355,17 +355,17 @@ export function SecretManager({
 
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 dark:bg-opacity-80">
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col dark:bg-gray-800">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-orange-600 rounded-lg flex items-center justify-center">
               <Key className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h3 className="text-xl font-semibold text-gray-900">Secret Manager</h3>
-              <p className="text-sm text-gray-500">
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Secret Manager</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
                 {isEditing ? 'Edit existing Kubernetes Secret' : 'Create and manage Kubernetes Secrets'}
               </p>
             </div>
@@ -383,7 +383,7 @@ export function SecretManager({
           <div className="p-8">
             {/* Create New Secret */}
             <div className="max-w-2xl mx-auto space-y-6">
-              <h4 className="text-lg font-semibold text-gray-900">
+              <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
                 {isEditing ? 'Edit Secret' : 'Create New Secret'}
               </h4>
               
@@ -406,7 +406,7 @@ export function SecretManager({
 
               {/* Secret Name */}
               <div className="space-y-1">
-                <label className="block text-sm font-semibold text-gray-700">
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
                   Secret Name *
                 </label>
                 <div className="relative">
@@ -415,7 +415,7 @@ export function SecretManager({
                     value={newSecret.name}
                     onChange={(e) => handleSecretNameChange(e.target.value)}
                     onKeyPress={(e) => handleKeyPress(e, handleCreateSecret)}
-                    className={`w-full px-3 py-2 border-2 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 ${
+                    className={`w-full px-3 py-2 border-2 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white ${
                       errors.length > 0 ? 'border-red-300 bg-red-50' : 'border-gray-300 hover:border-gray-400'
                     }`}
                     placeholder="my-secret"
@@ -439,14 +439,14 @@ export function SecretManager({
               {/* Namespace and Type */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="block text-sm font-semibold text-gray-700">
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Namespace
                   </label>
                   <div className="relative">
                     <select
                       value={newSecret.namespace}
                       onChange={(e) => setNewSecret(prev => ({ ...prev, namespace: e.target.value }))}
-                      className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 hover:border-gray-400 appearance-none"
+                      className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 hover:border-gray-400 appearance-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                     >
                       {namespaces.map(namespace => (
                         <option key={namespace} value={namespace}>
@@ -463,14 +463,14 @@ export function SecretManager({
                 </div>
 
                 <div className="space-y-1">
-                  <label className="block text-sm font-semibold text-gray-700">
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Type
                   </label>
                   <div className="relative">
                     <select
                       value={newSecret.type}
                       onChange={(e) => handleSecretTypeChange(e.target.value as Secret['type'])}
-                      className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 hover:border-gray-400 appearance-none"
+                      className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 hover:border-gray-400 appearance-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                     >
                       <option value="Opaque">Opaque</option>
                       <option value="kubernetes.io/tls">TLS</option>
@@ -490,7 +490,7 @@ export function SecretManager({
                 <>
                   {/* Docker Server */}
                   <div className="space-y-1">
-                    <label className="block text-sm font-semibold text-gray-700">
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
                       Docker Server *
                     </label>
                     <div className="relative">
@@ -503,7 +503,7 @@ export function SecretManager({
                             setErrors([]);
                           }
                         }}
-                        className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 hover:border-gray-400"
+                        className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 hover:border-gray-400 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                         placeholder="https://index.docker.io/v1/"
                       />
                       <div className="absolute inset-y-0 right-0 flex items-center pr-3">
@@ -517,7 +517,7 @@ export function SecretManager({
                   {/* Username and Password */}
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
-                      <label className="block text-sm font-semibold text-gray-700">
+                      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
                         Username *
                       </label>
                       <div className="relative">
@@ -530,7 +530,7 @@ export function SecretManager({
                               setErrors([]);
                             }
                           }}
-                          className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 hover:border-gray-400"
+                          className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 hover:border-gray-400 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                           placeholder="your-username"
                         />
                         <div className="absolute inset-y-0 right-0 flex items-center pr-3">
@@ -542,7 +542,7 @@ export function SecretManager({
                     </div>
 
                     <div className="space-y-1">
-                      <label className="block text-sm font-semibold text-gray-700">
+                      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
                         Password/Token *
                       </label>
                       <div className="relative">
@@ -555,7 +555,7 @@ export function SecretManager({
                               setErrors([]);
                             }
                           }}
-                          className="w-full px-3 py-2 pr-12 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 hover:border-gray-400"
+                          className="w-full px-3 py-2 pr-12 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 hover:border-gray-400 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                           placeholder="your-password-or-token"
                         />
                         <button
@@ -571,7 +571,7 @@ export function SecretManager({
 
                   {/* Email */}
                   <div className="space-y-1">
-                    <label className="block text-sm font-semibold text-gray-700">
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
                       Email (Optional)
                     </label>
                     <div className="relative">
@@ -584,7 +584,7 @@ export function SecretManager({
                             setErrors([]);
                           }
                         }}
-                        className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 hover:border-gray-400"
+                        className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 hover:border-gray-400 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                         placeholder="your-email@example.com"
                       />
                       <div className="absolute inset-y-0 right-0 flex items-center pr-3">
@@ -599,7 +599,7 @@ export function SecretManager({
                 <>
                   {/* TLS Certificate */}
                   <div className="space-y-1">
-                    <label className="block text-sm font-semibold text-gray-700">
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
                       TLS Certificate *
                     </label>
                     <div className="relative">
@@ -612,7 +612,7 @@ export function SecretManager({
                           }
                         }}
                         rows={5}
-                        className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 hover:border-gray-400 resize-none"
+                        className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 hover:border-gray-400 resize-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                         placeholder="-----BEGIN CERTIFICATE-----&#10;MIIEpDCCA4ygAwIBAgIJANu87C4XJqzoMA0GCSqGSIb3DQEBCwUAMFsxCzAJ&#10;BgNVBAYTAlVTMRMwEQYDVQQIDApTb21lLVN0YXRlMSEwHwYDVQQKDBhJbnRl&#10;cm5ldCBXaWRnaXRzIFB0eSBMdGQxGzAZBgNVBAMMEnRlc3QuZXhhbXBsZS5j&#10;b20wHhcNMTkwMzI2MTY0NzQ3WhcNMTkwNDI1MTY0NzQ3WjBbMQswCQYDVQQG&#10;EwJVUzETMBEGA1UECAwKU29tZS1TdGF0ZTEhMB8GA1UECgwYSW50ZXJuZXQg&#10;V2lkZ2l0cyBQdHkgTHRkMRswGQYDVQQDDBJ0ZXN0LmV4YW1wbGUuY29tMIIB&#10;IjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA...&#10;-----END CERTIFICATE-----"
                       />
                       <div className="absolute top-2 right-2">
@@ -625,7 +625,7 @@ export function SecretManager({
 
                   {/* TLS Private Key */}
                   <div className="space-y-1">
-                    <label className="block text-sm font-semibold text-gray-700">
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
                       TLS Private Key *
                     </label>
                     <div className="relative">
@@ -638,7 +638,7 @@ export function SecretManager({
                           }
                         }}
                         rows={5}
-                        className="w-full px-3 py-2 pr-12 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 hover:border-gray-400 resize-none"
+                        className="w-full px-3 py-2 pr-12 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 hover:border-gray-400 resize-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                         placeholder="-----BEGIN PRIVATE KEY-----&#10;MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC7VJTUt9Us&#10;8cKllM0jqGwvCLWTjGTI+UuRADFJjQHsqE1bB1g4iJ+w1hDI1rRi7uF68KFq&#10;Q1p5yJgRkllqHqC6UcJHVYkbZQVZsbSBaGID9THxSXoKICg6B0NqE2tAhu1P&#10;7OEKw0zsqfGtH1CnJjLl4Cu4iHir7THmlaXkZd4lIH2bP/90PFDnZv/kyLD&#10;XfmctNqDk1KjaBvMLhP6ShLFgyAaoX6ma6QMWUQKhqUFKwmvBvYF9dlqHmH&#10;tHtJ0AlUB8oTy1vtpJMeQOjypZflQcHty2M33uC0WH0eosEtdj8SP/g0B5i&#10;Sg2XojfGPvx4tQMx7yNTRjXlLWy1QwIDAQABAoIBAQCwWa1OvrjBdBmLF&#10;yJQazX7x8V2mh41jqK5k8sDPjSbHOqWb98fopgLvu9oTqUq0yfBm/5Ka8&#10;vUlX4W9o2f+2xJjCsvul9iV+ZBcsGxL0AaKNMo2CHqtQaRieF0frPELmQ&#10;IRdr6WATx0HMA4ByW7oaMgy4Pl4ma3TdyfSp0NxScsF7r7KndCbf8SgQL&#10;R2iYjJR1o3YJpByjZJpQUP9jH4mV1Q4PSnQXyRieWCmH+fhXp3Xmqj&#10;vEl2B4JU3jWIlmDo5TM4TsAsj3YQcMlqZbwB1l3RZ/LUxOVdxQy2T5g&#10;5Xylf1jNlCzr9a2fUgp2ZSWi5FbJDuMhLbqXWZN0kD4jZv6L6yU&#10;-----END PRIVATE KEY-----"
                       />
                       <button
@@ -656,7 +656,7 @@ export function SecretManager({
                   {/* Data Entries for regular secrets */}
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <label className="block text-sm font-semibold text-gray-700">
+                      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
                         Data *
                       </label>
                       <button
@@ -675,7 +675,7 @@ export function SecretManager({
                           value={newDataEntry.key}
                           onChange={(e) => setNewDataEntry(prev => ({ ...prev, key: e.target.value }))}
                           onKeyPress={(e) => handleKeyPress(e, addDataEntry)}
-                          className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 hover:border-gray-400"
+                          className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 hover:border-gray-400 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                           placeholder="key"
                         />
                         <div className="absolute inset-y-0 right-0 flex items-center pr-3">
@@ -690,7 +690,7 @@ export function SecretManager({
                           value={newDataEntry.value}
                           onChange={(e) => setNewDataEntry(prev => ({ ...prev, value: e.target.value }))}
                           onKeyPress={(e) => handleKeyPress(e, addDataEntry)}
-                          className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 hover:border-gray-400"
+                          className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 hover:border-gray-400 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                           placeholder="value"
                         />
                         <div className="absolute inset-y-0 right-0 flex items-center pr-3">
@@ -703,12 +703,12 @@ export function SecretManager({
                     
                     {Object.entries(newSecret.data).length > 0 && (
                       <div className="space-y-1 max-h-24 overflow-y-auto">
-                        <h4 className="text-sm font-semibold text-gray-700">Added Data:</h4>
+                        <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Added Data:</h4>
                         {Object.entries(newSecret.data).map(([key]) => (
-                          <div key={key} className="flex items-center justify-between p-2 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg border border-gray-200 shadow-sm">
+                          <div key={key} className="flex items-center justify-between p-2 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
                             <div className="min-w-0 flex-1">
-                              <div className="text-sm font-semibold text-gray-800">{key}</div>
-                              <div className="text-xs text-gray-500 font-mono">••••••••</div>
+                              <div className="text-sm font-semibold text-gray-800 dark:text-gray-300">{key}</div>
+                              <div className="text-xs text-gray-500 font-mono dark:text-gray-400">••••••••</div>
                             </div>
                             <button
                               onClick={() => removeDataEntry(key)}
@@ -727,7 +727,7 @@ export function SecretManager({
               {/* Labels */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <label className="block text-sm font-semibold text-gray-700">
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Labels (Optional)
                   </label>
                   <button
@@ -746,7 +746,7 @@ export function SecretManager({
                       value={newLabel.key}
                       onChange={(e) => setNewLabel(prev => ({ ...prev, key: e.target.value }))}
                       onKeyPress={(e) => handleKeyPress(e, addLabel)}
-                      className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 hover:border-gray-400"
+                      className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 hover:border-gray-400 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                       placeholder="key"
                     />
                     <div className="absolute inset-y-0 right-0 flex items-center pr-3">
@@ -761,7 +761,7 @@ export function SecretManager({
                       value={newLabel.value}
                       onChange={(e) => setNewLabel(prev => ({ ...prev, value: e.target.value }))}
                       onKeyPress={(e) => handleKeyPress(e, addLabel)}
-                      className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 hover:border-gray-400"
+                      className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 hover:border-gray-400 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                       placeholder="value"
                     />
                     <div className="absolute inset-y-0 right-0 flex items-center pr-3">
@@ -774,13 +774,13 @@ export function SecretManager({
                 
                 {Object.entries(newSecret.labels).length > 0 && (
                   <div className="space-y-1">
-                    <h4 className="text-sm font-semibold text-gray-700">Added Labels:</h4>
+                    <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Added Labels:</h4>
                     {Object.entries(newSecret.labels).map(([key, value]) => (
-                      <div key={key} className="flex items-center justify-between p-2 bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg border border-blue-200 shadow-sm">
-                        <span className="text-sm text-gray-800">
-                          <span className="font-semibold text-blue-800">{key}</span>
-                          <span className="mx-2 text-gray-400">:</span>
-                          <span className="text-blue-700">{value}</span>
+                      <div key={key} className="flex items-center justify-between p-2 bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg border border-blue-200 shadow-sm dark:bg-gradient-to-r dark:from-blue-900 dark:to-blue-800 dark:border-blue-700">
+                        <span className="text-sm text-gray-800 dark:text-gray-300">
+                          <span className="font-semibold text-blue-800 dark:text-blue-300">{key}</span>
+                          <span className="mx-2 text-gray-400 dark:text-gray-400">:</span>
+                          <span className="text-blue-700 dark:text-blue-300">{value}</span>
                         </span>
                         <button
                           onClick={() => removeLabel(key)}
@@ -820,7 +820,7 @@ export function SecretManager({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end p-6 border-t border-gray-200 bg-gray-50">
+        <div className="flex items-center justify-end p-6 border-t border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-900">
           <button
             onClick={onClose}
             className="px-6 py-3 text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 transition-all duration-200 font-medium shadow-sm"

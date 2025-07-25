@@ -418,7 +418,7 @@ export function DaemonSetForm({ config, onChange, availableNamespaces, available
             {/* Environment Variables */}
             <div className="mb-6">
               <div className="flex items-center justify-between mb-3">
-                <h5 className="text-sm font-medium text-gray-700">Environment Variables</h5>
+                <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300">Environment Variables</h5>
                 <button
                   onClick={() => addContainerEnvVar(containerIndex)}
                   className="inline-flex items-center px-2 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700 transition-colors duration-200"
@@ -431,23 +431,23 @@ export function DaemonSetForm({ config, onChange, availableNamespaces, available
               {container.env.length > 0 && (
                 <div className="space-y-3">
                   {container.env.map((envVar, envIndex) => (
-                    <div key={envIndex} className="border border-gray-200 rounded-lg p-3 bg-white">
+                    <div key={envIndex} className="border border-gray-200 rounded-lg p-3 bg-white  dark:border-gray-700 dark:bg-gray-900 ">
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-3">
                         <div>
-                          <label className="block text-xs font-medium text-gray-600 mb-1">
+                          <label className="block text-xs font-medium text-gray-600 mb-1 dark:text-gray-400">
                             Variable Name *
                           </label>
                           <input
                             type="text"
                             value={envVar.name}
                             onChange={(e) => updateContainerEnvVar(containerIndex, envIndex, { name: e.target.value })}
-                            className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent text-sm"
+                            className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                             placeholder="DATABASE_URL"
                           />
                         </div>
                         
                         <div>
-                          <label className="block text-xs font-medium text-gray-600 mb-1">
+                          <label className="block text-xs font-medium text-gray-600 mb-1 dark:text-gray-400">
                             Value Source
                           </label>
                           <select
@@ -469,7 +469,7 @@ export function DaemonSetForm({ config, onChange, availableNamespaces, available
                                 });
                               }
                             }}
-                            className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent text-sm"
+                            className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                           >
                             <option value="direct">Direct Value</option>
                             <option value="configMap">ConfigMap</option>
@@ -480,7 +480,7 @@ export function DaemonSetForm({ config, onChange, availableNamespaces, available
                         {envVar.valueFrom ? (
                           <>
                             <div>
-                              <label className="block text-xs font-medium text-gray-600 mb-1">
+                              <label className="block text-xs font-medium text-gray-600 mb-1 dark:text-gray-400">
                                 {envVar.valueFrom.type === 'configMap' ? 'ConfigMap' : 'Secret'} Name
                               </label>
                               <select
@@ -488,7 +488,7 @@ export function DaemonSetForm({ config, onChange, availableNamespaces, available
                                 onChange={(e) => updateContainerEnvVar(containerIndex, envIndex, { 
                                   valueFrom: { ...envVar.valueFrom!, name: e.target.value } 
                                 })}
-                                className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent text-sm"
+                                className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                               >
                                 <option value="">Select {envVar.valueFrom.type}</option>
                                 {envVar.valueFrom.type === 'configMap' 
@@ -503,7 +503,7 @@ export function DaemonSetForm({ config, onChange, availableNamespaces, available
                             </div>
                             
                             <div>
-                              <label className="block text-xs font-medium text-gray-600 mb-1">
+                              <label className="block text-xs font-medium text-gray-600 mb-1 dark:text-gray-400">
                                 Key
                               </label>
                               <select
@@ -511,7 +511,7 @@ export function DaemonSetForm({ config, onChange, availableNamespaces, available
                                 onChange={(e) => updateContainerEnvVar(containerIndex, envIndex, { 
                                   valueFrom: { ...envVar.valueFrom!, key: e.target.value } 
                                 })}
-                                className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent text-sm"
+                                className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                                 disabled={!envVar.valueFrom.name}
                               >
                                 <option value="">Select key</option>
@@ -531,14 +531,14 @@ export function DaemonSetForm({ config, onChange, availableNamespaces, available
                           </>
                         ) : (
                           <div className="sm:col-span-2">
-                            <label className="block text-xs font-medium text-gray-600 mb-1">
+                            <label className="block text-xs font-medium text-gray-600 mb-1 dark:text-gray-400">
                               Value
                             </label>
                             <input
                               type="text"
                               value={envVar.value || ''}
                               onChange={(e) => updateContainerEnvVar(containerIndex, envIndex, { value: e.target.value })}
-                              className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent text-sm"
+                              className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                               placeholder="environment value"
                             />
                           </div>
@@ -567,7 +567,7 @@ export function DaemonSetForm({ config, onChange, availableNamespaces, available
                 </label>
                 <button
                   onClick={() => addContainerVolumeMount(containerIndex)}
-                  className="inline-flex items-center px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded text-sm hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-200"
+                  className="inline-flex items-center px-2 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700 transition-colors duration-200"
                 >
                   <Plus className="w-3 h-3 mr-1" />
                   Add

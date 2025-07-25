@@ -53,8 +53,8 @@ export function RolesList({
         <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
           <Shield className="w-8 h-8 text-gray-400" />
         </div>
-        <h3 className="text-lg font-medium text-gray-900 mb-2">No Roles</h3>
-        <p className="text-sm text-gray-500 mb-4">
+        <h3 className="text-lg font-medium text-gray-900 mb-2 dark:text-gray-100">No Roles</h3>
+        <p className="text-sm text-gray-500 mb-4 dark:text-gray-400">
           Create RBAC Roles to manage permissions for your applications
         </p>
       </div>

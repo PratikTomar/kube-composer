@@ -1,48 +1,49 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
-import { Download, FileText, List, Plus, Menu, X, Database, Settings, Key, PlayCircle, Container as Docker, FolderOpen, GitBranch, Link2, Copy, Trash2, AlertTriangle } from 'lucide-react';
-import { loadConfig, saveConfig, clearConfig } from './utils/localStorage';
-import { DeploymentForm } from './components/DeploymentForm';
-import { DaemonSetForm } from './components/DaemonSetForm';
-import { YamlPreview } from './components/YamlPreview';
-import { ResourceSummary } from './components/ResourceSummary';
-import { DeploymentsList } from './components/DeploymentsList';
-import { DaemonSetsList } from './components/DaemonSetsList';
-import { NamespacesList } from './components/NamespacesList';
+import { AlertTriangle, Copy, Database, Container as Docker, Download, FileText, FolderOpen, GitBranch, Key, Link2, List, Menu, PlayCircle, Plus, Settings, Trash2, X } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ConfigMapsList } from './components/ConfigMapsList';
+import { DaemonSetForm } from './components/DaemonSetForm';
+import { DaemonSetsList } from './components/DaemonSetsList';
+import { DeploymentForm } from './components/DeploymentForm';
+import { DeploymentsList } from './components/DeploymentsList';
+import { NamespacesList } from './components/NamespacesList';
+import { ResourceSummary } from './components/ResourceSummary';
+import { RolesList } from './components/RolesList';
 import { SecretsList } from './components/SecretsList';
 import { ServiceAccountsList } from './components/ServiceAccountsList';
-import { RolesList } from './components/RolesList';
+import { YamlPreview } from './components/YamlPreview';
+import { clearConfig, loadConfig, saveConfig } from './utils/localStorage';
 
-import { VisualPreview } from './components/VisualPreview';
-import { Footer } from './components/Footer';
-import { SocialShare } from './components/SocialShare';
-import { SEOHead } from './components/SEOHead';
-import { NamespaceManager } from './components/NamespaceManager';
 import { ConfigMapManager } from './components/ConfigMapManager';
-import { SecretManager } from './components/SecretManager';
-import { ServiceAccountManager } from './components/ServiceAccountManager';
-import RoleWizardManager from './components/RoleWizardManager';
-import { ProjectSettingsManager } from './components/ProjectSettingsManager';
-import { YouTubePopup } from './components/YouTubePopup';
 import { DockerRunPopup } from './components/DockerRunPopup';
-import { generateMultiDeploymentYaml } from './utils/yamlGenerator';
-import { JobManager, Job } from './components/JobManager';
-import { JobList } from './components/jobs/JobList';
+import { Footer } from './components/Footer';
+import { Job, JobManager } from './components/JobManager';
 import { CronJobList } from './components/jobs/CronJobList';
-import type { DeploymentConfig, DaemonSetConfig, Namespace, ConfigMap, Secret, ServiceAccount, ProjectSettings, JobConfig, CronJobConfig, KubernetesRole, KubernetesClusterRole, RoleBinding } from './types';
+import { JobList } from './components/jobs/JobList';
 import {
-  K8sDeploymentIcon,
-  K8sNamespaceIcon,
   K8sConfigMapIcon,
-  K8sSecretIcon,
-  K8sJobIcon,
   K8sCronJobIcon,
-  K8sStorageIcon,
   K8sDaemonSetIcon,
+  K8sDeploymentIcon,
+  K8sJobIcon,
+  K8sNamespaceIcon,
+  K8sSecretIcon,
   K8sSecurityIcon,
-  K8sServiceAccountIcon
+  K8sServiceAccountIcon,
+  K8sStorageIcon
 } from './components/KubernetesIcons';
+import { NamespaceManager } from './components/NamespaceManager';
+import { ProjectSettingsManager } from './components/ProjectSettingsManager';
 import { RoleBindingManager } from './components/RoleBindingManager';
+import RoleWizardManager from './components/RoleWizardManager';
+import { SecretManager } from './components/SecretManager';
+import { SEOHead } from './components/SEOHead';
+import { ServiceAccountManager } from './components/ServiceAccountManager';
+import { SocialShare } from './components/SocialShare';
+import { VisualPreview } from './components/VisualPreview';
+import { YouTubePopup } from './components/YouTubePopup';
+import useTheme from './hooks/useTheme';
+import type { ConfigMap, CronJobConfig, DaemonSetConfig, DeploymentConfig, JobConfig, KubernetesClusterRole, KubernetesRole, Namespace, ProjectSettings, RoleBinding, Secret, ServiceAccount } from './types';
+import { generateMultiDeploymentYaml } from './utils/yamlGenerator';
 
 // Move this outside the component to avoid breaking the Rules of Hooks
 const isPlayground = typeof window !== 'undefined' && window.location.search.includes('q=playground');
@@ -128,6 +129,11 @@ function App() {
   // Auto-save functionality
   const autoSaveTimeoutRef = useRef<number | null>(null);
   const lastSavedRef = useRef<number>(0);
+
+  // using custom hook useTheme to get value which I passed in ThemeProvider
+  const { isDark } = useTheme();
+
+  // const darkModeClass = isDark ? 'bg-gray-900 text-white' : 'bg-white text-black';
 
   // Force save function for immediate saves
   const forceSave = useCallback(() => {
@@ -1189,13 +1195,13 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className={`min-h-screen bg-gray-50 flex flex-col ${isDark ? 'dark' : ''}`}>
       {/* SEO Head Component */}
       <SEOHead />
       
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
-        <div className="px-4 sm:px-6 lg:px-8 py-4">
+      <header className={`bg-white border-b border-gray-200 sticky top-0 z-50`}>
+        <div className={`px-4 sm:px-6 lg:px-8 py-4 dark:bg-gray-900`}>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
             {/* Top row: Logo, Title, Menu */}
             <div className="flex items-center space-x-3">
@@ -1218,11 +1224,11 @@ function App() {
                     setShowAllResources(true);
                     setSidebarTab('deployments'); // Reset to default tab
                   }}
-                  className="text-lg sm:text-xl font-semibold text-gray-900 hover:text-blue-600 transition-colors duration-200 text-left"
+                  className={`text-lg sm:text-xl font-semibold text-gray-900 hover:text-blue-600 transition-colors duration-200 text-left dark:text-white`}
                 >
                   Kube Composer
                 </button>
-                <p className="block text-sm text-gray-500">
+                <p className={`block text-sm text-gray-500 dark:text-gray-400`}>
                   {projectSettings.name ? `Project: ${projectSettings.name}` : 'Kubernetes YAML Generator for developers'}
                   {showAllResources && (
                     <span className="inline-block ml-2 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
@@ -1313,7 +1319,7 @@ function App() {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 flex min-h-0 overflow-hidden" role="main">
+      <main className={`flex-1 flex min-h-0 overflow-hidden`} role="main">
         {/* Mobile Sidebar Overlay */}
         {sidebarOpen && (
           <div 
@@ -1328,7 +1334,7 @@ function App() {
           lg:translate-x-0 fixed lg:relative inset-y-0 left-0 z-50 lg:z-auto
           w-80 lg:w-1/4 xl:w-1/5 bg-white border-r border-gray-200 
           transition-transform duration-300 ease-in-out lg:transition-none
-          flex flex-col min-h-0
+          flex flex-col min-h-0 dark:bg-gray-900
         `}>
           {/* Project Settings Button */}
           <div className="p-4 border-b border-gray-200 flex-shrink-0">
@@ -1665,8 +1671,8 @@ function App() {
                     <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                       <FileText className="w-8 h-8 text-gray-400" />
                     </div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">No Deployments</h3>
-                    <p className="text-sm text-gray-500 mb-4">
+                    <h3 className="text-lg font-medium text-gray-900 mb-2 dark:text-gray-100">No Deployments</h3>
+                    <p className="text-sm text-gray-500 mb-4 dark:text-gray-400">
                       Get started by creating your first Kubernetes deployment
                     </p>
                   </div>
@@ -1702,8 +1708,8 @@ function App() {
                     <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                       <FileText className="w-8 h-8 text-gray-400" />
                     </div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">No DaemonSets</h3>
-                    <p className="text-sm text-gray-500 mb-4">
+                    <h3 className="text-lg font-medium text-gray-900 mb-2 dark:text-gray-100">No DaemonSets</h3>
+                    <p className="text-sm text-gray-500 mb-4 dark:text-gray-400">
                       Get started by creating your first Kubernetes DaemonSet
                     </p>
                   </div>
@@ -1938,8 +1944,8 @@ function App() {
                           <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                             <Link2 className="w-8 h-8 text-gray-400" />
                           </div>
-                          <h3 className="text-lg font-medium text-gray-900 mb-2">No RoleBindings</h3>
-                          <p className="text-sm text-gray-500 mb-4">
+                          <h3 className="text-lg font-medium text-gray-900 mb-2 dark:text-gray-100">No RoleBindings</h3>
+                          <p className="text-sm text-gray-500 mb-4 dark:text-gray-400">
                             Create RoleBindings to manage RBAC permissions for users, groups, and service accounts
                           </p>
                         </div>
@@ -2076,11 +2082,11 @@ function App() {
         {/* Right Content - Preview */}
         <div className="flex-1 flex flex-col min-w-0 min-h-0">
           {/* Preview Content with Sticky Header */}
-          <div className="flex-1 min-h-0 overflow-y-auto bg-gray-50">
-            <div className="sticky top-0 z-10 bg-white border-b border-gray-200 p-4">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
+          <div className="flex-1 min-h-0 overflow-y-auto bg-gray-50 dark:bg-gray-900">
+            <div className="sticky top-0 z-10 bg-white border-b border-gray-200 p-4 dark:bg-gray-900">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0 ">
                 <div className="flex items-center w-full">
-                  <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+                  <h2 className="text-lg font-semibold text-gray-900 flex items-center dark:text-white">
                     Preview
                     {previewMode === 'yaml' && deployments.length > 1 && (
                       <span className="ml-2 text-sm font-normal text-gray-500">
@@ -2089,37 +2095,37 @@ function App() {
                     )}
                   </h2>
                   {/* Resource Stats Row - now directly next to Preview */}
-                  <div className="hidden md:flex items-center space-x-4 ml-6 px-4 py-1 bg-gray-50 border border-gray-200 rounded-lg shadow-sm">
-                    <div className="flex items-center space-x-1 text-sm text-gray-700 font-medium">
+                  <div className="hidden md:flex items-center space-x-4 ml-6 px-4 py-1 bg-gray-50 border border-gray-200 rounded-lg shadow-sm dark:bg-gray-900">
+                    <div className="flex items-center space-x-1 text-sm text-gray-700 font-medium dark:text-gray-200">
                       <FileText className="w-5 h-5 text-blue-500" />
                       <span className="font-bold">{deployments.length}</span>
-                      <span className="text-gray-500">deployment{deployments.length !== 1 ? 's' : ''}</span>
+                      <span className="text-gray-500 dark:text-gray-300">deployment{deployments.length !== 1 ? 's' : ''}</span>
                     </div>
-                    <div className="flex items-center space-x-1 text-sm text-gray-700 font-medium">
+                    <div className="flex items-center space-x-1 text-sm text-gray-700 font-medium dark:text-gray-200">
                       <K8sDaemonSetIcon className="w-5 h-5 text-indigo-500" />
                       <span className="font-bold">{daemonSets.length}</span>
-                      <span className="text-gray-500">daemonset{daemonSets.length !== 1 ? 's' : ''}</span>
+                      <span className="text-gray-500 dark:text-gray-300">daemonset{daemonSets.length !== 1 ? 's' : ''}</span>
                     </div>
-                    <div className="flex items-center space-x-1 text-sm text-gray-700 font-medium">
+                    <div className="flex items-center space-x-1 text-sm text-gray-700 font-medium dark:text-gray-200">
                       <Database className="w-5 h-5 text-purple-500" />
                       <span className="font-bold">{namespaces.length}</span>
-                      <span className="text-gray-500">namespace{namespaces.length !== 1 ? 's' : ''}</span>
+                      <span className="text-gray-500 dark:text-gray-300">namespace{namespaces.length !== 1 ? 's' : ''}</span>
                     </div>
-                    <div className="flex items-center space-x-1 text-sm text-gray-700 font-medium">
+                    <div className="flex items-center space-x-1 text-sm text-gray-700 font-medium dark:text-gray-200">
                       <Settings className="w-5 h-5 text-green-500" />
                       <span className="font-bold">{configMaps.length}</span>
-                      <span className="text-gray-500">configmap{configMaps.length !== 1 ? 's' : ''}</span>
+                      <span className="text-gray-500 dark:text-gray-300">configmap{configMaps.length !== 1 ? 's' : ''}</span>
                     </div>
-                    <div className="flex items-center space-x-1 text-sm text-gray-700 font-medium">
+                    <div className="flex items-center space-x-1 text-sm text-gray-700 font-medium dark:text-gray-200">
                       <Key className="w-5 h-5 text-orange-500" />
                       <span className="font-bold">{secrets.length}</span>
-                      <span className="text-gray-500">secret{secrets.length !== 1 ? 's' : ''}</span>
+                      <span className="text-gray-500 dark:text-gray-300">secret{secrets.length !== 1 ? 's' : ''}</span>
                     </div>
 
-                    <div className="flex items-center space-x-1 text-sm text-gray-700 font-medium">
+                    <div className="flex items-center space-x-1 text-sm text-gray-700 font-medium dark:text-gray-200">
                       <K8sJobIcon className="w-5 h-5 text-pink-500" />
                       <span className="font-bold">{jobs.filter(j => j.type === 'job' || j.type === 'cronjob').length}</span>
-                      <span className="text-gray-500">job{jobs.filter(j => j.type === 'job' || j.type === 'cronjob').length !== 1 ? 's' : ''}</span>
+                      <span className="text-gray-500 dark:text-gray-300">job{jobs.filter(j => j.type === 'job' || j.type === 'cronjob').length !== 1 ? 's' : ''}</span>
                     </div>
                   </div>
                 </div>
@@ -2146,7 +2152,7 @@ function App() {
                 </div>
               </div>
             </div>
-            <div className="p-4 sm:p-6 pb-8">
+            <div className="p-4 sm:p-6 pb-8 ">
               {previewMode === 'flow' && <VisualPreview deployments={deployments} daemonSets={daemonSets} namespaces={namespaces} configMaps={configMaps} secrets={secrets} serviceAccounts={serviceAccounts} roles={roles} clusterRoles={clusterRoles} jobs={jobs} containerRef={containerRef} filterType={getFilterType()} roleBindings={roleBindings} />}
               {previewMode === 'summary' && <ResourceSummary deployments={deployments} daemonSets={daemonSets} namespaces={namespaces} configMaps={configMaps} secrets={secrets} serviceAccounts={serviceAccounts} roles={roles} clusterRoles={clusterRoles} jobs={jobs} />}
               {previewMode === 'yaml' && <YamlPreview yaml={generatedYaml} />}

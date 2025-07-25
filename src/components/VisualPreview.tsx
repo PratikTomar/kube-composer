@@ -1682,15 +1682,15 @@ export function VisualPreview({
   
   if (!hasFilteredResources()) {
     return (
-      <div className="text-center py-16 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-xl border border-blue-200">
+      <div className="text-center py-16 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-xl border border-blue-200  dark:bg-gradient-to-br dark:from-gray-800 dark:to-gray-900">
         <div className="max-w-md mx-auto">
           <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <GitBranch className="w-10 h-10 text-blue-600" />
           </div>
-          <h3 className="text-xl font-semibold text-gray-900 mb-2">No Resources to Visualize</h3>
-          <p className="text-gray-600 mb-6">Create your first deployment or service account to see the Visual diagram</p>
-          <div className="bg-white/60 backdrop-blur-sm rounded-lg p-4 border border-white/20">
-            <p className="text-sm text-gray-500">
+          <h3 className="text-xl font-semibold text-gray-900 mb-2 dark:text-gray-100">No Resources to Visualize</h3>
+          <p className="text-gray-600 mb-6 dark:text-gray-400">Create your first deployment or service account to see the Visual diagram</p>
+          <div className="bg-white/60 dark:bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20 dark:border-white/10">
+            <p className="text-sm text-gray-500 dark:text-gray-400">
               Add deployments, service accounts, ConfigMaps, and Secrets to visualize your Kubernetes resource flow and dependencies
             </p>
           </div>
@@ -1702,11 +1702,11 @@ export function VisualPreview({
   return (
     <div
       ref={containerRef}
-      className="relative min-h-[600px] bg-gradient-to-br from-gray-50 to-gray-100 p-8 overflow-auto"
+      className="relative min-h-[600px] bg-gradient-to-br from-gray-50 to-gray-100 p-8 overflow-auto dark:from-gray-900 dark:to-gray-800"
       style={{ width: '100%', height: '100%' }}
     >
       {/* Hint for double-click */}
-      <div className="mb-4 flex items-center space-x-2 bg-blue-50 border border-blue-200 rounded-lg px-4 py-2 text-blue-800 text-sm font-medium shadow-sm">
+      <div className="mb-4 flex items-center space-x-2 bg-blue-50 border border-blue-200 rounded-lg px-4 py-2 text-blue-800 text-sm font-medium shadow-sm dark:bg-blue-900 dark:border-blue-700 dark:text-blue-100">
         <Info className="w-4 h-4 text-blue-400 mr-2" />
         <span>Double-click any component to open its configuration/YAML.</span>
       </div>

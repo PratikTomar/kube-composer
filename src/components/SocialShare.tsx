@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
-import { Share2, Twitter, Facebook, Linkedin, Link, Check, Star, Github, AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Check, Facebook, Github, Link, Linkedin, Moon, Share2, Star, Sun, Twitter } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import useTheme from '../hooks/useTheme';
 
 interface SocialShareProps {
   className?: string;
@@ -16,6 +17,9 @@ export function SocialShare({ className = '' }: SocialShareProps) {
   const [starCount, setStarCount] = useState<number | null>(null);
   const [isLoadingStars, setIsLoadingStars] = useState(true);
   const [apiError, setApiError] = useState<string | null>(null);
+
+  // using custom hook useTheme to get value which I passed in ThemeProvider
+  const { isDark, toggleDarkHandler } = useTheme();
   
   const shareData = {
     title: 'Kube Composer - Free Kubernetes YAML Generator',
@@ -149,6 +153,12 @@ export function SocialShare({ className = '' }: SocialShareProps) {
 
   return (
     <div className={`flex items-center space-x-1 ${className}`}>
+
+      {/* Dark Mode Toggle Button */}
+      <button className='p-2 rounded-full bg-gray-800 text-white' onClick={toggleDarkHandler}>
+        {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+      </button>
+
       {/* GitHub star button */}
       <a
         href="https://github.com/same7ammar/kube-composer"

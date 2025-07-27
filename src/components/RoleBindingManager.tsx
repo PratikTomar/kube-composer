@@ -170,22 +170,22 @@ const RoleBindingManager: React.FC<RoleBindingManagerProps> = ({ namespaces = []
   const renderStep1 = () => (
     <div className="mb-6">
       <div className="mb-4">
-        <h4 className="text-lg font-semibold text-gray-900 mb-1">Step 1: Basic Configuration</h4>
-        <p className="text-sm text-gray-600">
+        <h4 className="text-lg font-semibold text-gray-900 mb-1 dark:text-white">Step 1: Basic Configuration</h4>
+        <p className="text-sm text-gray-600 dark:text-gray-400">
           Choose the binding type and provide a unique name for your RoleBinding or ClusterRoleBinding.
         </p>
       </div>
       
       <div className="space-y-4">
-        <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
-          <label className="block text-base font-medium text-gray-900 mb-2">
+        <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm dark:bg-gray-800 dark:border-gray-700">
+          <label className="block text-base font-medium text-gray-900 mb-2 dark:text-white">
             Binding Type
-            <span className="ml-2 text-gray-500 cursor-pointer" title="RoleBinding is namespace-scoped. ClusterRoleBinding is cluster-wide.">
+            <span className="ml-2 text-gray-500 cursor-pointer dark:text-gray-400" title="RoleBinding is namespace-scoped. ClusterRoleBinding is cluster-wide.">
               <Info className="inline w-4 h-4" />
             </span>
           </label>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <label className="relative flex items-center p-3 border border-gray-200 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-all duration-200">
+            <label className="relative flex items-center p-3 border border-gray-200 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-all duration-200 dark:border-gray-700 dark:hover:border-blue-400 dark:hover:bg-blue-500">
               <input
                 type="radio"
                 className="sr-only"
@@ -196,11 +196,11 @@ const RoleBindingManager: React.FC<RoleBindingManagerProps> = ({ namespaces = []
                 {!binding.isClusterRoleBinding && <div className="w-2 h-2 bg-white rounded-full m-0.5"></div>}
               </div>
               <div>
-                <div className="font-medium text-gray-900 text-sm">RoleBinding</div>
-                <div className="text-xs text-gray-600">Namespace-scoped permissions</div>
+                <div className="font-medium text-gray-900 text-sm dark:text-white">RoleBinding</div>
+                <div className="text-xs text-gray-600 dark:text-gray-400">Namespace-scoped permissions</div>
               </div>
             </label>
-            <label className="relative flex items-center p-3 border border-gray-200 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-all duration-200">
+            <label className="relative flex items-center p-3 border border-gray-200 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-all duration-200 dark:border-gray-700 dark:hover:border-blue-400 dark:hover:bg-blue-500">
               <input
                 type="radio"
                 className="sr-only"
@@ -211,22 +211,22 @@ const RoleBindingManager: React.FC<RoleBindingManagerProps> = ({ namespaces = []
                 {binding.isClusterRoleBinding && <div className="w-2 h-2 bg-white rounded-full m-0.5"></div>}
               </div>
               <div>
-                <div className="font-medium text-gray-900 text-sm">ClusterRoleBinding</div>
-                <div className="text-xs text-gray-600">Cluster-wide permissions</div>
+                <div className="font-medium text-gray-900 text-sm dark:text-white">ClusterRoleBinding</div>
+                <div className="text-xs text-gray-600 dark:text-gray-400">Cluster-wide permissions</div>
               </div>
             </label>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
-          <label className="block text-base font-medium text-gray-900 mb-2">
+        <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm dark:bg-gray-800 dark:border-gray-700">
+          <label className="block text-base font-medium text-gray-900 mb-2 dark:text-white">
             Binding Name <span className="text-red-500">*</span>
-            <span className="ml-2 text-gray-500 cursor-pointer" title="Must be a valid DNS-1123 subdomain (lowercase, numbers, '-', '.')">
+            <span className="ml-2 text-gray-500 cursor-pointer dark:text-gray-400" title="Must be a valid DNS-1123 subdomain (lowercase, numbers, '-', '.')">
               <Info className="inline w-4 h-4" />
             </span>
           </label>
           <input
-            className={`w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm bg-white text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ${errors.name ? 'border-red-500 focus:border-red-500 focus:ring-red-200' : ''}`}
+            className={`w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm bg-white text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:placeholder-gray-400 ${errors.name ? 'border-red-500 focus:border-red-500 focus:ring-red-200' : ''}`}
             value={binding.name}
             onChange={e => handleBasicChange('name', e.target.value)}
             onBlur={() => setTouched(prev => ({ ...prev, name: true }))}
@@ -234,7 +234,7 @@ const RoleBindingManager: React.FC<RoleBindingManagerProps> = ({ namespaces = []
             aria-label="RoleBinding name"
           />
           {touched.name && errors.name && (
-            <div className="text-red-500 text-xs mt-1 flex items-center bg-red-50 border border-red-200 rounded p-2">
+            <div className="text-red-500 text-xs mt-2 flex items-center bg-red-50 border border-red-200 rounded p-2  dark:border-red-400">
               <Info className="w-3 h-3 mr-1" />
               {errors.name}
             </div>
@@ -242,15 +242,15 @@ const RoleBindingManager: React.FC<RoleBindingManagerProps> = ({ namespaces = []
         </div>
 
         {!binding.isClusterRoleBinding && (
-          <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
-            <label className="block text-base font-medium text-gray-900 mb-2">
+          <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm dark:bg-gray-800 dark:border-gray-700">
+            <label className="block text-base font-medium text-gray-900 mb-2 dark:text-white">
               Namespace <span className="text-red-500">*</span>
-              <span className="ml-2 text-gray-500 cursor-pointer" title="The namespace in which this RoleBinding will be created.">
+              <span className="ml-2 text-gray-500 cursor-pointer dark:text-gray-400" title="The namespace in which this RoleBinding will be created.">
                 <Info className="inline w-4 h-4" />
               </span>
             </label>
             <select
-              className={`w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm bg-white text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ${errors.namespace ? 'border-red-500 focus:border-red-500 focus:ring-red-200' : ''}`}
+              className={`w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm bg-white text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 dark:bg-gray-800 dark:border-gray-700 dark:text-white ${errors.namespace ? 'border-red-500 focus:border-red-500 focus:ring-red-200' : ''}`}
               value={binding.namespace}
               onChange={e => handleBasicChange('namespace', e.target.value)}
               onBlur={() => setTouched(prev => ({ ...prev, namespace: true }))}
@@ -277,63 +277,63 @@ const RoleBindingManager: React.FC<RoleBindingManagerProps> = ({ namespaces = []
   const renderStep2 = () => (
     <div className="mb-6">
       <div className="mb-4">
-        <h4 className="text-lg font-semibold text-gray-900 mb-1">Step 2: Select Role Reference</h4>
-        <p className="text-sm text-gray-600">
+        <h4 className="text-lg font-semibold text-gray-900 mb-1 dark:text-white">Step 2: Select Role Reference</h4>
+        <p className="text-sm text-gray-600 dark:text-gray-400">
           Choose the type of role and select the specific Role or ClusterRole to bind to subjects.
         </p>
       </div>
       
       <div className="space-y-4">
-        <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
-          <label className="block text-base font-medium text-gray-900 mb-2">
+        <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm dark:bg-gray-800 dark:border-gray-700">
+          <label className="block text-base font-medium text-gray-900 mb-2 dark:text-white">
             Role Type
-            <span className="ml-2 text-gray-500 cursor-pointer" title="A Role is namespace-scoped. A ClusterRole is cluster-wide.">
+            <span className="ml-2 text-gray-500 cursor-pointer dark:text-gray-400" title="A Role is namespace-scoped. A ClusterRole is cluster-wide.">
               <Info className="inline w-4 h-4" />
             </span>
           </label>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <label className="relative flex items-center p-3 border border-gray-200 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-all duration-200">
+            <label className="relative flex items-center p-3 border border-gray-200 dark:border-gray-700 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-all duration-200 dark:bg-gray-800 dark:text-white dark:hover:bg-blue-600">
               <input
                 type="radio"
                 className="sr-only"
                 checked={binding.roleRef.kind === 'Role'}
                 onChange={() => handleRoleRefChange('kind', 'Role')}
               />
-              <div className={`w-4 h-4 rounded-full border-2 mr-3 ${binding.roleRef.kind === 'Role' ? 'border-blue-600 bg-blue-600' : 'border-gray-300'}`}>
+              <div className={`w-4 h-4 rounded-full border-2 mr-3 dark:border-gray-700 ${binding.roleRef.kind === 'Role' ? 'border-blue-600 bg-blue-600' : 'border-gray-300'}`}>
                 {binding.roleRef.kind === 'Role' && <div className="w-2 h-2 bg-white rounded-full m-0.5"></div>}
               </div>
               <div>
-                <div className="font-medium text-gray-900 text-sm">Role</div>
-                <div className="text-xs text-gray-600">Namespace-scoped permissions</div>
+                <div className="font-medium text-gray-900 text-sm dark:text-white">Role</div>
+                <div className="text-xs text-gray-600 dark:text-gray-400">Namespace-scoped permissions</div>
               </div>
             </label>
-            <label className="relative flex items-center p-3 border border-gray-200 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-all duration-200">
+            <label className="relative flex items-center p-3 border border-gray-200 dark:border-gray-700 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-all duration-200 dark:bg-gray-800 dark:text-white dark:hover:bg-blue-600">
               <input
                 type="radio"
                 className="sr-only"
                 checked={binding.roleRef.kind === 'ClusterRole'}
                 onChange={() => handleRoleRefChange('kind', 'ClusterRole')}
               />
-              <div className={`w-4 h-4 rounded-full border-2 mr-3 ${binding.roleRef.kind === 'ClusterRole' ? 'border-blue-600 bg-blue-600' : 'border-gray-300'}`}>
+              <div className={`w-4 h-4 rounded-full border-2 mr-3 dark:border-gray-700 ${binding.roleRef.kind === 'ClusterRole' ? 'border-blue-600 bg-blue-600' : 'border-gray-300'}`}>
                 {binding.roleRef.kind === 'ClusterRole' && <div className="w-2 h-2 bg-white rounded-full m-0.5"></div>}
               </div>
               <div>
-                <div className="font-medium text-gray-900 text-sm">ClusterRole</div>
-                <div className="text-xs text-gray-600">Cluster-wide permissions</div>
+                <div className="font-medium text-gray-900 text-sm dark:text-white">ClusterRole</div>
+                <div className="text-xs text-gray-600 dark:text-gray-400">Cluster-wide permissions</div>
               </div>
             </label>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
-          <label className="block text-base font-medium text-gray-900 mb-2">
+        <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm dark:bg-gray-800 dark:border-gray-700">
+          <label className="block text-base font-medium text-gray-900 mb-2 dark:text-white">
             Role Name <span className="text-red-500">*</span>
-            <span className="ml-2 text-gray-500 cursor-pointer" title="Select the specific Role or ClusterRole to bind.">
+            <span className="ml-2 text-gray-500 cursor-pointer dark:text-gray-400" title="Select the specific Role or ClusterRole to bind.">
               <Info className="inline w-4 h-4" />
             </span>
           </label>
           <select
-            className={`w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm bg-white text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ${errors['roleRef.name'] ? 'border-red-500 focus:border-red-500 focus:ring-red-200' : ''}`}
+            className={`w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm bg-white text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 dark:bg-gray-800 dark:border-gray-700 dark:text-white ${errors['roleRef.name'] ? 'border-red-500 focus:border-red-500 focus:ring-red-200' : ''}`}
             value={binding.roleRef.name}
             onChange={e => handleRoleRefChange('name', e.target.value)}
             onBlur={() => setTouched(prev => ({ ...prev, 'roleRef.name': true }))}
@@ -374,17 +374,17 @@ const RoleBindingManager: React.FC<RoleBindingManagerProps> = ({ namespaces = []
   const renderStep3 = () => (
     <div className="mb-6">
       <div className="mb-4">
-        <h4 className="text-lg font-semibold text-gray-900 mb-1">Step 3: Configure Subjects</h4>
-        <p className="text-sm text-gray-600">
+        <h4 className="text-lg font-semibold text-gray-900 mb-1 dark:text-white">Step 3: Configure Subjects</h4>
+        <p className="text-sm text-gray-600 dark:text-gray-400">
           Add one or more subjects (users, groups, or service accounts) to bind to the selected role.
         </p>
       </div>
       
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <label className="block text-base font-medium text-gray-900">
+          <label className="block text-base font-medium text-gray-900 dark:text-white">
             Subjects <span className="text-red-500">*</span>
-            <span className="ml-2 text-gray-500 cursor-pointer" title="Subjects are users, groups, or service accounts that will receive the permissions.">
+            <span className="ml-2 text-gray-500 dark:text-gray-400 cursor-pointer" title="Subjects are users, groups, or service accounts that will receive the permissions.">
               <Info className="inline w-4 h-4" />
             </span>
           </label>
@@ -406,17 +406,17 @@ const RoleBindingManager: React.FC<RoleBindingManagerProps> = ({ namespaces = []
         
         <div className="space-y-3">
           {binding.subjects.map((subject, idx) => (
-            <div key={idx} className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm relative">
+            <div key={idx} className="bg-white rounded-lg border border-gray-200 p-4 dark:bg-gray-800 dark:border-gray-700 shadow-sm relative">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-gray-900 mb-1">
+                  <label className="block text-xs font-medium text-gray-900 mb-1 dark:text-white">
                     Kind
-                    <span className="ml-1 text-gray-500 cursor-pointer" title="Choose the type of subject.">
+                    <span className="ml-1 text-gray-500 dark:text-gray-400 cursor-pointer" title="Choose the type of subject.">
                       <Info className="inline w-3 h-3" />
                     </span>
                   </label>
                   <select
-                    className="w-full px-2 py-1.5 border border-gray-300 rounded-lg shadow-sm bg-white text-xs text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                    className="w-full px-2 py-1.5 border border-gray-300 rounded-lg shadow-sm bg-white text-xs text-gray-900 dark:bg-gray-800 dark:border-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                     value={subject.kind}
                     onChange={e => handleSubjectChange(idx, 'kind', e.target.value)}
                   >
@@ -428,14 +428,14 @@ const RoleBindingManager: React.FC<RoleBindingManagerProps> = ({ namespaces = []
                 
                 {subject.kind === 'ServiceAccount' && (
                   <div>
-                    <label className="block text-xs font-medium text-gray-900 mb-1">
+                    <label className="block text-xs font-medium text-gray-900 mb-1 dark:text-white">
                       Namespace <span className="text-red-500">*</span>
-                      <span className="ml-1 text-gray-500 cursor-pointer" title="Namespace for the service account.">
+                      <span className="ml-1 text-gray-500 dark:text-gray-400 cursor-pointer" title="Namespace for the service account.">
                         <Info className="inline w-3 h-3" />
                       </span>
                     </label>
                     <select
-                      className={`w-full px-2 py-1.5 border border-gray-300 rounded-lg shadow-sm bg-white text-xs text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ${errors[`subjects.${idx}.namespace`] ? 'border-red-500 focus:border-red-500 focus:ring-red-200' : ''}`}
+                      className={`w-full px-2 py-1.5 border border-gray-300 rounded-lg shadow-sm dark:bg-gray-800 dark:border-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ${errors[`subjects.${idx}.namespace`] ? 'border-red-500 focus:border-red-500 focus:ring-red-200' : ''}`}
                       value={subject.namespace || ''}
                       onChange={e => handleSubjectChange(idx, 'namespace', e.target.value)}
                       onBlur={() => setTouched(prev => ({ ...prev, [`subjects.${idx}.namespace`]: true }))}
@@ -447,7 +447,7 @@ const RoleBindingManager: React.FC<RoleBindingManagerProps> = ({ namespaces = []
                       ))}
                     </select>
                     {touched[`subjects.${idx}.namespace`] && errors[`subjects.${idx}.namespace`] && (
-                      <div className="text-red-500 text-xs mt-1 flex items-center bg-red-50 border border-red-200 rounded p-1">
+                      <div className="text-red-500 text-xs mt-1 flex items-center dark:bg-red-500 dark:border-red-500 rounded p-1">
                         <Info className="w-3 h-3 mr-1" />
                         {errors[`subjects.${idx}.namespace`]}
                       </div>
@@ -456,9 +456,9 @@ const RoleBindingManager: React.FC<RoleBindingManagerProps> = ({ namespaces = []
                 )}
                 
                 <div>
-                  <label className="block text-xs font-medium text-gray-900 mb-1">
+                  <label className="block text-xs font-medium text-gray-900 mb-1 dark:text-white">
                     Name <span className="text-red-500">*</span>
-                    <span className="ml-1 text-gray-500 cursor-pointer" title="The name of the user, group, or service account.">
+                    <span className="ml-1 text-gray-500 dark:text-gray-400 cursor-pointer" title="The name of the user, group, or service account.">
                       <Info className="inline w-3 h-3" />
                     </span>
                   </label>
@@ -466,7 +466,7 @@ const RoleBindingManager: React.FC<RoleBindingManagerProps> = ({ namespaces = []
                     subject.namespace ? (
                       <div className="relative">
                         <input
-                          className={`w-full px-2 py-1.5 border border-gray-300 rounded-lg shadow-sm bg-white text-xs text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ${errors[`subjects.${idx}.name`] ? 'border-red-500 focus:border-red-500 focus:ring-red-200' : ''}`}
+                          className={`w-full px-2 py-1.5 border border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:text-white rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ${errors[`subjects.${idx}.name`] ? 'border-red-500 focus:border-red-500 focus:ring-red-200' : ''}`}
                           value={subject.name}
                           onChange={e => handleSubjectChange(idx, 'name', e.target.value)}
                           onFocus={() => setShowServiceAccountDropdown(prev => ({ ...prev, [idx]: true }))}
@@ -487,10 +487,10 @@ const RoleBindingManager: React.FC<RoleBindingManagerProps> = ({ namespaces = []
                           </svg>
                         </button>
                         {showServiceAccountDropdown[idx] && (
-                          <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-32 overflow-y-auto">
+                          <div className="absolute z-10 w-full mt-1 dark:bg-gray-800 dark:border-gray-700 border border-gray-200 rounded-lg shadow-lg max-h-32 overflow-y-auto">
                             <div className="py-1">
                               <div
-                                className="px-2 py-1 text-xs text-gray-900 hover:bg-gray-100 cursor-pointer"
+                                className="px-2 py-1 text-xs text-gray-900 dark:text-white hover:bg-gray-100 cursor-pointer"
                                 onClick={() => {
                                   handleSubjectChange(idx, 'name', 'default');
                                   setShowServiceAccountDropdown(prev => ({ ...prev, [idx]: false }));
@@ -519,13 +519,13 @@ const RoleBindingManager: React.FC<RoleBindingManagerProps> = ({ namespaces = []
                         )}
                       </div>
                     ) : (
-                      <div className="text-xs text-gray-500 italic">
+                      <div className="text-xs text-gray-500 dark:text-gray-400 italic">
                         Select namespace first to see available ServiceAccounts
                       </div>
                     )
                   ) : (
                     <input
-                      className={`w-full px-2 py-1.5 border border-gray-300 rounded-lg shadow-sm bg-white text-xs text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ${errors[`subjects.${idx}.name`] ? 'border-red-500 focus:border-red-500 focus:ring-red-200' : ''}`}
+                      className={`w-full px-2 py-1.5 border border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:text-white rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ${errors[`subjects.${idx}.name`] ? 'border-red-500 focus:border-red-500 focus:ring-red-200' : ''}`}
                       value={subject.name}
                       onChange={e => handleSubjectChange(idx, 'name', e.target.value)}
                       onBlur={() => setTouched(prev => ({ ...prev, [`subjects.${idx}.name`]: true }))}
@@ -542,14 +542,14 @@ const RoleBindingManager: React.FC<RoleBindingManagerProps> = ({ namespaces = []
                 </div>
                 
                 <div>
-                  <label className="block text-xs font-medium text-gray-900 mb-1">
+                  <label className="block text-xs font-medium text-gray-900 dark:text-white mb-1">
                     API Group
-                    <span className="ml-1 text-gray-500 cursor-pointer" title="Auto-filled based on subject kind.">
+                    <span className="ml-1 text-gray-500 dark:text-gray-400 cursor-pointer" title="Auto-filled based on subject kind.">
                       <Info className="inline w-3 h-3" />
                     </span>
                   </label>
                   <input
-                    className="w-full px-2 py-1.5 border border-gray-300 rounded-lg shadow-sm bg-gray-50 text-xs text-gray-500 cursor-not-allowed"
+                    className="w-full px-2 py-1.5 border border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:text-white rounded-lg shadow-sm bg-gray-50 text-xs text-gray-500 cursor-not-allowed"
                     value={subject.apiGroup || ''}
                     disabled
                     readOnly
@@ -576,51 +576,51 @@ const RoleBindingManager: React.FC<RoleBindingManagerProps> = ({ namespaces = []
   const renderStep4 = () => (
     <div className="mb-6">
       <div className="mb-4">
-        <h4 className="text-lg font-semibold text-gray-900 mb-1">Step 4: Review & Generate</h4>
-        <p className="text-sm text-gray-600">
+        <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">Step 4: Review & Generate</h4>
+        <p className="text-sm text-gray-600 dark:text-gray-400">
           Review your configuration and generate the YAML for your RoleBinding or ClusterRoleBinding.
         </p>
       </div>
       
       <div className="space-y-4">
-        <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
-          <h3 className="text-base font-semibold text-gray-900 mb-3">Configuration Summary</h3>
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 p-4 shadow-sm">
+          <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-3">Configuration Summary</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <h4 className="text-sm font-medium text-gray-700 mb-2">Basic Information</h4>
+              <h4 className="text-sm font-medium text-gray-700 dark:text-gray-400 mb-2">Basic Information</h4>
               <div className="space-y-1 text-xs">
-                <div><span className="font-medium">Type:</span> {binding.isClusterRoleBinding ? 'ClusterRoleBinding' : 'RoleBinding'}</div>
-                <div><span className="font-medium">Name:</span> {binding.name}</div>
-                {!binding.isClusterRoleBinding && <div><span className="font-medium">Namespace:</span> {binding.namespace}</div>}
+                <div className=' text-gray-900 dark:text-white'><span className="font-medium text-gray-900 dark:text-white">Type:</span> {binding.isClusterRoleBinding ? 'ClusterRoleBinding' : 'RoleBinding'}</div>
+                <div className=' text-gray-900 dark:text-white'><span className="font-medium text-gray-900 dark:text-white">Name:</span> {binding.name}</div>
+                {!binding.isClusterRoleBinding && <div className=' text-gray-900 dark:text-white'><span className="font-medium text-gray-900 dark:text-white">Namespace:</span> {binding.namespace}</div>}
               </div>
             </div>
             <div>
-              <h4 className="text-sm font-medium text-gray-700 mb-2">Role Reference</h4>
+              <h4 className="text-sm font-medium text-gray-700 dark:text-gray-400 mb-2">Role Reference</h4>
               <div className="space-y-1 text-xs">
-                <div><span className="font-medium">Kind:</span> {binding.roleRef.kind}</div>
-                <div><span className="font-medium">Name:</span> {binding.roleRef.name}</div>
+                <div className=' text-gray-900 dark:text-white'><span className="font-medium text-gray-900 dark:text-white">Kind:</span> {binding.roleRef.kind}</div>
+                <div className=' text-gray-900 dark:text-white'><span className="font-medium text-gray-900 dark:text-white">Name:</span> {binding.roleRef.name}</div>
               </div>
             </div>
           </div>
           
           <div className="mt-4">
-            <h4 className="text-sm font-medium text-gray-700 mb-2">Subjects ({binding.subjects.length})</h4>
+            <h4 className="text-sm font-medium text-gray-700 dark:text-gray-400 mb-2">Subjects ({binding.subjects.length})</h4>
             <div className="space-y-1">
               {binding.subjects.map((subject, idx) => (
-                <div key={idx} className="text-xs bg-white/50 rounded p-2 border border-gray-200">
-                  <div><span className="font-medium">Kind:</span> {subject.kind}</div>
-                  <div><span className="font-medium">Name:</span> {subject.name}</div>
-                  {subject.namespace && <div><span className="font-medium">Namespace:</span> {subject.namespace}</div>}
-                  {subject.apiGroup && <div><span className="font-medium">API Group:</span> {subject.apiGroup}</div>}
+                <div key={idx} className="text-xs bg-white/50 rounded p-2 border border-gray-200 dark:bg-gray-800">
+                  <div className=' text-gray-900 dark:text-white'><span className="font-medium text-gray-900 dark:text-white">Kind:</span> {subject.kind}</div>
+                  <div className=' text-gray-900 dark:text-white'><span className="font-medium text-gray-900 dark:text-white">Name:</span> {subject.name}</div>
+                  {subject.namespace && <div className=' text-gray-900 dark:text-white'><span className="font-medium text-gray-900 dark:text-white">Namespace:</span> {subject.namespace}</div>}
+                  {subject.apiGroup && <div className=' text-gray-900 dark:text-white'><span className="font-medium text-gray-900 dark:text-white">API Group:</span> {subject.apiGroup}</div>}
                 </div>
               ))}
             </div>
           </div>
         </div>
         
-        <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 p-4 shadow-sm">
           <div className="flex items-center justify-between mb-3">
-            <label className="block text-base font-medium text-gray-900">Generated YAML</label>
+            <label className="block text-base font-medium text-gray-900 dark:text-white">Generated YAML</label>
             <button
               type="button"
               onClick={() => {
@@ -651,7 +651,7 @@ const RoleBindingManager: React.FC<RoleBindingManagerProps> = ({ namespaces = []
 
   // Modal container
   return (
-    <div className="max-w-2xl mx-auto bg-white rounded-xl shadow-lg p-4 mt-4 mb-6 border border-gray-200 dark:bg-gray-900 dark:border-gray-700">
+    <div className="max-w-2xl mx-auto bg-white rounded-xl shadow-lg p-4 mt-4 mb-6 border  border-gray-200 dark:bg-gray-900 dark:border-gray-700">
       {/* Step Indicator with Progress Bar */}
       <div className="flex flex-col items-center mb-4">
         <div className="w-full max-w-xl bg-gray-50 dark:bg-gray-800 rounded-lg shadow-sm px-3 py-2 flex items-center justify-between relative z-10 border border-gray-200 dark:border-gray-700">
@@ -674,9 +674,6 @@ const RoleBindingManager: React.FC<RoleBindingManagerProps> = ({ namespaces = []
                 {i < steps.length - 1 && (
                   <span className="absolute right-[-50%] top-1/2 transform -translate-y-1/2 w-full h-0.5 bg-gray-300 z-0 dark:bg-gray-700" style={{ left: '100%', width: '130%' }} />
                 )}
-
-              
-
               </div>
               <span className={`mt-1 text-xs text-center w-16 truncate transition-all duration-300
                 ${i === step ? 'font-semibold text-blue-700' : 'text-gray-500'}`}>{s.label}</span>

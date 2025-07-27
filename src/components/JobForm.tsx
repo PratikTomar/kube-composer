@@ -291,10 +291,7 @@ export const JobForm: React.FC<JobFormProps> = ({ mode, namespaces, onSave, init
                   {state.labels.map((l, i) => (
                     <div key={i} className="flex gap-2 items-center">
                       <input className="w-1/3 rounded border border-gray-300 px-2 py-1 dark:border-gray-600 dark:bg-gray-700 dark:text-white" placeholder="key" value={l.key} onChange={e => handleLabelChange(i, e.target.value, l.value)} />
-
                       <input className="w-1/2 rounded border border-gray-300 px-2 py-1 dark:border-gray-600 dark:bg-gray-700 dark:text-white" placeholder="value" value={l.value} onChange={e => handleLabelChange(i, l.key, e.target.value)} />
-                      <input className="w-1/2 rounded border border-gray-300 px-2 py-1 dark:border-gray-600 dark:bg-gray-700 dark:text-white" placeholder="value" value={l.value} onChange={e => handleLabelChange(i, l.key, e.target.value)} />
-
                       <button type="button" className="text-red-500 px-2" onClick={() => removeLabel(i)} aria-label="Remove label">×</button>
                     </div>
                   ))}

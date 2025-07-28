@@ -1761,7 +1761,7 @@ export function VisualPreview({
         {flowNodes.map(node => (
           <div
             key={node.id}
-            className={`absolute w-48 p-3 rounded-lg border-2 shadow-lg select-none ${
+            className={`absolute w-48 p-3 rounded-lg border-2 shadow-lg select-none cursor-pointer ${
               node.colorClass || getStatusColor(node.status)
             }`}
             style={{

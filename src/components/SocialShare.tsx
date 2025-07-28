@@ -163,7 +163,7 @@ export function SocialShare({ className = '' }: SocialShareProps) {
         href="https://github.com/same7ammar/kube-composer"
         target="_blank"
         rel="noopener noreferrer"
-        className="group inline-flex items-center space-x-2 px-3 py-2 bg-gray-900 hover:bg-gray-800 text-white rounded-lg transition-all duration-200 text-xs font-medium shadow-md hover:shadow-lg transform hover:scale-105 dark:bg-gray-700 dark:hover:bg-gray-600"
+        className="group inline-flex items-center space-x-2 px-3 py-2 bg-gray-900 hover:bg-gray-800 text-white rounded-lg transition-all duration-200 text-xs font-medium shadow-md hover:shadow-lg transform hover:scale-105 dark:bg-gray-700 dark:hover:bg-gray-500"
         title={`Star on GitHub${starCount !== null ? ` (${starCount} stars)` : ''}`}
         aria-label="Star Kube Composer on GitHub"
       >
@@ -176,7 +176,7 @@ export function SocialShare({ className = '' }: SocialShareProps) {
             Star
           </span>
           {!isLoadingStars && starCount !== null && (
-            <span className="bg-gray-700 group-hover:bg-gray-600 px-2 py-0.5 rounded-full text-xs font-bold text-yellow-300 group-hover:text-yellow-200 transition-all duration-200 min-w-[1.5rem] text-center">
+            <span className="bg-gray-700 group-hover:bg-gray-600 px-2 py-0.5 rounded-full text-xs font-bold text-yellow-300 group-hover:text-yellow-200 transition-all duration-200 min-w-[1.5rem] text-center dark:bg-gray-600">
               {formatStarCount(starCount)}
             </span>
           )}

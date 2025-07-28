@@ -304,6 +304,6 @@ export interface RoleBinding {
 }
 
 export type ThemeContextProps = {
-    isDark: boolean;
-    toggleDarkHandler: () => void;
+    isDarkModeEnabled: boolean;
+    toggleDarkModeHandler: () => void;
 }

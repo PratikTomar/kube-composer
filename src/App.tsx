@@ -131,9 +131,7 @@ function App() {
   const lastSavedRef = useRef<number>(0);
 
   // using custom hook useTheme to get value which I passed in ThemeProvider
-  const { isDark } = useTheme();
-
-  // const darkModeClass = isDark ? 'bg-gray-900 text-white' : 'bg-white text-black';
+  const { isDarkModeEnabled } = useTheme();
 
   // Force save function for immediate saves
   const forceSave = useCallback(() => {
@@ -1195,12 +1193,12 @@ function App() {
   };
 
   return (
-    <div className={`min-h-screen bg-gray-50 flex flex-col ${isDark ? 'dark' : ''}`}>
+    <div className={`min-h-screen bg-gray-50 flex flex-col ${isDarkModeEnabled ? 'dark' : ''}`}>
       {/* SEO Head Component */}
       <SEOHead />
       
       {/* Header */}
-      <header className={`bg-white border-b border-gray-200 sticky top-0 z-50`}>
+      <header className={`bg-white border-b border-gray-200 sticky top-0 z-50 dark:border-gray-700`}>
         <div className={`px-4 sm:px-6 lg:px-8 py-4 dark:bg-gray-900`}>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
             {/* Top row: Logo, Title, Menu */}
@@ -1332,12 +1330,12 @@ function App() {
         <div className={`
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
           lg:translate-x-0 fixed lg:relative inset-y-0 left-0 z-50 lg:z-auto
-          w-80 lg:w-1/4 xl:w-1/5 bg-white border-r border-gray-200 
+          w-80 lg:w-1/4 xl:w-1/5 bg-white border-r border-gray-200 dark:border-gray-700
           transition-transform duration-300 ease-in-out lg:transition-none
           flex flex-col min-h-0 dark:bg-gray-900
         `}>
           {/* Project Settings Button */}
-          <div className="p-4 border-b border-gray-200 flex-shrink-0">
+          <div className="p-4 border-b border-gray-200 flex-shrink-0 dark:border-gray-700">
             <button
               onClick={() => setShowProjectSettings(true)}
               className="w-full inline-flex items-center justify-center px-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 text-sm font-medium shadow-md hover:shadow-lg transform hover:scale-105"
@@ -2083,7 +2081,7 @@ function App() {
         <div className="flex-1 flex flex-col min-w-0 min-h-0">
           {/* Preview Content with Sticky Header */}
           <div className="flex-1 min-h-0 overflow-y-auto bg-gray-50 dark:bg-gray-900">
-            <div className="sticky top-0 z-10 bg-white border-b border-gray-200 p-4 dark:bg-gray-900">
+            <div className="sticky top-0 z-10 bg-white border-b border-gray-200 p-4 dark:bg-gray-900 dark:border-gray-700">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0 ">
                 <div className="flex items-center w-full">
                   <h2 className="text-lg font-semibold text-gray-900 flex items-center dark:text-white">
@@ -2139,8 +2137,8 @@ function App() {
                           onClick={() => setPreviewMode(mode.id)}
                           className={`${
                             previewMode === mode.id
-                              ? 'bg-blue-100 text-blue-700'
-                              : 'text-gray-500 hover:text-gray-700'
+                              ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-100'
+                              : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
                           } px-2 sm:px-3 py-2 rounded-lg text-xs sm:text-sm font-medium flex items-center space-x-1 transition-colors duration-200`}
                         >
                           <Icon className="w-4 h-4" />

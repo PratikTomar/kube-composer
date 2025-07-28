@@ -19,8 +19,8 @@ export function SocialShare({ className = '' }: SocialShareProps) {
   const [apiError, setApiError] = useState<string | null>(null);
 
   // using custom hook useTheme to get value which I passed in ThemeProvider
-  const { isDark, toggleDarkHandler } = useTheme();
-  
+  const { isDarkModeEnabled, toggleDarkModeHandler } = useTheme();
+
   const shareData = {
     title: 'Kube Composer - Free Kubernetes YAML Generator',
     text: 'Just discovered this amazing tool! 🚀 Generate production-ready Kubernetes YAML files in minutes with a visual editor. No more manual YAML writing! Perfect for developers and DevOps teams. #kubernetes #yaml #devops #docker #k8s',
@@ -154,8 +154,8 @@ export function SocialShare({ className = '' }: SocialShareProps) {
   return (
     <div className={`flex items-center space-x-1 ${className}`}>
       {/* Dark Mode Toggle Button */}
-      <button className='p-2 rounded-full bg-gray-800 text-white dark:bg-gray-200 dark:text-gray-800' onClick={toggleDarkHandler}>
-        {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+      <button className='p-2 rounded-full bg-gray-800 text-white dark:bg-gray-200 dark:text-gray-800' onClick={toggleDarkModeHandler}>
+        {isDarkModeEnabled ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
       </button>
 
       {/* GitHub star button */}

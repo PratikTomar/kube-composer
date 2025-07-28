@@ -157,7 +157,7 @@ export function YamlPreview({ yaml, name }: YamlPreviewProps) {
     <div className="space-y-4">
       {/* Header with controls */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
-        <h3 className="text-lg font-semibold text-gray-900">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
           Generated YAML{name ? ` for ${name}` : ''}
         </h3>
         
@@ -221,9 +221,9 @@ export function YamlPreview({ yaml, name }: YamlPreviewProps) {
       </div>
 
       {/* YAML content */}
-      <div className="bg-gray-900 rounded-xl overflow-hidden border border-gray-700 shadow-lg" aria-label="YAML preview">
+      <div className="bg-gray-900 rounded-xl overflow-hidden border border-gray-700 shadow-lg dark:bg-gray-800 dark:border-gray-700" aria-label="YAML preview">
         {/* Header bar */}
-        <div className="bg-gray-800 px-4 py-2 border-b border-gray-700">
+        <div className="bg-gray-800 px-4 py-2 border-b border-gray-700 dark:bg-gray-700 dark:border-gray-700">
           <div className="flex items-center space-x-2">
             <div className="w-3 h-3 bg-red-500 rounded-full"></div>
             <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
@@ -263,8 +263,8 @@ export function YamlPreview({ yaml, name }: YamlPreviewProps) {
         </div>
 
         {/* Footer with stats */}
-        <div className="bg-gray-800 px-4 py-2 border-t border-gray-700">
-          <div className="flex items-center justify-between text-xs text-gray-400">
+        <div className="bg-gray-800 px-4 py-2 border-t border-gray-700 dark:bg-gray-700 dark:border-gray-700">
+          <div className="flex items-center justify-between text-xs text-gray-400 dark:text-gray-400">
             <span>{yamlLines.length} lines • {yaml.length} characters</span>
             <span>YAML • UTF-8</span>
           </div>

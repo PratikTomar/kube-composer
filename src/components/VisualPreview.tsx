@@ -1881,10 +1881,10 @@ export function VisualPreview({
       </div>
       {/* YAML Modal */}
       {yamlModal?.open && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg p-6 max-w-2xl w-full relative">
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 dark:text-white">
+          <div className="bg-white rounded-lg shadow-lg p-6 max-w-2xl w-full relative dark:bg-gray-800 dark:border-gray-700">
             <button
-              className="absolute top-3 right-3 text-gray-400 hover:text-gray-700"
+              className="absolute top-3 right-3 text-gray-400 hover:text-gray-700 dark:text-gray-300 dark:hover:text-gray-300"
               onClick={() => setYamlModal(null)}
             >
               <X className="w-6 h-6" />

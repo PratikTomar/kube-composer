@@ -1,14 +1,14 @@
 import { ReactNode } from 'react';
 import { ThemeContext } from '../context/ThemeContext';
-import useToggle from '../hooks/useToggle';
+import useDarkMode from '../hooks/useDarkMode';
 
-const ThemeProvider = ({children}: {children: ReactNode}) => {
+const ThemeProvider = ({ children }: { children: ReactNode }) => {
 
-    const {isToggled : isDark, toggleHandler : toggleDarkHandler} = useToggle();
-    
+  const { isDarkModeEnabled, toggleDarkModeHandler } = useDarkMode();
+
   return (
-    <ThemeContext.Provider  value={{isDark, toggleDarkHandler}}>
-        {children}
+    <ThemeContext.Provider value={{ isDarkModeEnabled, toggleDarkModeHandler }}>
+      {children}
     </ThemeContext.Provider>
   )
 }

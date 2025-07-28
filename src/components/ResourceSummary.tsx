@@ -168,23 +168,23 @@ export function ResourceSummary({
       {/* Validation Status */}
       <div className={`p-4 rounded-lg border ${
         validation.isValid 
-          ? 'bg-green-50 border-green-200' 
-          : 'bg-red-50 border-red-200'
+          ? 'bg-green-50 dark:bg-green-900 border-green-200 dark:border-green-700 text-green-800 dark:text-green-100' 
+          : 'bg-red-50 dark:bg-red-900 border-red-200 dark:border-red-700 text-red-800 dark:text-red-100'
       }`}>
         <div className="flex items-center space-x-2 mb-2">
           {validation.isValid ? (
-            <CheckCircle className="w-5 h-5 text-green-600" />
+            <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
           ) : (
-            <AlertCircle className="w-5 h-5 text-red-600" />
+            <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
           )}
           <span className={`font-medium ${
-            validation.isValid ? 'text-green-900' : 'text-red-900'
+            validation.isValid ? 'text-green-900 dark:text-green-100' : 'text-red-900 dark:text-red-100'
           }`}>
             {validation.isValid ? 'Configuration Valid' : 'Configuration Issues'}
           </span>
         </div>
         {!validation.isValid && (
-          <ul className="text-sm text-red-700 space-y-1">
+          <ul className="text-sm dark:text-red-300 space-y-1">
             {validation.issues.map((issue, index) => (
               <li key={index}>• {issue}</li>
             ))}
@@ -195,12 +195,12 @@ export function ResourceSummary({
       {/* Resource Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {/* Workloads */}
-        <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+        <div className="bg-blue-50 dark:bg-blue-900 p-4 rounded-lg border border-blue-200 dark:border-blue-700 text-blue-800 dark:text-blue-100">
           <div className="flex items-center space-x-2 mb-2">
-            <Server className="w-5 h-5 text-blue-600" />
-            <span className="font-medium text-blue-900">Workloads</span>
+            <Server className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+            <span className="font-medium text-blue-900 dark:text-blue-100">Workloads</span>
           </div>
-          <div className="text-sm text-blue-700 space-y-1">
+          <div className="text-sm text-blue-700 space-y-1 dark:text-blue-300">
             <div>Deployments: {validDeployments.length}</div>
             <div>DaemonSets: {validDaemonSets.length}</div>
             <div>Jobs: {validJobs.length}</div>
@@ -209,12 +209,12 @@ export function ResourceSummary({
         </div>
 
         {/* Security */}
-        <div className="bg-cyan-50 p-4 rounded-lg border border-cyan-200">
+        <div className="bg-cyan-50 dark:bg-cyan-900 p-4 rounded-lg border border-cyan-200 dark:border-cyan-700 text-cyan-800 dark:text-cyan-100">
           <div className="flex items-center space-x-2 mb-2">
-            <Users className="w-5 h-5 text-cyan-600" />
-            <span className="font-medium text-cyan-900">Security</span>
+            <Users className="w-5 h-5 text-cyan-600 dark:text-cyan-400" />
+            <span className="font-medium text-cyan-900 dark:text-cyan-100">Security</span>
           </div>
-          <div className="text-sm text-cyan-700 space-y-1">
+          <div className="text-sm text-cyan-700 space-y-1 dark:text-cyan-300">
             <div>Service Accounts: {validServiceAccounts.length}</div>
             <div>Roles: {validRoles.length}</div>
             <div>ClusterRoles: {validClusterRoles.length}</div>
@@ -224,12 +224,12 @@ export function ResourceSummary({
         </div>
 
         {/* Storage */}
-        <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+        <div className="bg-green-50 dark:bg-green-900 p-4 rounded-lg border border-green-200 dark:border-green-700 text-green-800 dark:text-green-100">
           <div className="flex items-center space-x-2 mb-2">
-            <Settings className="w-5 h-5 text-green-600" />
-            <span className="font-medium text-green-900">Storage</span>
+            <Settings className="w-5 h-5 text-green-600 dark:text-green-400" />
+            <span className="font-medium text-green-900 dark:text-green-100">Storage</span>
           </div>
-          <div className="text-sm text-green-700 space-y-1">
+          <div className="text-sm text-green-700 space-y-1 dark:text-green-300">
             <div>ConfigMaps: {configMaps.length}</div>
             <div>Namespaces: {namespaces.length}</div>
             <div>Total Data Keys: {configMaps.reduce((sum, cm) => sum + Object.keys(cm.data).length, 0)}</div>
@@ -240,15 +240,15 @@ export function ResourceSummary({
       {/* Service Accounts Summary */}
       {validServiceAccounts.length > 0 && (
         <div className="space-y-4">
-          <h4 className="font-medium text-gray-900">Service Accounts</h4>
+          <h4 className="font-medium text-gray-900 dark:text-gray-100">Service Accounts</h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {validServiceAccounts.map((serviceAccount, index) => (
-              <div key={index} className="bg-cyan-50 p-4 rounded-lg border border-cyan-200">
+              <div key={index} className="bg-cyan-50 dark:bg-cyan-900 p-4 rounded-lg border border-cyan-200 dark:border-cyan-700 text-cyan-800 dark:text-cyan-100">
                 <div className="flex items-center space-x-2 mb-2">
-                  <Users className="w-5 h-5 text-cyan-600" />
-                  <span className="font-medium text-cyan-900">{serviceAccount.name}</span>
+                  <Users className="w-5 h-5 text-cyan-600 dark:text-cyan-400" />
+                  <span className="font-medium text-cyan-900 dark:text-cyan-100">{serviceAccount.name}</span>
                 </div>
-                <div className="text-sm text-cyan-700 space-y-1">
+                <div className="text-sm text-cyan-700 space-y-1 dark:text-cyan-300">
                   <div>Namespace: {serviceAccount.namespace}</div>
                   <div>Secrets: {serviceAccount.secrets?.length || 0}</div>
                   <div>Image Pull Secrets: {serviceAccount.imagePullSecrets?.length || 0}</div>
@@ -265,24 +265,24 @@ export function ResourceSummary({
       {/* Jobs Summary */}
       {validJobs.length > 0 && (
         <div className="space-y-4">
-          <h4 className="font-medium text-gray-900">Jobs & CronJobs</h4>
+          <h4 className="font-medium text-gray-900 dark:text-gray-100">Jobs & CronJobs</h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {validJobs.map((job, index) => (
               <div key={index} className={`p-4 rounded-lg border ${
-                job.type === 'cronjob' ? 'bg-purple-50 border-purple-200' : 'bg-orange-50 border-orange-200'
+                job.type === 'cronjob' ? 'bg-purple-50 dark:bg-purple-900 border-purple-200 dark:border-purple-700 text-purple-800 dark:text-purple-100' : 'bg-orange-50 dark:bg-orange-900 border-orange-200 dark:border-orange-700 text-orange-800 dark:text-orange-100'
               }`}>
                 <div className="flex items-center space-x-2 mb-2">
                   {job.type === 'cronjob' ? (
-                    <Clock className="w-5 h-5 text-purple-600" />
+                    <Clock className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                   ) : (
-                    <Play className="w-5 h-5 text-orange-600" />
+                    <Play className="w-5 h-5 text-orange-600 dark:text-orange-400" />
                   )}
                   <span className={`font-medium ${
-                    job.type === 'cronjob' ? 'text-purple-900' : 'text-orange-900'
+                    job.type === 'cronjob' ? 'text-purple-900 dark:text-purple-100' : 'text-orange-900 dark:text-orange-100'
                   }`}>{job.name}</span>
                 </div>
                 <div className={`text-sm space-y-1 ${
-                  job.type === 'cronjob' ? 'text-purple-700' : 'text-orange-700'
+                  job.type === 'cronjob' ? 'text-purple-700 dark:text-purple-300' : 'text-orange-700 dark:text-orange-300'
                 }`}>
                   <div>Type: {job.type === 'cronjob' ? 'CronJob' : 'Job'}</div>
                   <div>Namespace: {job.namespace}</div>
@@ -306,15 +306,15 @@ export function ResourceSummary({
       {/* Roles Summary */}
       {validRoles.length > 0 && (
         <div className="space-y-4">
-          <h4 className="font-medium text-gray-900">Roles</h4>
+          <h4 className="font-medium text-gray-900 dark:text-gray-100">Roles</h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {validRoles.map((role, index) => (
-              <div key={index} className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+              <div key={index} className="bg-purple-50 dark:bg-purple-900 p-4 rounded-lg border border-purple-200 dark:border-purple-700 text-purple-800 dark:text-purple-100">
                 <div className="flex items-center space-x-2 mb-2">
-                  <Key className="w-5 h-5 text-purple-600" />
-                  <span className="font-medium text-purple-900">{role.metadata.name}</span>
+                  <Key className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                  <span className="font-medium text-purple-900 dark:text-purple-100">{role.metadata.name}</span>
                 </div>
-                <div className="text-sm text-purple-700 space-y-1">
+                <div className="text-sm text-purple-700 space-y-1 dark:text-purple-300">
                   <div>Namespace: {role.metadata.namespace}</div>
                   <div>Rules: {role.rules?.length || 0}</div>
                   <div>API Groups: {Array.from(new Set(role.rules?.flatMap(r => r.apiGroups || []).map(g => g || 'core') || [])).length}</div>
@@ -330,15 +330,15 @@ export function ResourceSummary({
       {/* ClusterRoles Summary */}
       {validClusterRoles.length > 0 && (
         <div className="space-y-4">
-          <h4 className="font-medium text-gray-900">ClusterRoles</h4>
+          <h4 className="font-medium text-gray-900 dark:text-gray-100">ClusterRoles</h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {validClusterRoles.map((clusterRole, index) => (
-              <div key={index} className="bg-teal-50 p-4 rounded-lg border border-teal-200">
+              <div key={index} className="bg-teal-50 dark:bg-teal-900 p-4 rounded-lg border border-teal-200 dark:border-teal-700 text-teal-800 dark:text-teal-100">
                 <div className="flex items-center space-x-2 mb-2">
-                  <Key className="w-5 h-5 text-teal-600" />
-                  <span className="font-medium text-teal-900">{clusterRole.metadata.name}</span>
+                  <Key className="w-5 h-5 text-teal-600 dark:text-teal-400" />
+                  <span className="font-medium text-teal-900 dark:text-teal-100">{clusterRole.metadata.name}</span>
                 </div>
-                <div className="text-sm text-teal-700 space-y-1">
+                <div className="text-sm text-teal-700 space-y-1 dark:text-teal-300">
                   <div>Scope: Cluster-wide</div>
                   <div>Rules: {clusterRole.rules?.length || 0}</div>
                   <div>API Groups: {Array.from(new Set(clusterRole.rules?.flatMap(r => r.apiGroups || []).map(g => g || 'core') || [])).length}</div>
@@ -354,15 +354,15 @@ export function ResourceSummary({
       {/* Deployments Summary */}
       {validDeployments.length > 0 && (
         <div className="space-y-4">
-          <h4 className="font-medium text-gray-900">Deployments</h4>
+          <h4 className="font-medium text-gray-900 dark:text-gray-100">Deployments</h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {validDeployments.map((deployment, index) => (
-              <div key={index} className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+              <div key={index} className="bg-blue-50 dark:bg-blue-900 p-4 rounded-lg border border-blue-200 dark:border-blue-700 text-blue-800 dark:text-blue-100">
                 <div className="flex items-center space-x-2 mb-2">
-                  <Server className="w-5 h-5 text-blue-600" />
-                  <span className="font-medium text-blue-900">{deployment.appName}</span>
+                  <Server className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                  <span className="font-medium text-blue-900 dark:text-blue-100">{deployment.appName}</span>
                 </div>
-                <div className="text-sm text-blue-700 space-y-1">
+                <div className="text-sm text-blue-700 space-y-1 dark:text-blue-300">
                   <div>Namespace: {deployment.namespace}</div>
                   <div>Replicas: {deployment.replicas}</div>
                   <div>Containers: {deployment.containers?.length || 0}</div>
@@ -380,15 +380,15 @@ export function ResourceSummary({
       {/* DaemonSets Summary */}
       {validDaemonSets.length > 0 && (
         <div className="space-y-4">
-          <h4 className="font-medium text-gray-900">DaemonSets</h4>
+          <h4 className="font-medium text-gray-900 dark:text-gray-100">DaemonSets</h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {validDaemonSets.map((daemonSet, index) => (
-              <div key={index} className="bg-indigo-50 p-4 rounded-lg border border-indigo-200">
+              <div key={index} className="bg-indigo-50 dark:bg-indigo-900 p-4 rounded-lg border border-indigo-200 dark:border-indigo-700 text-indigo-800 dark:text-indigo-100">
                 <div className="flex items-center space-x-2 mb-2">
-                  <Server className="w-5 h-5 text-indigo-600" />
-                  <span className="font-medium text-indigo-900">{daemonSet.appName}</span>
+                  <Server className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                  <span className="font-medium text-indigo-900 dark:text-indigo-100">{daemonSet.appName}</span>
                 </div>
-                <div className="text-sm text-indigo-700 space-y-1">
+                <div className="text-sm text-indigo-700 space-y-1 dark:text-indigo-300">
                   <div>Namespace: {daemonSet.namespace}</div>
                   <div>Containers: {daemonSet.containers?.length || 0}</div>
                   <div>Port: {daemonSet.port} → {daemonSet.targetPort}</div>
@@ -403,15 +403,15 @@ export function ResourceSummary({
       {/* ConfigMaps Summary */}
       {configMaps.length > 0 && (
         <div className="space-y-4">
-          <h4 className="font-medium text-gray-900">ConfigMaps</h4>
+          <h4 className="font-medium text-gray-900 dark:text-gray-100">ConfigMaps</h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {configMaps.map((configMap, index) => (
-              <div key={index} className="bg-green-50 p-4 rounded-lg border border-green-200">
+              <div key={index} className="bg-green-50 dark:bg-green-900 p-4 rounded-lg border border-green-200 dark:border-green-700 text-green-800 dark:text-green-100">
                 <div className="flex items-center space-x-2 mb-2">
-                  <Settings className="w-5 h-5 text-green-600" />
-                  <span className="font-medium text-green-900">{configMap.name}</span>
+                  <Settings className="w-5 h-5 text-green-600 dark:text-green-400" />
+                  <span className="font-medium text-green-900 dark:text-green-100">{configMap.name}</span>
                 </div>
-                <div className="text-sm text-green-700 space-y-1">
+                <div className="text-sm text-green-700 space-y-1 dark:text-green-300">
                   <div>Namespace: {configMap.namespace}</div>
                   <div>Data Keys: {Object.keys(configMap.data).length}</div>
                 </div>
@@ -424,15 +424,15 @@ export function ResourceSummary({
       {/* Secrets Summary */}
       {secrets.length > 0 && (
         <div className="space-y-4">
-          <h4 className="font-medium text-gray-900">Secrets</h4>
+          <h4 className="font-medium text-gray-900 dark:text-gray-100">Secrets</h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {secrets.map((secret, index) => (
-              <div key={index} className="bg-red-50 p-4 rounded-lg border border-red-200">
+              <div key={index} className="bg-red-50 dark:bg-red-900 p-4 rounded-lg border border-red-200 dark:border-red-700 text-red-800 dark:text-red-100">
                 <div className="flex items-center space-x-2 mb-2">
-                  <Key className="w-5 h-5 text-red-600" />
-                  <span className="font-medium text-red-900">{secret.name}</span>
+                  <Key className="w-5 h-5 text-red-600 dark:text-red-400" />
+                  <span className="font-medium text-red-900 dark:text-red-100">{secret.name}</span>
                 </div>
-                <div className="text-sm text-red-700 space-y-1">
+                <div className="text-sm text-red-700 space-y-1 dark:text-red-300">
                   <div>Namespace: {secret.namespace}</div>
                   <div>Data Keys: {Object.keys(secret.data).length}</div>
                   <div>Type: {secret.type}</div>
@@ -444,12 +444,12 @@ export function ResourceSummary({
       )}
 
       {/* Total Resources */}
-      <div className="bg-indigo-50 p-4 rounded-lg border border-indigo-200">
+      <div className="bg-indigo-50 dark:bg-indigo-900 p-4 rounded-lg border border-indigo-200 dark:border-indigo-700 text-indigo-800 dark:text-indigo-100">
         <div className="flex items-center justify-between">
-          <span className="font-medium text-indigo-900">Total Kubernetes Resources</span>
-          <span className="text-2xl font-bold text-indigo-600">{totalResources}</span>
+          <span className="font-medium text-indigo-900 dark:text-indigo-100">Total Kubernetes Resources</span>
+          <span className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">{totalResources}</span>
         </div>
-        <div className="text-sm text-indigo-700 mt-1">
+        <div className="text-sm text-indigo-700 mt-1 dark:text-indigo-300">
           Resources that will be created in your cluster
         </div>
       </div>

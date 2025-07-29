@@ -803,7 +803,7 @@ export function DeploymentForm({ config, onChange, availableNamespaces, availabl
       {/* Secrets Selection */}
       {filteredSecrets.length > 0 && (
         <div className="space-y-4 sm:space-y-6">
-          <div className="flex items-center space-x-2 text-base sm:text-lg font-semibold text-gray-900">
+          <div className="flex items-center space-x-2 text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100">
             <Key className="w-4 sm:w-5 h-4 sm:h-5 text-orange-600" />
             <span>Secrets</span>
           </div>

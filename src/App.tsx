@@ -1344,7 +1344,7 @@ function App() {
               <span>Project Settings</span>
             </button>
             {Object.keys(projectSettings.globalLabels).length > 0 && (
-              <div className="mt-2 text-xs text-gray-600 text-center">
+              <div className="mt-2 text-xs text-gray-600 dark:text-gray-400 text-center">
                 {Object.keys(projectSettings.globalLabels).length} global label{Object.keys(projectSettings.globalLabels).length !== 1 ? 's' : ''} active
               </div>
             )}

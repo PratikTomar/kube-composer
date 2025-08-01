@@ -389,16 +389,16 @@ export function SecretManager({
               
               {/* Validation Errors Summary */}
               {errors.length > 0 && (
-                <div className="bg-red-50 border border-red-200 rounded-xl p-4 space-y-2">
+                <div className="bg-red-50 border border-red-200 rounded-xl p-4 space-y-2 dark:bg-red-700 dark:border-red-800 dark:text-red-100">
                   <div className="flex items-center space-x-2">
-                    <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0" />
-                    <span className="text-sm font-semibold text-red-800">
+                    <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-100 flex-shrink-0" />
+                    <span className="text-sm font-semibold text-red-800 dark:text-red-100">
                       Please fix the following {errors.length} error{errors.length > 1 ? 's' : ''}:
                     </span>
                   </div>
                   <ul className="list-disc list-inside space-y-1 ml-6">
                     {errors.map((error, index) => (
-                      <li key={index} className="text-sm text-red-700">{error}</li>
+                      <li key={index} className="text-sm text-red-700 dark:text-red-100">{error}</li>
                     ))}
                   </ul>
                 </div>
@@ -427,7 +427,7 @@ export function SecretManager({
                 {errors.length > 0 && (
                   <div className="mt-2 space-y-1">
                     {errors.map((error, index) => (
-                      <div key={index} className="flex items-center space-x-2 text-sm text-red-600 bg-red-50 px-2 py-1 rounded-md">
+                      <div key={index} className="flex items-center space-x-2 text-sm text-red-600 bg-red-50 px-2 py-1 rounded-md dark:bg-red-700 dark:border-red-800 dark:text-red-100">
                         <AlertTriangle className="w-4 h-4 flex-shrink-0" />
                         <span>{error}</span>
                       </div>

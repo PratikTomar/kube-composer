@@ -1955,12 +1955,12 @@ function App() {
                               <div
                                 key={i}
                                 onClick={() => setSelectedRoleBindingIndex(i)}
-                                className={`p-2 border rounded-lg cursor-pointer transition-all duration-200 hover:shadow-md hover:bg-blue-50 focus-within:ring-2 focus-within:ring-blue-200 outline-none group
+                                className={`p-2 border rounded-lg cursor-pointer transition-all duration-200 hover:shadow-md  hover:bg-blue-50 focus-within:ring-2 focus-within:ring-blue-200 outline-none group 
                                   ${isSelected
                                     ? rb.isClusterRoleBinding
-                                      ? 'border-blue-500 bg-blue-50 shadow-md'
-                                      : 'border-purple-500 bg-purple-50 shadow-md'
-                                    : 'border-gray-200 bg-white hover:border-blue-300'}
+                                      ? 'border-blue-500 bg-blue-50 shadow-md dark:border-blue-600 dark:bg-blue-600 dark:shadow-blue-600'
+                                      : 'border-purple-500 bg-purple-50 shadow-md dark:border-purple-600 dark:bg-purple-600 dark:shadow-purple-600'
+                                    : 'border-gray-200 bg-white hover:border-blue-300 dark:border-gray-600 dark:bg-gray-700 dark:hover:border-blue-300 dark:hover:bg-gray-600'}
                                 `}
                                 tabIndex={0}
                                 aria-label={`RoleBinding ${rb.name || '(no name)'}`}
@@ -1968,19 +1968,19 @@ function App() {
                                 <div className="flex items-center space-x-2 min-w-0 flex-1 mb-1 justify-between">
                                   <div className="flex items-center space-x-2 min-w-0">
                                     <div className="flex-shrink-0">
-                                      <div className={`w-7 h-7 rounded-full flex items-center justify-center border ${rb.isClusterRoleBinding ? 'bg-blue-100 border-blue-300' : 'bg-purple-100 border-purple-300'}`}>
+                                      <div className={`w-7 h-7 rounded-full flex items-center justify-center border ${rb.isClusterRoleBinding ? 'bg-blue-100 border-blue-300 dark:border-blue-600 dark:bg-blue-600 dark:shadow-blue-600' : 'bg-purple-100 border-purple-300 dark:border-purple-600 dark:bg-purple-600 dark:shadow-purple-600'}`}>
                                         {rb.isClusterRoleBinding ? (
-                                          <Key className="w-4 h-4 text-blue-600" />
+                                          <Key className="w-4 h-4 text-blue-600 dark:text-blue-300" />
                                         ) : (
-                                          <Key className="w-4 h-4 text-purple-600" />
+                                          <Key className="w-4 h-4 text-purple-600 dark:text-purple-300" />
                                         )}
                                       </div>
                                     </div>
                                     <h4
-                                      className="text-base font-bold text-gray-900 truncate group-hover:text-blue-700"
+                                      className="text-base font-bold text-gray-900 truncate group-hover:text-blue-700 dark:text-gray-100 dark:group-hover:text-blue-400"
                                       title={rb.name || '(no name)'}
                                     >
-                                      {rb.name || <span className="italic text-gray-400">(no name)</span>}
+                                      {rb.name || <span className="italic text-gray-400 dark:text-gray-300">(no name)</span>}
                                     </h4>
                                   </div>
                                   <div className="flex items-center space-x-1 flex-shrink-0 ml-2">
@@ -1988,13 +1988,13 @@ function App() {
                                       <div className="flex items-center space-x-1" onClick={e => e.stopPropagation()}>
                                         <button
                                           onClick={e => { e.stopPropagation(); setDeleteRoleBindingConfirm(null); }}
-                                          className="px-1.5 py-0.5 text-[10px] bg-gray-100 text-gray-600 rounded hover:bg-gray-200 transition-colors duration-200"
+                                          className="px-1.5 py-0.5 text-[10px] bg-gray-100 text-gray-600 rounded hover:bg-gray-200 transition-colors duration-200 dark:bg-gray-600 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-gray-300"
                                         >
                                           Cancel
                                         </button>
                                         <button
                                           onClick={e => { e.stopPropagation(); handleDeleteRoleBinding(i); setDeleteRoleBindingConfirm(null); }}
-                                          className="px-1.5 py-0.5 text-[10px] bg-red-600 text-white rounded hover:bg-red-700 transition-colors duration-200 flex items-center space-x-1"
+                                          className="px-1.5 py-0.5 text-[10px] bg-red-600 text-white rounded hover:bg-red-700 transition-colors duration-200 flex items-center space-x-1 dark:bg-red-700 dark:hover:bg-red-800"
                                         >
                                           <AlertTriangle className="w-3 h-3" />
                                           <span>Delete</span>
@@ -2004,7 +2004,7 @@ function App() {
                                       <>
                                         <button
                                           onClick={e => { e.stopPropagation(); handleEditRoleBinding(i); }}
-                                          className="p-1 text-gray-400 hover:text-blue-600 rounded transition-colors duration-200"
+                                          className="p-1 text-gray-400 hover:text-blue-600 rounded transition-colors duration-200 dark:text-gray-300 dark:hover:text-blue-400"
                                           title="Edit RoleBinding"
                                           aria-label="Edit RoleBinding"
                                         >
@@ -2012,7 +2012,7 @@ function App() {
                                         </button>
                                         <button
                                           onClick={e => { e.stopPropagation(); handleDuplicateRoleBinding(i); }}
-                                          className="p-1 text-gray-400 hover:text-green-600 rounded transition-colors duration-200"
+                                          className="p-1 text-gray-400 hover:text-green-600 rounded transition-colors duration-200 dark:text-gray-300 dark:hover:text-green-400"
                                           title="Duplicate RoleBinding"
                                           aria-label="Duplicate RoleBinding"
                                         >
@@ -2020,7 +2020,7 @@ function App() {
                                         </button>
                                         <button
                                           onClick={e => { e.stopPropagation(); setDeleteRoleBindingConfirm(i); }}
-                                          className="p-1 text-gray-400 hover:text-red-600 rounded transition-colors duration-200"
+                                          className="p-1 text-gray-400 hover:text-red-600 rounded transition-colors duration-200 dark:text-gray-300 dark:hover:text-red-400"
                                           title="Delete RoleBinding"
                                           aria-label="Delete RoleBinding"
                                         >
@@ -2031,14 +2031,14 @@ function App() {
                                   </div>
                                 </div>
                                 <div className="pl-9">
-                                  <div className="flex items-center space-x-1 text-[11px] text-gray-500 font-medium mb-0.5">
+                                  <div className="flex items-center space-x-1 text-[11px] text-gray-500 dark:text-gray-300 font-medium mb-0.5">
                                     <span>{rb.isClusterRoleBinding ? 'ClusterRoleBinding' : 'RoleBinding'}</span>
                                     <span>•</span>
                                     <span>{rb.subjects.length} subj</span>
                                   </div>
-                                  <div className="flex items-center space-x-1 text-[11px] text-gray-600 mb-0.5">
+                                  <div className="flex items-center space-x-1 text-[11px] text-gray-600 dark:text-gray-300 mb-0.5">
                                     <span className="truncate" title={`Role: ${rb.roleRef.name} (${rb.roleRef.kind})`}>
-                                      <span className="font-semibold">Role:</span> {rb.roleRef.name} <span className="text-gray-400">({rb.roleRef.kind})</span>
+                                      <span className="font-semibold">Role:</span> {rb.roleRef.name} <span className="text-gray-400 dark:text-gray-300">({rb.roleRef.kind})</span>
                                     </span>
                                     {!rb.isClusterRoleBinding && rb.namespace && <>
                                       <span>•</span>
@@ -2047,16 +2047,16 @@ function App() {
                                   </div>
                                   <div className="flex items-center space-x-1">
                                     {!rb.isClusterRoleBinding && (
-                                      <span className="px-1.5 py-0.5 bg-purple-100 text-purple-800 rounded text-[10px] font-semibold tracking-wide border border-purple-200">{rb.namespace}</span>
+                                      <span className="px-1.5 py-0.5 bg-purple-100 text-purple-800 rounded text-[10px] font-semibold tracking-wide border border-purple-200 dark:bg-purple-600 dark:text-purple-100 ">{rb.namespace}</span>
                                     )}
                                     {rb.isClusterRoleBinding && (
-                                      <span className="px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded text-[10px] font-semibold tracking-wide border border-blue-200">cluster-wide</span>
+                                      <span className="px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded text-[10px] font-semibold tracking-wide border border-blue-200 dark:bg-blue-600 dark:text-blue-100">cluster-wide</span>
                                     )}
                                   </div>
                                 </div>
                                 {/* Delete confirmation warning */}
                                 {deleteRoleBindingConfirm === i && (
-                                  <div className="mt-1 p-1 bg-red-50 border border-red-200 rounded text-[10px] text-red-700">
+                                  <div className="mt-1 p-1 bg-red-50 border border-red-200 rounded text-[10px] text-red-700 dark:bg-red-600 dark:text-red-100">
                                     <div className="flex items-center space-x-1 mb-1">
                                       <AlertTriangle className="w-3 h-3" />
                                       <span className="font-medium">Are you sure?</span>
@@ -2226,7 +2226,7 @@ function App() {
               <button
                 type="button"
                 onClick={() => setShowForm(false)}
-                className="px-6 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                className="px-6 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 dark:bg-gray-700 dark:hover:bg-gray-500"
               >
                 Cancel
               </button>

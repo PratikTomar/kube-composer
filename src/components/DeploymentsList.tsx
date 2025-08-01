@@ -110,7 +110,7 @@ export function DeploymentsList({
                   <div className="flex items-center space-x-1">
                     <button
                       onClick={handleCancelDelete}
-                      className="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded hover:bg-gray-200 transition-colors duration-200 dark:bg-gray-700 dark:text-gray-300"
+                      className="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded hover:bg-gray-200 transition-colors duration-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-gray-200"
                     >
                       Cancel
                     </button>
@@ -157,7 +157,7 @@ export function DeploymentsList({
             
             {/* Delete confirmation warning */}
             {deleteConfirm === index && (
-              <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-700 dark:bg-red-50 dark:border-red-200 dark:text-red-700">
+              <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-700 dark:bg-red-700 dark:border-red-800 dark:text-red-200">
                 <div className="flex items-center space-x-1 mb-1">
                   <AlertTriangle className="w-3 h-3" />
                   <span className="font-medium">Are you sure?</span>

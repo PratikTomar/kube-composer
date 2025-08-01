@@ -218,13 +218,13 @@ export function NamespaceManager({
                 {Object.entries(newNamespace.labels).length > 0 && (
                   <div className="space-y-1">
                     {Object.entries(newNamespace.labels).map(([key, value]) => (
-                      <div key={key} className="flex items-center justify-between bg-gray-50 px-3 py-2 rounded-lg">
+                      <div key={key} className="flex items-center justify-between bg-gray-50 px-3 py-2 rounded-lg dark:bg-gray-700">
                         <span className="text-sm text-gray-900 dark:text-white">
                           <span className="font-medium">{key}</span>: {value}
                         </span>
                         <button
                           onClick={() => removeLabel(key)}
-                          className="text-gray-400 hover:text-red-600"
+                          className="text-gray-400 hover:text-red-600 dark:text-gray-300 dark:hover:text-red-400"
                         >
                           <X className="w-4 h-4" />
                         </button>
@@ -274,7 +274,7 @@ export function NamespaceManager({
                         </span>
                         <button
                           onClick={() => removeAnnotation(key)}
-                          className="text-gray-400 hover:text-red-600"
+                          className="text-gray-400 hover:text-red-600 dark:text-gray-300 dark:hover:text-red-400"
                         >
                           <X className="w-4 h-4" />
                         </button>
@@ -378,7 +378,7 @@ export function NamespaceManager({
 
                     {/* Delete confirmation warning */}
                     {deleteConfirm === namespace.name && (
-                      <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-700">
+                      <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-700 dark:bg-red-700 dark:border-red-800 dark:text-red-200">
                         <div className="flex items-center space-x-1 mb-1">
                           <AlertTriangle className="w-3 h-3" />
                           <span className="font-medium">Confirm deletion</span>

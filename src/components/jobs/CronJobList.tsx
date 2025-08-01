@@ -40,15 +40,15 @@ export const CronJobList: React.FC<CronJobListProps> = ({ cronjobs, onDelete, on
   return (
     <div className="space-y-1 p-4">
       {cronjobs.length === 0 && (
-        <div className="text-center text-gray-400 py-8">No CronJobs found.</div>
+        <div className="text-center text-gray-400 py-8 dark:text-gray-300">No CronJobs found.</div>
       )}
       {cronjobs.map((cronjob, index) => (
         <div
           key={`${cronjob.name}-${cronjob.namespace}-${index}`}
           className={`p-3 rounded-lg border cursor-pointer transition-all duration-200 ${
             selectedIndex === index
-              ? 'bg-yellow-50 border-yellow-200 ring-1 ring-yellow-200'
-              : 'bg-white border-gray-200 hover:bg-gray-50'
+              ? 'bg-yellow-50 border-yellow-200 ring-1 ring-yellow-200 dark:bg-yellow-700 dark:border-yellow-800 dark:ring-yellow-800'
+              : 'bg-white border-gray-200 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700'
           }`}
           onClick={() => onSelect(index)}
         >
@@ -56,13 +56,13 @@ export const CronJobList: React.FC<CronJobListProps> = ({ cronjobs, onDelete, on
             <div className="flex items-center space-x-3 min-w-0 flex-1">
               <Clock className="w-5 h-5 text-yellow-500" />
               <div className="min-w-0 flex-1">
-                <div className="font-medium text-gray-900 truncate">
+                <div className="font-medium text-gray-900 truncate dark:text-gray-100">
                   {cronjob.name || 'Untitled CronJob'}
                 </div>
-                <div className="text-sm text-gray-500 truncate">
+                <div className="text-sm text-gray-500 truncate dark:text-gray-300">
                   {cronjob.jobTemplate.containers?.[0]?.image || 'No image specified'}
                 </div>
-                <div className="text-xs text-gray-400 mt-1">
+                <div className="text-xs text-gray-400 mt-1 dark:text-gray-200">
                   {cronjob.namespace} • {cronjob.schedule}
                 </div>
               </div>
@@ -73,13 +73,13 @@ export const CronJobList: React.FC<CronJobListProps> = ({ cronjobs, onDelete, on
                 <div className="flex items-center space-x-1">
                   <button
                     onClick={handleCancelDelete}
-                    className="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded hover:bg-gray-200 transition-colors duration-200"
+                    className="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded hover:bg-gray-200 transition-colors duration-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-500 dark:hover:text-gray-200"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={(e) => handleConfirmDelete(index, e)}
-                    className="px-2 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 transition-colors duration-200 flex items-center space-x-1"
+                    className="px-2 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 transition-colors duration-200 flex items-center space-x-1 dark:bg-red-700 dark:hover:bg-red-800"
                   >
                     <AlertTriangle className="w-3 h-3" />
                     <span>Delete</span>
@@ -90,7 +90,7 @@ export const CronJobList: React.FC<CronJobListProps> = ({ cronjobs, onDelete, on
                   {onEdit && (
                     <button
                       onClick={(e) => handleEditClick(index, e)}
-                      className="p-1 text-gray-400 hover:text-gray-600 rounded transition-colors duration-200"
+                      className="p-1 text-gray-400 hover:text-gray-600 rounded transition-colors duration-200 dark:text-gray-300 dark:hover:text-gray-400"
                       title="Edit cronjob"
                     >
                       <Settings className="w-4 h-4" />
@@ -102,7 +102,7 @@ export const CronJobList: React.FC<CronJobListProps> = ({ cronjobs, onDelete, on
                         e.stopPropagation();
                         onViewYaml(index);
                       }}
-                      className="p-1 text-gray-400 hover:text-blue-600 rounded transition-colors duration-200"
+                      className="p-1 text-gray-400 hover:text-blue-600 rounded transition-colors duration-200 dark:text-gray-300 dark:hover:text-blue-400"
                       title="View YAML"
                     >
                       <span className="text-xs">YAML</span>
@@ -110,7 +110,7 @@ export const CronJobList: React.FC<CronJobListProps> = ({ cronjobs, onDelete, on
                   )}
                   <button
                     onClick={(e) => handleDeleteClick(index, e)}
-                    className="p-1 text-gray-400 hover:text-red-600 rounded transition-colors duration-200"
+                    className="p-1 text-gray-400 hover:text-red-600 rounded transition-colors duration-200 dark:text-gray-300 dark:hover:text-red-400"
                     title="Delete cronjob"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -121,7 +121,7 @@ export const CronJobList: React.FC<CronJobListProps> = ({ cronjobs, onDelete, on
           </div>
           {/* Delete confirmation warning */}
           {deleteConfirm === index && (
-            <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-700">
+            <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-700 dark:bg-red-700 dark:text-gray-300 dark:border-red-800">
               <div className="flex items-center space-x-1 mb-1">
                 <AlertTriangle className="w-3 h-3" />
                 <span className="font-medium">Are you sure?</span>

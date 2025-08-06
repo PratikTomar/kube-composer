@@ -302,3 +302,8 @@ export interface RoleBinding {
   };
   subjects: Subject[];
 }
+
+export type ThemeContextProps = {
+    isDarkModeEnabled: boolean;
+    toggleDarkModeHandler: () => void;
+}

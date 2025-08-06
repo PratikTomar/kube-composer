@@ -364,22 +364,22 @@ const RoleWizardManager: React.FC<RoleWizardManagerProps> = ({
   const renderStep1 = () => (
     <div className="mb-4">
       <div className="mb-3">
-        <h4 className="text-lg font-semibold text-gray-900 mb-1">Step 1: Basic Configuration</h4>
-        <p className="text-sm text-gray-600">
+        <h4 className="text-lg font-semibold text-gray-900 mb-1 dark:text-white">Step 1: Basic Configuration</h4>
+        <p className="text-sm text-gray-600 dark:text-gray-400">
           Choose the role type and provide a unique name for your {isClusterRoleMode ? 'ClusterRole' : 'Role'}.
         </p>
       </div>
       
       <div className="space-y-3">
-        <div className="bg-white rounded-lg border border-gray-200 p-3 shadow-sm">
-          <label className="block text-sm font-medium text-gray-900 mb-2">
+        <div className="bg-white rounded-lg border border-gray-200 p-3 shadow-sm dark:bg-gray-800 dark:border-gray-700">
+          <label className="block text-sm font-medium text-gray-900 mb-2 dark:text-white">
             Role Type
-            <span className="ml-2 text-gray-500 cursor-pointer" title="Role is namespace-scoped. ClusterRole is cluster-wide.">
+            <span className="ml-2 text-gray-500 cursor-pointer dark:text-gray-400" title="Role is namespace-scoped. ClusterRole is cluster-wide.">
               <Info className="inline w-4 h-4" />
             </span>
           </label>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <label className="relative flex items-center p-2 border border-gray-200 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-all duration-200">
+            <label className="relative flex items-center p-2 border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:hover:bg-blue-600 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-all duration-200">
               <input
                 type="radio"
                 className="sr-only"
@@ -390,11 +390,11 @@ const RoleWizardManager: React.FC<RoleWizardManagerProps> = ({
                 {!isClusterRoleMode && <div className="w-2 h-2 bg-white rounded-full m-0.5"></div>}
               </div>
               <div>
-                <div className="font-medium text-gray-900 text-sm">Role</div>
-                <div className="text-xs text-gray-600">Namespace-scoped permissions</div>
+                <div className="font-medium text-gray-900 text-sm dark:text-white">Role</div>
+                <div className="text-xs text-gray-600 dark:text-gray-400">Namespace-scoped permissions</div>
               </div>
             </label>
-            <label className="relative flex items-center p-2 border border-gray-200 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-all duration-200">
+            <label className="relative flex items-center p-2 border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:hover:bg-blue-600 rounded-lg cursor-pointer hover:border-blue-400">
               <input
                 type="radio"
                 className="sr-only"
@@ -405,22 +405,22 @@ const RoleWizardManager: React.FC<RoleWizardManagerProps> = ({
                 {isClusterRoleMode && <div className="w-2 h-2 bg-white rounded-full m-0.5"></div>}
               </div>
               <div>
-                <div className="font-medium text-gray-900 text-sm">ClusterRole</div>
-                <div className="text-xs text-gray-600">Cluster-wide permissions</div>
+                <div className="font-medium text-gray-900 text-sm dark:text-white">ClusterRole</div>
+                <div className="text-xs text-gray-600 dark:text-gray-400">Cluster-wide permissions</div>
               </div>
             </label>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg border border-gray-200 p-3 shadow-sm">
-          <label className="block text-sm font-medium text-gray-900 mb-2">
+        <div className="bg-white rounded-lg border border-gray-200 p-3 shadow-sm dark:bg-gray-800  dark:border-gray-700">
+          <label className="block text-sm font-medium text-gray-900 mb-2 dark:text-white">
             Role Name <span className="text-red-500">*</span>
-            <span className="ml-2 text-gray-500 cursor-pointer" title="Must be a valid DNS-1123 subdomain (lowercase, numbers, '-', '.')">
+            <span className="ml-2 text-gray-500 cursor-pointer dark:text-gray-400" title="Must be a valid DNS-1123 subdomain (lowercase, numbers, '-', '.')">
               <Info className="inline w-4 h-4" />
             </span>
           </label>
           <input
-            className={`w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm bg-white text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ${errors.name ? 'border-red-500 focus:border-red-500 focus:ring-red-200' : ''}`}
+            className={`w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm dark:bg-gray-800 dark:border-gray-700 dark:text-white text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ${errors.name ? 'border-red-500 focus:border-red-500 focus:ring-red-200' : ''}`}
             value={roleData.metadata.name}
             onChange={e => handleBasicChange('name', e.target.value)}
             onBlur={() => {
@@ -464,7 +464,7 @@ const RoleWizardManager: React.FC<RoleWizardManagerProps> = ({
             aria-label="Role name"
           />
           {errors.name && (
-            <div className="text-red-500 text-xs mt-1 flex items-center bg-red-50 border border-red-200 rounded p-1">
+            <div className="text-red-500 text-xs mt-2  flex items-center bg-red-50 border border-red-200 rounded p-1">
               <Info className="w-3 h-3 mr-1" />
               {errors.name}
             </div>
@@ -472,15 +472,15 @@ const RoleWizardManager: React.FC<RoleWizardManagerProps> = ({
         </div>
 
         {!isClusterRoleMode && (
-          <div className="bg-white rounded-lg border border-gray-200 p-3 shadow-sm">
-            <label className="block text-sm font-medium text-gray-900 mb-2">
+          <div className="bg-white rounded-lg border border-gray-200 p-3 shadow-sm dark:bg-gray-800 dark:border-gray-700">
+            <label className="block text-sm font-medium text-gray-900 mb-2 dark:text-white">
               Namespace <span className="text-red-500">*</span>
-              <span className="ml-2 text-gray-500 cursor-pointer" title="The namespace where this role will be created">
+              <span className="ml-2 text-gray-500 cursor-pointer dark:text-gray-400" title="The namespace where this role will be created">
                 <Info className="inline w-4 h-4" />
               </span>
             </label>
             <select
-              className={`w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm bg-white text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ${errors.namespace ? 'border-red-500 focus:border-red-500 focus:ring-red-200' : ''}`}
+              className={`w-full px-3 py-2 border border-gray-300 rounded-lg dark:bg-gray-800 dark:border-gray-700 dark:text-white text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ${errors.namespace ? 'border-red-500 focus:border-red-500 focus:ring-red-200' : ''}`}
               value={roleData.metadata.namespace || ''}
               onChange={e => handleBasicChange('namespace', e.target.value)}
               onBlur={() => {
@@ -502,7 +502,7 @@ const RoleWizardManager: React.FC<RoleWizardManagerProps> = ({
               ))}
             </select>
             {errors.namespace && (
-              <div className="text-red-500 text-xs mt-1 flex items-center bg-red-50 border border-red-200 rounded p-1">
+              <div className="text-red-500 text-xs mt-1 flex items-center  bg-red-50 border border-red-200 rounded p-1">
                 <Info className="w-3 h-3 mr-1" />
                 {errors.namespace}
               </div>
@@ -510,18 +510,18 @@ const RoleWizardManager: React.FC<RoleWizardManagerProps> = ({
           </div>
         )}
 
-        <div className="bg-white rounded-lg border border-gray-200 p-3 shadow-sm">
-          <label className="block text-sm font-medium text-gray-900 mb-2">
+        <div className="bg-white rounded-lg border border-gray-200 p-3 shadow-sm dark:bg-gray-800 dark:border-gray-700">
+          <label className="block text-sm font-medium text-gray-900 mb-2 dark:text-white">
             Labels
-            <span className="ml-2 text-gray-500 cursor-pointer" title="Optional key-value pairs for organizing and selecting resources">
+            <span className="ml-2 text-gray-500 cursor-pointer dark:text-gray-400" title="Optional key-value pairs for organizing and selecting resources">
               <Info className="inline w-4 h-4" />
             </span>
           </label>
           <div className="space-y-2">
             {Object.entries(roleData.metadata.labels).map(([key, value]) => (
-              <div key={key} className="flex items-center space-x-2 bg-gray-50 rounded p-2 border border-gray-200">
-                <span className="text-xs text-gray-600">{key}:</span>
-                <span className="text-xs text-gray-800">{value}</span>
+              <div key={key} className="flex items-center space-x-2 bg-gray-50 dark:bg-gray-700 rounded p-2 border border-gray-200 dark:border-gray-600">
+                <span className="text-xs text-gray-600 dark:text-gray-400">{key}:</span>
+                <span className="text-xs text-gray-800 dark:text-white">{value}</span>
                 <button
                   type="button"
                   onClick={() => removeLabel(key)}
@@ -533,13 +533,13 @@ const RoleWizardManager: React.FC<RoleWizardManagerProps> = ({
             ))}
             <div className="flex space-x-2">
               <input
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg shadow-sm bg-white text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                className="flex-1 px-3 py-2 dark:bg-gray-800 dark:border-gray-700 dark:text-white border border-gray-300 rounded-lg shadow-sm bg-white text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                 placeholder="Label key"
                 value={newLabel.key}
                 onChange={e => setNewLabel(prev => ({ ...prev, key: e.target.value }))}
               />
               <input
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg shadow-sm bg-white text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                className="flex-1 px-3 py-2 dark:bg-gray-800 dark:border-gray-700 dark:text-white border border-gray-300 rounded-lg shadow-sm bg-white text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                 placeholder="Label value"
                 value={newLabel.value}
                 onChange={e => setNewLabel(prev => ({ ...prev, value: e.target.value }))}
@@ -564,8 +564,8 @@ const RoleWizardManager: React.FC<RoleWizardManagerProps> = ({
       <div className="mb-3">
         <div className="flex justify-between items-center">
           <div>
-            <h4 className="text-lg font-semibold text-gray-900 mb-1">Step 2: Permissions</h4>
-            <p className="text-sm text-gray-600">Define the permissions for your {isClusterRoleMode ? 'ClusterRole' : 'Role'}.</p>
+            <h4 className="text-lg font-semibold text-gray-900 mb-1 dark:text-white">Step 2: Permissions</h4>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Define the permissions for your {isClusterRoleMode ? 'ClusterRole' : 'Role'}.</p>
           </div>
           <button
             type="button"
@@ -582,17 +582,17 @@ const RoleWizardManager: React.FC<RoleWizardManagerProps> = ({
       
       {/* Templates Dropdown */}
       {showStepTemplates && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
-          <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full max-h-[85vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4 dark:bg-opacity-80">
+          <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full max-h-[85vh] overflow-y-auto dark:bg-gray-900 dark:border-gray-700">
             <div className="p-3">
               <div className="flex items-center justify-between mb-3">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900">Role Templates</h3>
-                  <p className="text-sm text-gray-600 mt-1">Choose a template to quickly add common permissions</p>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Role Templates</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Choose a template to quickly add common permissions</p>
                 </div>
                 <button
                   type="button"
-                  className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-gray-100"
+                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-500 transition-colors p-1 rounded-full hover:bg-gray-100"
                   onClick={() => setShowStepTemplates(false)}
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -604,16 +604,16 @@ const RoleWizardManager: React.FC<RoleWizardManagerProps> = ({
               <div className="space-y-2">
                 {/* Pod Reader Template */}
                 <div 
-                  className="border border-gray-200 rounded-lg p-2 cursor-pointer transition-all duration-200 hover:border-blue-300 hover:bg-blue-50 hover:shadow-md"
+                  className="border border-gray-200 rounded-lg p-2 dark:border-gray-700 cursor-pointer transition-all duration-200 hover:border-blue-300 hover:bg-blue-50 hover:shadow-md dark:hover:border-blue-400 dark:hover:bg-blue-600"
                   onClick={() => handleApplyTemplate('pod-reader')}
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center mb-1">
-                        <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
-                        <h5 className="text-sm font-semibold text-gray-900">Pod Reader</h5>
+                        <div className="w-2 h-2 bg-blue-500 rounded-full mr-2 dark:bg-blue-400"></div>
+                        <h5 className="text-sm font-semibold text-gray-900 dark:text-white">Pod Reader</h5>
                       </div>
-                      <p className="text-xs text-gray-600 mb-2">Read-only access to pods</p>
+                      <p className="text-xs text-gray-600 dark:text-gray-300 mb-2">Read-only access to pods</p>
                       <div className="flex flex-wrap gap-1">
                         <span className="inline-block px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full font-medium">read:pods</span>
                       </div>
@@ -628,21 +628,21 @@ const RoleWizardManager: React.FC<RoleWizardManagerProps> = ({
 
                 {/* ConfigMap Manager Template */}
                 <div 
-                  className="border border-gray-200 rounded-lg p-2 cursor-pointer transition-all duration-200 hover:border-green-300 hover:bg-green-50 hover:shadow-md"
+                  className="border border-gray-200 rounded-lg p-2 dark:border-gray-700 cursor-pointer transition-all duration-200 hover:border-green-300 hover:bg-green-50 hover:shadow-md dark:hover:border-green-400 dark:hover:bg-green-600"
                   onClick={() => handleApplyTemplate('configmap-manager')}
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center mb-1">
-                        <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                        <h5 className="text-sm font-semibold text-gray-900">ConfigMap Manager</h5>
+                        <div className="w-2 h-2 bg-green-500 rounded-full mr-2 dark:bg-green-400"></div>
+                        <h5 className="text-sm font-semibold text-gray-900 dark:text-white">ConfigMap Manager</h5>
                       </div>
-                      <p className="text-xs text-gray-600 mb-2">Full access to ConfigMaps</p>
+                      <p className="text-xs text-gray-600 dark:text-gray-300 mb-2">Full access to ConfigMaps</p>
                       <div className="flex flex-wrap gap-1">
-                        <span className="inline-block px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full font-medium">create:configmaps</span>
-                        <span className="inline-block px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full font-medium">read:configmaps</span>
-                        <span className="inline-block px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full font-medium">update:configmaps</span>
-                        <span className="inline-block px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full font-medium">delete:configmaps</span>
+                        <span className="inline-block px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full font-medium dark:bg-green-400">create:configmaps</span>
+                        <span className="inline-block px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full font-medium dark:bg-blue-400">read:configmaps</span>
+                        <span className="inline-block px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full font-medium dark:bg-yellow-400">update:configmaps</span>
+                        <span className="inline-block px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full font-medium dark:bg-red-400">delete:configmaps</span>
                       </div>
                     </div>
                     <div className="ml-2">
@@ -655,18 +655,18 @@ const RoleWizardManager: React.FC<RoleWizardManagerProps> = ({
 
                 {/* Deployment Manager Template */}
                 <div 
-                  className="border border-gray-200 rounded-lg p-2 cursor-pointer transition-all duration-200 hover:border-purple-300 hover:bg-purple-50 hover:shadow-md"
+                  className="border border-gray-200 rounded-lg p-2 dark:border-gray-700 cursor-pointer transition-all duration-200 hover:border-purple-300 hover:bg-purple-50 hover:shadow-md dark:hover:border-purple-400 dark:hover:bg-purple-600"
                   onClick={() => handleApplyTemplate('deployment-manager')}
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center mb-1">
-                        <div className="w-2 h-2 bg-purple-500 rounded-full mr-2"></div>
-                        <h5 className="text-sm font-semibold text-gray-900">Deployment Manager</h5>
+                        <div className="w-2 h-2 bg-purple-500 rounded-full mr-2 dark:bg-purple-400"></div>
+                        <h5 className="text-sm font-semibold text-gray-900 dark:text-white">Deployment Manager</h5>
                       </div>
-                      <p className="text-xs text-gray-600 mb-2">Full access to deployments</p>
+                      <p className="text-xs text-gray-600 dark:text-gray-300 mb-2">Full access to deployments</p>
                       <div className="flex flex-wrap gap-1">
-                        <span className="inline-block px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded-full font-medium">manage:deployments</span>
+                        <span className="inline-block px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded-full font-medium dark:bg-purple-400">manage:deployments</span>
                       </div>
                     </div>
                     <div className="ml-2">
@@ -679,18 +679,18 @@ const RoleWizardManager: React.FC<RoleWizardManagerProps> = ({
 
                 {/* Service Manager Template */}
                 <div 
-                  className="border border-gray-200 rounded-lg p-2 cursor-pointer transition-all duration-200 hover:border-orange-300 hover:bg-orange-50 hover:shadow-md"
+                  className="border border-gray-200 rounded-lg p-2 dark:border-gray-700 cursor-pointer transition-all duration-200 hover:border-orange-300 hover:bg-orange-50 hover:shadow-md dark:hover:border-orange-400 dark:hover:bg-orange-600"
                   onClick={() => handleApplyTemplate('service-manager')}
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center mb-1">
-                        <div className="w-2 h-2 bg-orange-500 rounded-full mr-2"></div>
-                        <h5 className="text-sm font-semibold text-gray-900">Service Manager</h5>
+                        <div className="w-2 h-2 bg-orange-500 rounded-full mr-2 dark:bg-orange-400"></div>
+                        <h5 className="text-sm font-semibold text-gray-900 dark:text-white ">Service Manager</h5>
                       </div>
-                      <p className="text-xs text-gray-600 mb-2">Full access to services</p>
+                      <p className="text-xs text-gray-600 dark:text-gray-300 mb-2">Full access to services</p>
                       <div className="flex flex-wrap gap-1">
-                        <span className="inline-block px-2 py-1 bg-orange-100 text-orange-800 text-xs rounded-full font-medium">manage:services</span>
+                        <span className="inline-block px-2 py-1 bg-orange-100 text-orange-800 text-xs rounded-full font-medium dark:bg-orange-400">manage:services</span>
                       </div>
                     </div>
                     <div className="ml-2">
@@ -703,18 +703,18 @@ const RoleWizardManager: React.FC<RoleWizardManagerProps> = ({
 
                 {/* Namespace Admin Template */}
                 <div 
-                  className="border border-gray-200 rounded-lg p-2 cursor-pointer transition-all duration-200 hover:border-red-300 hover:bg-red-50 hover:shadow-md"
+                  className="border border-gray-200 rounded-lg p-2 dark:border-gray-700 cursor-pointer transition-all duration-200 hover:border-red-300 hover:bg-red-50 hover:shadow-md dark:hover:border-red-400 dark:hover:bg-red-600"
                   onClick={() => handleApplyTemplate('namespace-admin')}
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center mb-1">
-                        <div className="w-2 h-2 bg-red-500 rounded-full mr-2"></div>
-                        <h5 className="text-sm font-semibold text-gray-900">Namespace Admin</h5>
+                        <div className="w-2 h-2 bg-red-500 rounded-full mr-2 dark:bg-red-400"></div>
+                        <h5 className="text-sm font-semibold text-gray-900 dark:text-white">Namespace Admin</h5>
                       </div>
-                      <p className="text-xs text-gray-600 mb-2">Full access to namespace resources</p>
+                      <p className="text-xs text-gray-600 dark:text-gray-300 mb-2">Full access to namespace resources</p>
                       <div className="flex flex-wrap gap-1">
-                        <span className="inline-block px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full font-medium">admin:namespace</span>
+                        <span className="inline-block px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full font-medium dark:bg-red-400">admin:namespace</span>
                       </div>
                     </div>
                     <div className="ml-2">
@@ -726,10 +726,10 @@ const RoleWizardManager: React.FC<RoleWizardManagerProps> = ({
                 </div>
               </div>
               
-              <div className="mt-3 pt-3 border-t border-gray-200">
+              <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
                 <button
                   type="button"
-                  className="w-full px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
+                  className="w-full px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium dark:bg-gray-800 dark:text-gray-300"
                   onClick={() => setShowStepTemplates(false)}
                 >
                   Close
@@ -741,11 +741,11 @@ const RoleWizardManager: React.FC<RoleWizardManagerProps> = ({
       )}
 
       <div className="space-y-3">
-        <div className="bg-white rounded-lg border border-gray-200 p-3 shadow-sm">
+        <div className="bg-white rounded-lg border border-gray-200 p-3 shadow-sm dark:bg-gray-800 dark:border-gray-700">
           <div className="flex items-center justify-between mb-2">
-            <label className="block text-sm font-medium text-gray-900">
+            <label className="block text-sm font-medium text-gray-900 dark:text-white">
               Policy Rules <span className="text-red-500">*</span>
-              <span className="ml-2 text-gray-500 cursor-pointer" title="Define the permissions for this role">
+              <span className="ml-2 text-gray-500 cursor-pointer dark:text-gray-400" title="Define the permissions for this role">
                 <Info className="inline w-4 h-4" />
               </span>
             </label>
@@ -759,41 +759,41 @@ const RoleWizardManager: React.FC<RoleWizardManagerProps> = ({
           </div>
           
           {roleData.rules.length === 0 ? (
-            <div className="text-center py-6 text-gray-500">
+            <div className="text-center py-6 text-gray-500 dark:text-gray-400">
               <div className="text-sm">No rules defined yet. Add your first rule to get started.</div>
             </div>
           ) : (
             <div className="space-y-2">
               {roleData.rules.map((rule, index) => (
-                <div key={index} className="bg-gray-50 rounded-lg border border-gray-200 p-2 relative">
+                <div key={index} className="bg-gray-50 rounded-lg border border-gray-200 p-2 relative dark:bg-gray-700 dark:border-gray-600 dark:hover:border-gray-500 dark:hover:bg-gray-600">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-xs">
                         <div>
-                          <span className="font-medium text-gray-700">API Groups:</span>
+                          <span className="font-medium text-gray-700 dark:text-white">API Groups:</span>
                           <div className="mt-1">
                             {rule.apiGroups.map((group, i) => (
-                              <span key={i} className="inline-block px-2 py-1 bg-blue-100 text-blue-800 rounded mr-1 mb-1">
+                              <span key={i} className="inline-block px-2 py-1 bg-blue-100 text-blue-800 rounded mr-1 mb-1 dark:bg-blue-400">
                                 {group || '(core)'}
                               </span>
                             ))}
                           </div>
                         </div>
                         <div>
-                          <span className="font-medium text-gray-700">Resources:</span>
+                          <span className="font-medium text-gray-700 dark:text-gray-200">Resources:</span>
                           <div className="mt-1">
                             {rule.resources.map((resource, i) => (
-                              <span key={i} className="inline-block px-2 py-1 bg-green-100 text-green-800 rounded mr-1 mb-1">
+                              <span key={i} className="inline-block px-2 py-1 bg-green-100 text-green-800 rounded mr-1 mb-1 dark:bg-green-400">
                                 {resource}
                               </span>
                             ))}
                           </div>
                         </div>
                         <div>
-                          <span className="font-medium text-gray-700">Verbs:</span>
+                          <span className="font-medium text-gray-700 dark:text-gray-200">Verbs:</span>
                           <div className="mt-1">
                             {rule.verbs.map((verb, i) => (
-                              <span key={i} className="inline-block px-2 py-1 bg-purple-100 text-purple-800 rounded mr-1 mb-1">
+                              <span key={i} className="inline-block px-2 py-1 bg-purple-100 text-purple-800 rounded mr-1 mb-1 dark:bg-purple-400">
                                 {verb}
                               </span>
                             ))}
@@ -805,7 +805,7 @@ const RoleWizardManager: React.FC<RoleWizardManagerProps> = ({
                       <button
                         type="button"
                         onClick={() => handleEditRule(index)}
-                        className="p-1 text-blue-600 hover:text-blue-800 transition-colors"
+                        className="p-1 text-blue-600 hover:text-blue-800 transition-colors dark:text-blue-400 dark:hover:text-blue-300"
                         title="Edit rule"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -815,7 +815,7 @@ const RoleWizardManager: React.FC<RoleWizardManagerProps> = ({
                       <button
                         type="button"
                         onClick={() => removeRule(index)}
-                        className="p-1 text-red-600 hover:text-red-800 transition-colors"
+                        className="p-1 text-red-600 hover:text-red-800 transition-colors "
                         title="Remove rule"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -843,19 +843,19 @@ const RoleWizardManager: React.FC<RoleWizardManagerProps> = ({
 
       <div className="space-y-4">
         {/* Configuration Summary */}
-        <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
+        <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm dark:bg-gray-800 dark:border-gray-700">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-base font-semibold text-gray-900">Configuration Summary</h3>
+            <h3 className="text-base font-semibold text-gray-900 dark:text-white">Configuration Summary</h3>
             <div className="flex items-center space-x-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              <span className="text-xs text-green-600 font-medium">Ready to generate</span>
+              <div className="w-2 h-2 bg-green-500 rounded-full dark:bg-green-400"></div>
+              <span className="text-xs text-green-600 font-medium dark:text-green-400">Ready to generate</span>
             </div>
           </div>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {/* Basic Information */}
-            <div className="bg-gray-50 rounded-lg p-3">
-              <h4 className="text-sm font-semibold text-gray-900 mb-2 flex items-center">
+            <div className="bg-gray-50 rounded-lg p-3 dark:bg-gray-700">
+              <h4 className="text-sm font-semibold text-gray-900 mb-2 flex items-center dark:text-white">
                 <svg className="w-4 h-4 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
@@ -863,29 +863,29 @@ const RoleWizardManager: React.FC<RoleWizardManagerProps> = ({
               </h4>
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <span className="text-xs text-gray-600">Name:</span>
-                  <span className="text-sm font-medium text-gray-900">{roleData.metadata.name}</span>
+                  <span className="text-xs text-gray-600 dark:text-gray-400">Name:</span>
+                  <span className="text-sm font-medium text-gray-900 dark:text-white">{roleData.metadata.name}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-xs text-gray-600">Type:</span>
-                  <span className="text-sm font-medium text-gray-900">{isClusterRoleMode ? 'ClusterRole' : 'Role'}</span>
+                  <span className="text-xs text-gray-600 dark:text-gray-400">Type:</span>
+                  <span className="text-sm font-medium text-gray-900 dark:text-white">{isClusterRoleMode ? 'ClusterRole' : 'Role'}</span>
                 </div>
                 {!isClusterRoleMode && (
                   <div className="flex justify-between items-center">
-                    <span className="text-xs text-gray-600">Namespace:</span>
-                    <span className="text-sm font-medium text-gray-900">{roleData.metadata.namespace}</span>
+                    <span className="text-xs text-gray-600 dark:text-gray-400">Namespace:</span>
+                    <span className="text-sm font-medium text-gray-900 dark:text-white">{roleData.metadata.namespace}</span>
                   </div>
                 )}
                 <div className="flex justify-between items-center">
-                  <span className="text-xs text-gray-600">Rules:</span>
-                  <span className="text-sm font-medium text-gray-900">{roleData.rules.length} rule{roleData.rules.length !== 1 ? 's' : ''}</span>
+                  <span className="text-xs text-gray-600 dark:text-gray-400">Rules:</span>
+                  <span className="text-sm font-medium text-gray-900 dark:text-white">{roleData.rules.length} rule{roleData.rules.length !== 1 ? 's' : ''}</span>
                 </div>
               </div>
             </div>
 
             {/* Labels */}
-            <div className="bg-gray-50 rounded-lg p-3">
-              <h4 className="text-sm font-semibold text-gray-900 mb-2 flex items-center">
+            <div className="bg-gray-50 rounded-lg p-3 dark:bg-gray-700">
+              <h4 className="text-sm font-semibold text-gray-900 mb-2 flex items-center dark:text-white">
                 <svg className="w-4 h-4 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                 </svg>
@@ -895,12 +895,12 @@ const RoleWizardManager: React.FC<RoleWizardManagerProps> = ({
                 {Object.keys(roleData.metadata.labels).length > 0 ? (
                   Object.entries(roleData.metadata.labels).map(([k, v]) => (
                     <div key={k} className="flex justify-between items-center">
-                      <span className="text-xs text-gray-600">{k}:</span>
-                      <span className="text-sm font-medium text-gray-900">{v}</span>
+                      <span className="text-xs text-gray-600 dark:text-gray-400">{k}:</span>
+                      <span className="text-sm font-medium text-gray-900 dark:text-white">{v}</span>
                     </div>
                   ))
                 ) : (
-                  <div className="text-xs text-gray-500 italic">No labels defined</div>
+                  <div className="text-xs text-gray-500 italic dark:text-gray-400">No labels defined</div>
                 )}
               </div>
             </div>
@@ -909,8 +909,8 @@ const RoleWizardManager: React.FC<RoleWizardManagerProps> = ({
 
         {/* Rules Summary */}
         {roleData.rules.length > 0 && (
-          <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
-            <h3 className="text-base font-semibold text-gray-900 mb-3 flex items-center">
+          <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm dark:bg-gray-800 dark:border-gray-700">
+            <h3 className="text-base font-semibold text-gray-900 mb-3 flex items-center dark:text-white">
               <svg className="w-4 h-4 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
@@ -918,29 +918,29 @@ const RoleWizardManager: React.FC<RoleWizardManagerProps> = ({
             </h3>
             <div className="space-y-3">
               {roleData.rules.map((rule, index) => (
-                <div key={index} className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                <div key={index} className="bg-gray-50 rounded-lg p-3 border border-gray-200 dark:bg-gray-700 dark:border-gray-600">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-gray-900">Rule {index + 1}</span>
+                    <span className="text-sm font-medium text-gray-900 dark:text-white">Rule {index + 1}</span>
                     <div className="flex space-x-1">
-                      <span className="inline-block px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                      <span className="inline-block px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full dark:bg-blue-900 dark:text-blue-100">
                         {rule.apiGroups.length} API Group{rule.apiGroups.length !== 1 ? 's' : ''}
                       </span>
-                      <span className="inline-block px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
+                      <span className="inline-block px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full dark:bg-green-900 dark:text-green-100">
                         {rule.resources.length} Resource{rule.resources.length !== 1 ? 's' : ''}
                       </span>
-                      <span className="inline-block px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded-full">
+                      <span className="inline-block px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded-full dark:bg-purple-900 dark:text-purple-100">
                         {rule.verbs.length} Verb{rule.verbs.length !== 1 ? 's' : ''}
                       </span>
                     </div>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
                     <div>
-                      <span className="font-medium text-gray-700">API Groups:</span>
+                      <span className="font-medium text-gray-700 dark:text-gray-400">API Groups:</span>
                       <div className="mt-1 flex flex-wrap gap-1">
                         {rule.apiGroups.map((group, i) => {
                           const apiGroup = API_GROUPS.find(g => g.name === group);
                           return (
-                            <span key={i} className="inline-block px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
+                            <span key={i} className="inline-block px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 rounded-full text-xs dark:text-blue-100">
                               {apiGroup ? apiGroup.displayName : (group || '(core)')}
                             </span>
                           );
@@ -948,10 +948,10 @@ const RoleWizardManager: React.FC<RoleWizardManagerProps> = ({
                       </div>
                     </div>
                     <div>
-                      <span className="font-medium text-gray-700">Resources:</span>
+                      <span className="font-medium text-gray-700 dark:text-gray-400">Resources:</span>
                       <div className="mt-1 flex flex-wrap gap-1">
                         {rule.resources.map((resource, i) => (
-                          <span key={i} className="inline-block px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
+                          <span key={i} className="inline-block px-2 py-1 bg-green-100 dark:bg-green-900 text-green-800 rounded-full text-xs dark:text-green-100">
                             {resource}
                           </span>
                         ))}
@@ -975,13 +975,13 @@ const RoleWizardManager: React.FC<RoleWizardManagerProps> = ({
         )}
 
         {/* Generated YAML - Moved to bottom */}
-        <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
+        <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm dark:bg-gray-800 dark:border-gray-700">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center">
               <svg className="w-5 h-5 mr-2 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
               </svg>
-              <label className="text-base font-semibold text-gray-900">Generated YAML</label>
+              <label className="text-base font-semibold text-gray-900 dark:text-white">Generated YAML</label>
             </div>
             <button
               type="button"
@@ -1069,10 +1069,10 @@ const RoleWizardManager: React.FC<RoleWizardManagerProps> = ({
   ];
 
   return (
-    <div className="max-w-2xl mx-auto bg-white rounded-xl shadow-lg p-4 mt-4 mb-6 border border-gray-200">
+    <div className="max-w-2xl mx-auto bg-white rounded-xl shadow-lg p-4 mt-4 mb-6 border border-gray-200 dark:bg-gray-900 dark:border-gray-700">
       {/* Step Indicator with Progress Bar */}
       <div className="flex flex-col items-center mb-4">
-        <div className="w-full max-w-xl bg-gray-50 rounded-lg shadow-sm px-3 py-2 flex items-center justify-between relative z-10 border border-gray-200">
+        <div className="w-full max-w-xl bg-gray-50 dark:bg-gray-800 rounded-lg shadow-sm px-3 py-2 flex items-center justify-between relative z-10 border border-gray-200 dark:border-gray-700">
           {steps.map((s, i) => (
             <div key={i} className="flex-1 flex flex-col items-center relative">
               <div className="relative flex items-center justify-center" style={{ zIndex: 2 }}>
@@ -1265,15 +1265,15 @@ const RoleWizardManager: React.FC<RoleWizardManagerProps> = ({
                 {/* Step 4: Review */}
                 {ruleWizardStep === 3 && (
                   <div className="bg-white rounded-lg border border-gray-200 p-3 shadow-sm">
-                    <h4 className="text-sm font-medium text-gray-900 mb-2">Review Rule</h4>
+                    <h4 className="text-sm font-medium text-gray-900 mb-2 dark:text-gray-100">Review Rule</h4>
                     <div className="space-y-3">
                       <div>
-                        <span className="text-xs font-medium text-gray-700">API Groups:</span>
+                        <span className="text-xs font-medium text-gray-700 dark:text-gray-400">API Groups:</span>
                         <div className="mt-1 flex flex-wrap gap-1">
                           {ruleDraft.apiGroups.map((groupName, i) => {
                             const group = API_GROUPS.find(g => g.name === groupName);
                             return (
-                              <span key={i} className="inline-block px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                              <span key={i} className="inline-block px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 text-xs rounded-full dark:text-blue-100">
                                 {group ? group.displayName : (groupName || '(core)')}
                               </span>
                             );
@@ -1281,20 +1281,20 @@ const RoleWizardManager: React.FC<RoleWizardManagerProps> = ({
                         </div>
                       </div>
                       <div>
-                        <span className="text-xs font-medium text-gray-700">Resources:</span>
+                        <span className="text-xs font-medium text-gray-700 dark:text-gray-400">Resources:</span>
                         <div className="mt-1 flex flex-wrap gap-1">
                           {ruleDraft.resources.map((resource, i) => (
-                            <span key={i} className="inline-block px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
+                            <span key={i} className="inline-block px-2 py-1 bg-green-100 dark:bg-green-900 text-green-800 text-xs rounded-full dark:text-green-100">
                               {resource}
                             </span>
                           ))}
                         </div>
                       </div>
                       <div>
-                        <span className="text-xs font-medium text-gray-700">Verbs:</span>
+                        <span className="text-xs font-medium text-gray-700 dark:text-gray-400">Verbs:</span>
                         <div className="mt-1 flex flex-wrap gap-1">
                           {ruleDraft.verbs.map((verb, i) => (
-                            <span key={i} className="inline-block px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded-full">
+                            <span key={i} className="inline-block px-2 py-1 bg-purple-100 dark:bg-purple-900 text-purple-800 text-xs rounded-full dark:text-purple-100">
                               {verb}
                             </span>
                           ))}

@@ -248,7 +248,7 @@ export const JobForm: React.FC<JobFormProps> = ({ mode, namespaces, onSave, init
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 px-2 sm:px-0">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 px-2 sm:px-0 dark:bg-opacity-60">
       <form className="w-full max-w-lg sm:max-w-2xl mx-auto bg-white dark:bg-gray-900 rounded-2xl shadow-2xl overflow-hidden border border-gray-200 dark:border-gray-800 flex flex-col max-h-[90vh]" autoComplete="off" onSubmit={handleSubmit}>
         {/* Modal Header */}
         <div className="sticky top-0 z-10 px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 flex items-center justify-between">
@@ -271,26 +271,27 @@ export const JobForm: React.FC<JobFormProps> = ({ mode, namespaces, onSave, init
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-1 flex items-center">Job Name <span className="text-red-500 ml-1">*</span> <Tooltip text="Alphanumeric, dashes, max 63 chars. Used as metadata.name." /></label>
-                <input className={`w-full rounded border px-3 py-2 ${errors.name ? 'border-red-500' : 'border-gray-300'}`} value={state.name} maxLength={63} onChange={e => handleChange('name', e.target.value)} required aria-invalid={!!errors.name} />
+                <label className="block text-sm font-medium mb-1 flex items-center dark:text-white">Job Name <span className="text-red-500 ml-1">*</span> <Tooltip text="Alphanumeric, dashes, max 63 chars. Used as metadata.name." /></label>
+                <input className={`w-full rounded border px-3 py-2 dark:border-gray-600 dark:bg-gray-700 dark:text-white ${errors.name ? 'border-red-500' : 'border-gray-300'}`} value={state.name} maxLength={63} onChange={e => handleChange('name', e.target.value)} required aria-invalid={!!errors.name} />
                 {errors.name && <div className="text-red-500 text-xs mt-1">{errors.name}</div>}
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1 flex items-center">Namespace <span className="text-red-500 ml-1">*</span> <Tooltip text="Kubernetes namespace to create the Job in." /></label>
-                <select className={`w-full rounded border px-3 py-2 ${errors.namespace ? 'border-red-500' : 'border-gray-300'}`} value={state.namespace} onChange={e => handleChange('namespace', e.target.value)} required>
+                <label className="block text-sm font-medium mb-1 flex items-center dark:text-white">Namespace <span className="text-red-500 ml-1">*</span> <Tooltip text="Kubernetes namespace to create the Job in." /></label>
+
+                <select className={`w-full rounded border px-3 py-2 dark:border-gray-600 dark:bg-gray-700 dark:text-white ${errors.namespace ? 'border-red-500' : 'border-gray-300'}`} value={state.namespace} onChange={e => handleChange('namespace', e.target.value)} required>
+
                   <option value="">Select namespace</option>
                   {namespaces.map(ns => <option key={ns} value={ns}>{ns}</option>)}
                 </select>
                 {errors.namespace && <div className="text-red-500 text-xs mt-1">{errors.namespace}</div>}
               </div>
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium mb-1 flex items-center">Labels <Tooltip text="Key-value pairs for metadata.labels." /></label>
+                <label className="block text-sm font-medium mb-1 flex items-center dark:text-white">Labels <Tooltip text="Key-value pairs for metadata.labels." /></label>
                 <div className="space-y-2">
                   {state.labels.map((l, i) => (
                     <div key={i} className="flex gap-2 items-center">
-                      <input className="w-1/3 rounded border border-gray-300 px-2 py-1" placeholder="key" value={l.key} onChange={e => handleLabelChange(i, e.target.value, l.value)} />
-                      <span>:</span>
-                      <input className="w-1/2 rounded border border-gray-300 px-2 py-1" placeholder="value" value={l.value} onChange={e => handleLabelChange(i, l.key, e.target.value)} />
+                      <input className="w-1/3 rounded border border-gray-300 px-2 py-1 dark:border-gray-600 dark:bg-gray-700 dark:text-white" placeholder="key" value={l.key} onChange={e => handleLabelChange(i, e.target.value, l.value)} />
+                      <input className="w-1/2 rounded border border-gray-300 px-2 py-1 dark:border-gray-600 dark:bg-gray-700 dark:text-white" placeholder="value" value={l.value} onChange={e => handleLabelChange(i, l.key, e.target.value)} />
                       <button type="button" className="text-red-500 px-2" onClick={() => removeLabel(i)} aria-label="Remove label">×</button>
                     </div>
                   ))}
@@ -311,9 +312,9 @@ export const JobForm: React.FC<JobFormProps> = ({ mode, namespaces, onSave, init
             </div>
             <div className="space-y-6">
               {state.containers.map((container, idx) => (
-                <div key={idx} className="border border-gray-200 rounded-xl p-6 bg-gray-50">
+                <div key={idx} className="border border-gray-200 rounded-xl p-6 bg-gray-50 dark:border-gray-700 dark:bg-gray-900">
                   <div className="flex items-center justify-between mb-4">
-                    <h4 className="text-lg font-medium text-gray-900">Container {idx + 1} {container.name && <span className="ml-2 text-sm text-gray-500">({container.name})</span>}</h4>
+                    <h4 className="text-lg font-medium text-gray-900 dark:text-white">Container {idx + 1} {container.name && <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">({container.name})</span>}</h4>
                     <div className="flex items-center space-x-2">
                       <button type="button" onClick={() => duplicateContainer(idx)} className="p-1 text-gray-400 hover:text-blue-600 rounded transition-colors duration-200" title="Duplicate container">⧉</button>
                       {state.containers.length > 1 && (
@@ -323,46 +324,50 @@ export const JobForm: React.FC<JobFormProps> = ({ mode, namespaces, onSave, init
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                     <div>
-                      <label className="block text-sm font-medium mb-1">Container Name *</label>
-                      <input type="text" value={container.name} onChange={e => updateContainer(idx, { name: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm" placeholder="web-server" />
+                      <label className="block text-sm font-medium mb-1 dark:text-white">Container Name *</label>
+                      <input type="text" value={container.name} onChange={e => updateContainer(idx, { name: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white" placeholder="web-server" />
                       {errors[`container-name-${idx}`] && <div className="text-red-500 text-xs mt-1">{errors[`container-name-${idx}`]}</div>}
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-1">Container Image *</label>
-                      <input type="text" value={container.image} onChange={e => updateContainer(idx, { image: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm" placeholder="nginx:latest" />
+                      <label className="block text-sm font-medium mb-1 dark:text-white">Container Image *</label>
+
+                      <input type="text" value={container.image} onChange={e => updateContainer(idx, { image: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white" placeholder="nginx:latest" />
                       {errors[`container-image-${idx}`] && <div className="text-red-500 text-xs mt-1">{errors[`container-image-${idx}`]}</div>}
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-1">Command</label>
-                      <input type="text" value={container.command || ''} onChange={e => updateContainer(idx, { command: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm" placeholder="e.g. sleep" />
+                      <label className="block text-sm font-medium mb-1 dark:text-white">Command</label>
+                      <input type="text" value={container.command || ''} onChange={e => updateContainer(idx, { command: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white" placeholder="e.g. sleep" />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-1">Arguments</label>
-                      <input type="text" value={container.args || ''} onChange={e => updateContainer(idx, { args: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm" placeholder="e.g. 60" />
+                      <label className="block text-sm font-medium mb-1 dark:text-white">Arguments</label>
+                      <input type="text" value={container.args || ''} onChange={e => updateContainer(idx, { args: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white" placeholder="e.g. 60" />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-1">CPU Request *</label>
-                      <input type="text" value={container.resources.requests.cpu} onChange={e => updateContainer(idx, { resources: { ...container.resources, requests: { ...container.resources.requests, cpu: e.target.value } } })} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm" placeholder="e.g. 100m" />
+                      <label className="block text-sm font-medium mb-1 dark:text-white">CPU Request *</label>
+                      <input type="text" value={container.resources.requests.cpu} onChange={e => updateContainer(idx, { resources: { ...container.resources, requests: { ...container.resources.requests, cpu: e.target.value } } })} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white" placeholder="e.g. 100m" />
                       {errors[`container-cpu-${idx}`] && <div className="text-red-500 text-xs mt-1">{errors[`container-cpu-${idx}`]}</div>}
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-1">Memory Request *</label>
-                      <input type="text" value={container.resources.requests.memory} onChange={e => updateContainer(idx, { resources: { ...container.resources, requests: { ...container.resources.requests, memory: e.target.value } } })} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm" placeholder="e.g. 128Mi" />
+                      <label className="block text-sm font-medium mb-1 dark:text-white">Memory Request *</label>
+
+                      <input type="text" value={container.resources.requests.memory} onChange={e => updateContainer(idx, { resources: { ...container.resources, requests: { ...container.resources.requests, memory: e.target.value } } })} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white" placeholder="e.g. 128Mi" />
                       {errors[`container-mem-${idx}`] && <div className="text-red-500 text-xs mt-1">{errors[`container-mem-${idx}`]}</div>}
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-1">CPU Limit</label>
-                      <input type="text" value={container.resources.limits.cpu} onChange={e => updateContainer(idx, { resources: { ...container.resources, limits: { ...container.resources.limits, cpu: e.target.value } } })} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm" placeholder="e.g. 200m" />
+                      <label className="block text-sm font-medium mb-1 dark:text-white">CPU Limit</label>
+
+                      <input type="text" value={container.resources.limits.cpu} onChange={e => updateContainer(idx, { resources: { ...container.resources, limits: { ...container.resources.limits, cpu: e.target.value } } })} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white" placeholder="e.g. 200m" />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-1">Memory Limit</label>
-                      <input type="text" value={container.resources.limits.memory} onChange={e => updateContainer(idx, { resources: { ...container.resources, limits: { ...container.resources.limits, memory: e.target.value } } })} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm" placeholder="e.g. 256Mi" />
+                      <label className="block text-sm font-medium mb-1 dark:text-white">Memory Limit</label>
+
+                      <input type="text" value={container.resources.limits.memory} onChange={e => updateContainer(idx, { resources: { ...container.resources, limits: { ...container.resources.limits, memory: e.target.value } } })} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white" placeholder="e.g. 256Mi" />
                     </div>
                   </div>
                   {/* Environment Variables */}
                   <div className="mb-6">
                     <div className="flex items-center justify-between mb-3">
-                      <h5 className="text-sm font-medium text-gray-700">Environment Variables</h5>
+                      <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300">Environment Variables</h5>
                       <button type="button" onClick={() => addContainerEnvVar(idx)} className="inline-flex items-center px-2 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700 transition-colors duration-200">
                         + Add
                       </button>
@@ -370,21 +375,21 @@ export const JobForm: React.FC<JobFormProps> = ({ mode, namespaces, onSave, init
                     {container.env.length > 0 && (
                       <div className="space-y-3">
                         {container.env.map((envVar, envIdx) => (
-                          <div key={envIdx} className="border border-gray-200 rounded-lg p-3 bg-white">
+                          <div key={envIdx} className="border border-gray-200 rounded-lg p-3 bg-white dark:border-gray-700 dark:bg-gray-900">
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-3">
                               <div>
-                                <label className="block text-xs font-medium text-gray-600 mb-1">Variable Name *</label>
-                                <input type="text" value={envVar.name} onChange={e => updateContainerEnvVar(idx, envIdx, { name: e.target.value })} className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent text-sm" placeholder="DATABASE_URL" />
+                                <label className="block text-xs font-medium text-gray-600 mb-1 dark:text-gray-400">Variable Name *</label>
+                                <input type="text" value={envVar.name} onChange={e => updateContainerEnvVar(idx, envIdx, { name: e.target.value })} className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white" placeholder="DATABASE_URL" />
                               </div>
                               <div>
-                                <label className="block text-xs font-medium text-gray-600 mb-1">Value Source</label>
+                                <label className="block text-xs font-medium text-gray-600 mb-1 dark:text-gray-400">Value Source</label>
                                 <select value={envVar.valueFrom ? envVar.valueFrom.type : 'direct'} onChange={e => {
                                   if (e.target.value === 'direct') {
                                     updateContainerEnvVar(idx, envIdx, { value: envVar.value || '', valueFrom: undefined });
                                   } else {
                                     updateContainerEnvVar(idx, envIdx, { value: undefined, valueFrom: { type: e.target.value as 'configMap' | 'secret', name: '', key: '' } });
                                   }
-                                }} className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent text-sm">
+                                }} className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white">
                                   <option value="direct">Direct Value</option>
                                   <option value="configMap">ConfigMap</option>
                                   <option value="secret">Secret</option>
@@ -393,8 +398,9 @@ export const JobForm: React.FC<JobFormProps> = ({ mode, namespaces, onSave, init
                               {envVar.valueFrom ? (
                                 <>
                                   <div>
-                                    <label className="block text-xs font-medium text-gray-600 mb-1">{envVar.valueFrom.type === 'configMap' ? 'ConfigMap' : 'Secret'} Name</label>
-                                    <select value={envVar.valueFrom.name} onChange={e => updateContainerEnvVar(idx, envIdx, { valueFrom: { ...envVar.valueFrom!, name: e.target.value } })} className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent text-sm">
+                                    <label className="block text-xs font-medium text-gray-600 mb-1 dark:text-gray-400">{envVar.valueFrom.type === 'configMap' ? 'ConfigMap' : 'Secret'} Name</label>
+
+                                    <select value={envVar.valueFrom.name} onChange={e => updateContainerEnvVar(idx, envIdx, { valueFrom: { ...envVar.valueFrom!, name: e.target.value } })} className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white">
                                       <option value="">Select {envVar.valueFrom.type}</option>
                                       {envVar.valueFrom.type === 'configMap'
                                         ? filteredConfigMaps.map(cm => (<option key={cm.name} value={cm.name}>{cm.name}</option>))
@@ -402,8 +408,8 @@ export const JobForm: React.FC<JobFormProps> = ({ mode, namespaces, onSave, init
                                     </select>
                                   </div>
                                   <div>
-                                    <label className="block text-xs font-medium text-gray-600 mb-1">Key</label>
-                                    <select value={envVar.valueFrom.key} onChange={e => updateContainerEnvVar(idx, envIdx, { valueFrom: { ...envVar.valueFrom!, key: e.target.value } })} className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent text-sm" disabled={!envVar.valueFrom.name}>
+                                    <label className="block text-xs font-medium text-gray-600 mb-1 dark:text-gray-400">Key</label>
+                                    <select value={envVar.valueFrom.key} onChange={e => updateContainerEnvVar(idx, envIdx, { valueFrom: { ...envVar.valueFrom!, key: e.target.value } })} className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white" disabled={!envVar.valueFrom.name}>
                                       <option value="">Select key</option>
                                       {envVar.valueFrom.name && (
                                         envVar.valueFrom.type === 'configMap'
@@ -421,8 +427,8 @@ export const JobForm: React.FC<JobFormProps> = ({ mode, namespaces, onSave, init
                                 </>
                               ) : (
                                 <div className="sm:col-span-2">
-                                  <label className="block text-xs font-medium text-gray-600 mb-1">Value</label>
-                                  <input type="text" value={envVar.value || ''} onChange={e => updateContainerEnvVar(idx, envIdx, { value: e.target.value })} className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent text-sm" placeholder="environment value" />
+                                  <label className="block text-xs font-medium text-gray-600 mb-1 dark:text-gray-400">Value</label>
+                                  <input type="text" value={envVar.value || ''} onChange={e => updateContainerEnvVar(idx, envIdx, { value: e.target.value })} className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white" placeholder="environment value" />
                                 </div>
                               )}
                             </div>
@@ -437,7 +443,7 @@ export const JobForm: React.FC<JobFormProps> = ({ mode, namespaces, onSave, init
                   {/* Volume Mounts */}
                   <div>
                     <div className="flex items-center justify-between mb-3">
-                      <h5 className="text-sm font-medium text-gray-700">Volume Mounts</h5>
+                      <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300">Volume Mounts</h5>
                       <button type="button" onClick={() => addContainerVolumeMount(idx)} className="inline-flex items-center px-2 py-1 bg-indigo-600 text-white rounded text-xs hover:bg-indigo-700 transition-colors duration-200">
                         + Add
                       </button>
@@ -446,8 +452,8 @@ export const JobForm: React.FC<JobFormProps> = ({ mode, namespaces, onSave, init
                       <div className="space-y-2">
                         {container.volumeMounts.map((mount, mountIdx) => (
                           <div key={mountIdx} className="flex items-center space-x-2">
-                            <input type="text" value={mount.name} onChange={e => updateContainerVolumeMount(idx, mountIdx, 'name', e.target.value)} className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm" placeholder="Volume name" />
-                            <input type="text" value={mount.mountPath} onChange={e => updateContainerVolumeMount(idx, mountIdx, 'mountPath', e.target.value)} className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm" placeholder="/path/to/mount" />
+                            <input type="text" value={mount.name} onChange={e => updateContainerVolumeMount(idx, mountIdx, 'name', e.target.value)} className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white" placeholder="Volume name" />
+                            <input type="text" value={mount.mountPath} onChange={e => updateContainerVolumeMount(idx, mountIdx, 'mountPath', e.target.value)} className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white" placeholder="/path/to/mount" />
                             <button type="button" onClick={() => removeContainerVolumeMount(idx, mountIdx)} className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors duration-200">×</button>
                           </div>
                         ))}
@@ -465,8 +471,8 @@ export const JobForm: React.FC<JobFormProps> = ({ mode, namespaces, onSave, init
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-1 flex items-center">Restart Policy <span className="text-red-500 ml-1">*</span> <Tooltip text="Job restart policy. Usually Never or OnFailure." /></label>
-                <select className="w-full rounded border border-gray-300" value={state.restartPolicy} onChange={e => handleChange('restartPolicy', e.target.value as any)} required>
+                <label className="block text-sm font-medium mb-1 flex items-center dark:text-white">Restart Policy <span className="text-red-500 ml-1">*</span> <Tooltip text="Job restart policy. Usually Never or OnFailure." /></label>
+                <select className="w-full rounded border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white" value={state.restartPolicy} onChange={e => handleChange('restartPolicy', e.target.value as any)} required>
                   <option value="Never">Never</option>
                   <option value="OnFailure">OnFailure</option>
                 </select>
@@ -480,16 +486,16 @@ export const JobForm: React.FC<JobFormProps> = ({ mode, namespaces, onSave, init
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-1 flex items-center">Replicas <Tooltip text="Number of pods to run in parallel." /></label>
-                <input type="number" min="1" className="w-full rounded border border-gray-300 px-3 py-2" value={state.replicas} onChange={e => handleChange('replicas', Number(e.target.value))} placeholder="e.g. 1" />
+                <label className="block text-sm font-medium mb-1 flex items-center dark:text-white">Replicas <Tooltip text="Number of pods to run in parallel." /></label>
+                <input type="number" min="1" className="w-full rounded border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-700 dark:text-white" value={state.replicas} onChange={e => handleChange('replicas', Number(e.target.value))} placeholder="e.g. 1" />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1 flex items-center">Completions <Tooltip text="Number of successful completions required." /></label>
-                <input type="number" min="1" className="w-full rounded border border-gray-300 px-3 py-2" value={state.completions} onChange={e => handleChange('completions', Number(e.target.value))} placeholder="e.g. 1" />
+                <label className="block text-sm font-medium mb-1 flex items-center dark:text-white">Completions <Tooltip text="Number of successful completions required." /></label>
+                <input type="number" min="1" className="w-full rounded border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-700 dark:text-white" value={state.completions} onChange={e => handleChange('completions', Number(e.target.value))} placeholder="e.g. 1" />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1 flex items-center">Backoff Limit <Tooltip text="Number of retries before marking as failed." /></label>
-                <input type="number" min="0" className="w-full rounded border border-gray-300 px-3 py-2" value={state.backoffLimit} onChange={e => handleChange('backoffLimit', Number(e.target.value))} placeholder="e.g. 6" />
+                <label className="block text-sm font-medium mb-1 flex items-center dark:text-white">Backoff Limit <Tooltip text="Number of retries before marking as failed." /></label>
+                <input type="number" min="0" className="w-full rounded border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-700 dark:text-white" value={state.backoffLimit} onChange={e => handleChange('backoffLimit', Number(e.target.value))} placeholder="e.g. 6" />
               </div>
             </div>
           </section>
@@ -501,29 +507,31 @@ export const JobForm: React.FC<JobFormProps> = ({ mode, namespaces, onSave, init
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1 flex items-center">Schedule <span className="text-red-500 ml-1">*</span> <Tooltip text="Cron format, e.g. */5 * * * *." /></label>
-                  <input className={`w-full rounded border px-3 py-2 ${errors.schedule ? 'border-red-500' : 'border-gray-300'}`} value={state.schedule} onChange={e => handleChange('schedule', e.target.value)} placeholder="e.g. */5 * * * *" required aria-invalid={!!errors.schedule} />
+                  <label className="block text-sm font-medium mb-1 flex items-center dark:text-white">Schedule <span className="text-red-500 ml-1">*</span> <Tooltip text="Cron format, e.g. */5 * * * *." /></label>
+
+                  <input className={`w-full rounded border px-3 py-2 dark:border-gray-600 dark:bg-gray-700 dark:text-white ${errors.schedule ? 'border-red-500' : 'border-gray-300'}`} value={state.schedule} onChange={e => handleChange('schedule', e.target.value)} placeholder="e.g. */5 * * * *" required aria-invalid={!!errors.schedule} />
                   {errors.schedule && <div className="text-red-500 text-xs mt-1">{errors.schedule}</div>}
                   <button type="button" className="mt-2 text-blue-600 text-xs" onClick={handleTestSchedule}>Test Schedule</button>
-                  {testScheduleResult && <div className="text-xs mt-1 text-gray-500">{testScheduleResult}</div>}
+                  {testScheduleResult && <div className="text-xs mt-1 text-gray-500 dark:text-gray-400">{testScheduleResult}</div>}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1 flex items-center">Concurrency Policy <Tooltip text="How concurrent jobs are handled." /></label>
-                  <select className="w-full rounded border border-gray-300" value={state.concurrencyPolicy} onChange={e => handleChange('concurrencyPolicy', e.target.value as any)}>
+                  <label className="block text-sm font-medium mb-1 flex items-center dark:text-white">Concurrency Policy <Tooltip text="How concurrent jobs are handled." /></label>
+                  <select className="w-full rounded border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white" value={state.concurrencyPolicy} onChange={e => handleChange('concurrencyPolicy', e.target.value as any)}>
                     <option value="Allow">Allow</option>
                     <option value="Forbid">Forbid</option>
                     <option value="Replace">Replace</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1 flex items-center">Starting Deadline (seconds) <Tooltip text="How long to try to start a job if missed." /></label>
-                  <input className="w-full rounded border border-gray-300 px-3 py-2" value={state.startingDeadline} onChange={e => handleChange('startingDeadline', e.target.value)} placeholder="e.g. 60" />
+                  <label className="block text-sm font-medium mb-1 flex items-center dark:text-white">Starting Deadline (seconds) <Tooltip text="How long to try to start a job if missed." /></label>
+                  <input className="w-full rounded border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-700 dark:text-white" value={state.startingDeadline} onChange={e => handleChange('startingDeadline', e.target.value)} placeholder="e.g. 60" />
+
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1 flex items-center">History Limits <Tooltip text="How many successful/failed jobs to keep." /></label>
+                  <label className="block text-sm font-medium mb-1 flex items-center dark:text-white">History Limits <Tooltip text="How many successful/failed jobs to keep." /></label>
                   <div className="flex gap-2">
-                    <input className="w-1/2 rounded border border-gray-300 px-2 py-1" value={state.historySuccess} onChange={e => handleChange('historySuccess', e.target.value)} placeholder="Success" />
-                    <input className="w-1/2 rounded border border-gray-300 px-2 py-1" value={state.historyFailure} onChange={e => handleChange('historyFailure', e.target.value)} placeholder="Failure" />
+                    <input className="w-1/2 rounded border border-gray-300 px-2 py-1 dark:border-gray-600 dark:bg-gray-700 dark:text-white" value={state.historySuccess} onChange={e => handleChange('historySuccess', e.target.value)} placeholder="Success" />
+                    <input className="w-1/2 rounded border border-gray-300 px-2 py-1 dark:border-gray-600 dark:bg-gray-700 dark:text-white" value={state.historyFailure} onChange={e => handleChange('historyFailure', e.target.value)} placeholder="Failure" />
                   </div>
                 </div>
               </div>

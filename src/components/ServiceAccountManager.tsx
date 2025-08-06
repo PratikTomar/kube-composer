@@ -203,26 +203,26 @@ export function ServiceAccountManager({
   const availableSecrets = secrets.filter(s => s.namespace === namespace);
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-lg w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col border border-gray-200">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 dark:bg-opacity-80">
+      <div className="bg-white rounded-xl shadow-lg w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col border border-gray-200 dark:border-gray-700 dark:bg-gray-800">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
               <Users className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h3 className="text-xl font-semibold text-gray-900">
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
                 {isEditing ? 'Edit Service Account' : 'Create Service Account'}
               </h3>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-gray-500 dark:text-gray-400">
                 {isEditing ? 'Update service account configuration' : 'Configure authentication for your applications'}
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors duration-200"
+            className="text-gray-400 hover:text-gray-600 transition-colors duration-200 "
           >
             <X className="w-6 h-6" />
           </button>
@@ -232,22 +232,22 @@ export function ServiceAccountManager({
         <div className="flex-1 overflow-y-auto p-6">
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Basic Information */}
-            <div className="bg-white rounded-lg p-4 space-y-4 border border-gray-200 shadow-sm">
-              <h4 className="font-medium text-gray-900 flex items-center">
+            <div className="bg-white rounded-lg p-4 space-y-4 border border-gray-200 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+              <h4 className="font-medium text-gray-900 flex items-center dark:text-white">
                 <Settings className="w-4 h-4 mr-2" />
                 Basic Information
               </h4>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Service Account Name *
                   </label>
                   <input
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                    className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white ${
                       errors.name ? 'border-red-300 bg-red-50' : 'border-gray-300'
                     }`}
                     placeholder="my-service-account"
@@ -261,13 +261,13 @@ export function ServiceAccountManager({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Namespace *
                   </label>
                   <select
                     value={namespace}
                     onChange={(e) => setNamespace(e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                    className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white ${
                       errors.namespace ? 'border-red-300 bg-red-50' : 'border-gray-300'
                     }`}
                   >
@@ -288,8 +288,8 @@ export function ServiceAccountManager({
             </div>
 
             {/* Service Account Settings */}
-            <div className="bg-white rounded-lg p-4 space-y-4 border border-gray-200 shadow-sm">
-              <h4 className="font-medium text-gray-900 flex items-center">
+            <div className="bg-white rounded-lg p-4 space-y-4 border border-gray-200 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+              <h4 className="font-medium text-gray-900 flex items-center dark:text-white">
                 <Key className="w-4 h-4 mr-2" />
                 Service Account Settings
               </h4>
@@ -300,9 +300,9 @@ export function ServiceAccountManager({
                   id="automountToken"
                   checked={automountServiceAccountToken}
                   onChange={(e) => setAutomountServiceAccountToken(e.target.checked)}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded dark:bg-gray-700 dark:border-gray-600"
                 />
-                <label htmlFor="automountToken" className="ml-2 block text-sm text-gray-900">
+                <label htmlFor="automountToken" className="ml-2 block text-sm text-gray-900 dark:text-white">
                   Auto-mount service account token
                 </label>
               </div>
@@ -312,9 +312,9 @@ export function ServiceAccountManager({
             </div>
 
             {/* Secrets */}
-            <div className="bg-white rounded-lg p-4 space-y-4 border border-gray-200 shadow-sm">
+            <div className="bg-white rounded-lg p-4 space-y-4 border border-gray-200 shadow-sm dark:border-gray-700 dark:bg-gray-800">
               <div className="flex items-center justify-between">
-                <h4 className="font-medium text-gray-900">Secrets</h4>
+                <h4 className="font-medium text-gray-900 dark:text-white">Secrets</h4>
                 <button
                   type="button"
                   onClick={addSecret}
@@ -331,7 +331,7 @@ export function ServiceAccountManager({
                     <select
                       value={secret.name}
                       onChange={(e) => updateSecret(index, e.target.value)}
-                      className={`flex-1 px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                      className={`flex-1 px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white ${
                         errors[`secret-${index}`] ? 'border-red-300 bg-red-50' : 'border-gray-300'
                       }`}
                     >
@@ -360,14 +360,14 @@ export function ServiceAccountManager({
               ))}
 
               {selectedSecrets.length === 0 && (
-                <p className="text-sm text-gray-500 italic">No secrets configured</p>
+                <p className="text-sm text-gray-500 italic dark:text-gray-400">No secrets configured</p>
               )}
             </div>
 
             {/* Image Pull Secrets */}
-            <div className="bg-white rounded-lg p-4 space-y-4 border border-gray-200 shadow-sm">
+            <div className="bg-white rounded-lg p-4 space-y-4 border border-gray-200 shadow-sm dark:border-gray-700 dark:bg-gray-800">
               <div className="flex items-center justify-between">
-                <h4 className="font-medium text-gray-900">Image Pull Secrets</h4>
+                <h4 className="font-medium text-gray-900 dark:text-white">Image Pull Secrets</h4>
                 <button
                   type="button"
                   onClick={addImagePullSecret}
@@ -384,7 +384,7 @@ export function ServiceAccountManager({
                     <select
                       value={secret.name}
                       onChange={(e) => updateImagePullSecret(index, e.target.value)}
-                      className={`flex-1 px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                      className={`flex-1 px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white ${
                         errors[`imagePullSecret-${index}`] ? 'border-red-300 bg-red-50' : 'border-gray-300'
                       }`}
                     >
@@ -413,14 +413,14 @@ export function ServiceAccountManager({
               ))}
 
               {selectedImagePullSecrets.length === 0 && (
-                <p className="text-sm text-gray-500 italic">No image pull secrets configured</p>
+                <p className="text-sm text-gray-500 italic dark:text-gray-400">No image pull secrets configured</p>
               )}
             </div>
 
             {/* Labels */}
-            <div className="bg-white rounded-lg p-4 space-y-4 border border-gray-200 shadow-sm">
+            <div className="bg-white rounded-lg p-4 space-y-4 border border-gray-200 shadow-sm dark:border-gray-700 dark:bg-gray-800">
               <div className="flex items-center justify-between">
-                <h4 className="font-medium text-gray-900">Labels</h4>
+                <h4 className="font-medium text-gray-900 dark:text-white">Labels</h4>
                 <button
                   type="button"
                   onClick={addLabel}
@@ -439,7 +439,7 @@ export function ServiceAccountManager({
                       placeholder="Key"
                       value={label.key}
                       onChange={(e) => updateLabel(index, 'key', e.target.value)}
-                      className={`flex-1 px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                      className={`flex-1 px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white ${
                         errors[`label-${index}`] ? 'border-red-300 bg-red-50' : 'border-gray-300'
                       }`}
                     />
@@ -448,7 +448,7 @@ export function ServiceAccountManager({
                       placeholder="Value"
                       value={label.value}
                       onChange={(e) => updateLabel(index, 'value', e.target.value)}
-                      className={`flex-1 px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                      className={`flex-1 px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white ${
                         errors[`label-${index}`] ? 'border-red-300 bg-red-50' : 'border-gray-300'
                       }`}
                     />
@@ -470,14 +470,14 @@ export function ServiceAccountManager({
               ))}
 
               {labels.length === 0 && (
-                <p className="text-sm text-gray-500 italic">No labels configured</p>
+                <p className="text-sm text-gray-500 italic dark:text-gray-400">No labels configured</p>
               )}
             </div>
 
             {/* Annotations */}
-            <div className="bg-white rounded-lg p-4 space-y-4 border border-gray-200 shadow-sm">
+            <div className="bg-white rounded-lg p-4 space-y-4 border border-gray-200 shadow-sm dark:border-gray-700 dark:bg-gray-800">
               <div className="flex items-center justify-between">
-                <h4 className="font-medium text-gray-900">Annotations</h4>
+                <h4 className="font-medium text-gray-900 dark:text-white">Annotations</h4>
                 <button
                   type="button"
                   onClick={addAnnotation}
@@ -496,7 +496,7 @@ export function ServiceAccountManager({
                       placeholder="Key"
                       value={annotation.key}
                       onChange={(e) => updateAnnotation(index, 'key', e.target.value)}
-                      className={`flex-1 px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                      className={`flex-1 px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white ${
                         errors[`annotation-${index}`] ? 'border-red-300 bg-red-50' : 'border-gray-300'
                       }`}
                     />
@@ -505,7 +505,7 @@ export function ServiceAccountManager({
                       placeholder="Value"
                       value={annotation.value}
                       onChange={(e) => updateAnnotation(index, 'value', e.target.value)}
-                      className={`flex-1 px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                      className={`flex-1 px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white ${
                         errors[`annotation-${index}`] ? 'border-red-300 bg-red-50' : 'border-gray-300'
                       }`}
                     />
@@ -527,14 +527,14 @@ export function ServiceAccountManager({
               ))}
 
               {annotations.length === 0 && (
-                <p className="text-sm text-gray-500 italic">No annotations configured</p>
+                <p className="text-sm text-gray-500 italic dark:text-gray-400">No annotations configured</p>
               )}
             </div>
           </form>
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end space-x-3 p-6 border-t border-gray-200 bg-gray-50">
+        <div className="flex items-center justify-end space-x-3 p-6 border-t border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800">
           <button
             type="button"
             onClick={onClose}

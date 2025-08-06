@@ -63,23 +63,23 @@ export function DeploymentsList({
         return (
           <div
             key={index}
-            className={`p-3 rounded-lg border cursor-pointer transition-all duration-200 ${
+            className={`p-3 rounded-lg border cursor-pointer transition-all duration-200 text-left w-full ${
               selectedIndex === index
-                ? 'bg-blue-50 border-blue-200 ring-1 ring-blue-200'
-                : 'bg-white border-gray-200 hover:bg-gray-50'
+                ? 'bg-blue-50 border-blue-200 ring-1 ring-blue-200 dark:bg-blue-900 dark:border-blue-800 dark:ring-blue-800'
+                : 'bg-white border-gray-200 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700'
             }`}
             onClick={() => onSelect(index)}
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3 min-w-0 flex-1">
                 <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
-                  deployment.appName ? 'bg-green-500' : 'bg-gray-300'
+                  deployment.appName ? 'bg-green-500 dark:bg-green-400' : 'bg-gray-300'
                 }`} />
                 <div className="min-w-0 flex-1">
-                  <div className="font-medium text-gray-900 truncate">
+                  <div className="font-medium text-gray-900 truncate dark:text-gray-100">
                     {deployment.appName || 'Untitled Deployment'}
                   </div>
-                  <div className="text-sm text-gray-500 truncate">
+                  <div className="text-sm text-gray-500 truncate dark:text-gray-400">
                     {summary.primaryImage}
                   </div>
                   <div className="flex items-center space-x-2 mt-1">
@@ -110,13 +110,13 @@ export function DeploymentsList({
                   <div className="flex items-center space-x-1">
                     <button
                       onClick={handleCancelDelete}
-                      className="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded hover:bg-gray-200 transition-colors duration-200"
+                      className="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded hover:bg-gray-200 transition-colors duration-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-gray-200"
                     >
                       Cancel
                     </button>
                     <button
                       onClick={(e) => handleConfirmDelete(index, e)}
-                      className="px-2 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 transition-colors duration-200 flex items-center space-x-1"
+                      className="px-2 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 transition-colors duration-200 flex items-center space-x-1 dark:bg-red-600 dark:hover:bg-red-700"
                     >
                       <AlertTriangle className="w-3 h-3" />
                       <span>Delete</span>
@@ -131,21 +131,21 @@ export function DeploymentsList({
                         onSelect(index);
                         onEdit();
                       }}
-                      className="p-1 text-gray-400 hover:text-gray-600 rounded transition-colors duration-200"
+                      className="p-1 text-gray-400 hover:text-gray-600 rounded transition-colors duration-200 dark:text-gray-300 dark:hover:text-gray-400"
                       title="Edit deployment"
                     >
                       <Settings className="w-4 h-4" />
                     </button>
                     <button
                       onClick={(e) => handleDuplicateClick(index, e)}
-                      className="p-1 text-gray-400 hover:text-blue-600 rounded transition-colors duration-200"
+                      className="p-1 text-gray-400 hover:text-blue-600 rounded transition-colors duration-200 dark:text-gray-300 dark:hover:text-blue-600"
                       title="Duplicate deployment"
                     >
                       <Copy className="w-4 h-4" />
                     </button>
                     <button
                       onClick={(e) => handleDeleteClick(index, e)}
-                      className="p-1 text-gray-400 hover:text-red-600 rounded transition-colors duration-200"
+                      className="p-1 text-gray-400 hover:text-red-600 rounded transition-colors duration-200 dark:text-gray-300 dark:hover:text-red-600"
                       title="Delete deployment"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -157,7 +157,7 @@ export function DeploymentsList({
             
             {/* Delete confirmation warning */}
             {deleteConfirm === index && (
-              <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-700">
+              <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-700 dark:bg-red-700 dark:border-red-800 dark:text-red-200">
                 <div className="flex items-center space-x-1 mb-1">
                   <AlertTriangle className="w-3 h-3" />
                   <span className="font-medium">Are you sure?</span>

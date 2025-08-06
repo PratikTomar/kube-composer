@@ -135,17 +135,17 @@ export function ConfigMapManager({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 dark:bg-opacity-80">
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col dark:bg-gray-900">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-green-600 rounded-lg flex items-center justify-center">
               <FileText className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h3 className="text-xl font-semibold text-gray-900">ConfigMap Manager</h3>
-              <p className="text-sm text-gray-500">Create and manage Kubernetes ConfigMaps</p>
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white">ConfigMap Manager</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Create and manage Kubernetes ConfigMaps</p>
             </div>
           </div>
           <button
@@ -161,11 +161,11 @@ export function ConfigMapManager({
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 p-6">
             {/* Create New ConfigMap */}
             <div className="space-y-4">
-              <h4 className="text-lg font-semibold text-gray-900">Create New ConfigMap</h4>
+              <h4 className="text-lg font-semibold text-gray-900 dark:text-white">Create New ConfigMap</h4>
 
               {/* ConfigMap Name */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">
                   ConfigMap Name *
                 </label>
                 <input
@@ -173,7 +173,7 @@ export function ConfigMapManager({
                   value={newConfigMap.name}
                   onChange={(e) => handleConfigMapNameChange(e.target.value)}
                   onKeyPress={(e) => handleKeyPress(e, handleCreateConfigMap)}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent ${
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:border-gray-600 dark:bg-gray-700 dark:text-white ${
                     errors.length > 0 ? 'border-red-300' : 'border-gray-300'
                   }`}
                   placeholder="my-config"
@@ -192,13 +192,13 @@ export function ConfigMapManager({
 
               {/* Namespace */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">
                   Namespace
                 </label>
                 <select
                   value={newConfigMap.namespace}
                   onChange={(e) => setNewConfigMap(prev => ({ ...prev, namespace: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                 >
                   {namespaces.map(namespace => (
                     <option key={namespace} value={namespace}>
@@ -211,7 +211,7 @@ export function ConfigMapManager({
               {/* Data Entries */}
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Data *
                   </label>
                   <button
@@ -229,13 +229,13 @@ export function ConfigMapManager({
                     value={newDataEntry.key}
                     onChange={(e) => setNewDataEntry(prev => ({ ...prev, key: e.target.value }))}
                     onKeyPress={(e) => handleKeyPress(e, addDataEntry)}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                     placeholder="config.properties"
                   />
                   <textarea
                     value={newDataEntry.value}
                     onChange={(e) => setNewDataEntry(prev => ({ ...prev, value: e.target.value }))}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                     placeholder="database.host=localhost"
                     rows={2}
                   />
@@ -244,10 +244,10 @@ export function ConfigMapManager({
                 {Object.entries(newConfigMap.data).length > 0 && (
                   <div className="space-y-1 max-h-32 overflow-y-auto">
                     {Object.entries(newConfigMap.data).map(([key, value]) => (
-                      <div key={key} className="flex items-start justify-between bg-gray-50 px-3 py-2 rounded-lg">
+                      <div key={key} className="flex items-start justify-between bg-gray-50 px-3 py-2 rounded-lg dark:bg-gray-700">
                         <div className="min-w-0 flex-1">
-                          <div className="text-sm font-medium text-gray-900 truncate">{key}</div>
-                          <div className="text-xs text-gray-600 truncate">{value}</div>
+                          <div className="text-sm font-medium text-gray-900 truncate dark:text-white">{key}</div>
+                          <div className="text-xs text-gray-600 truncate dark:text-gray-400">{value}</div>
                         </div>
                         <button
                           onClick={() => removeDataEntry(key)}
@@ -264,7 +264,7 @@ export function ConfigMapManager({
               {/* Labels */}
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Labels (Optional)
                   </label>
                   <button
@@ -282,7 +282,7 @@ export function ConfigMapManager({
                     value={newLabel.key}
                     onChange={(e) => setNewLabel(prev => ({ ...prev, key: e.target.value }))}
                     onKeyPress={(e) => handleKeyPress(e, addLabel)}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                     placeholder="key"
                   />
                   <input
@@ -290,7 +290,7 @@ export function ConfigMapManager({
                     value={newLabel.value}
                     onChange={(e) => setNewLabel(prev => ({ ...prev, value: e.target.value }))}
                     onKeyPress={(e) => handleKeyPress(e, addLabel)}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                     placeholder="value"
                   />
                 </div>
@@ -298,8 +298,8 @@ export function ConfigMapManager({
                 {Object.entries(newConfigMap.labels).length > 0 && (
                   <div className="space-y-1">
                     {Object.entries(newConfigMap.labels).map(([key, value]) => (
-                      <div key={key} className="flex items-center justify-between bg-gray-50 px-3 py-2 rounded-lg">
-                        <span className="text-sm text-gray-900">
+                      <div key={key} className="flex items-center justify-between bg-gray-50 px-3 py-2 rounded-lg dark:bg-gray-700">
+                        <span className="text-sm text-gray-900 dark:text-white">
                           <span className="font-medium">{key}</span>: {value}
                         </span>
                         <button
@@ -333,11 +333,11 @@ export function ConfigMapManager({
 
               <div className="space-y-2 max-h-96 overflow-y-auto">
                 {configMaps.map((configMap) => (
-                  <div key={configMap.name} className="bg-white rounded-lg p-4 border border-gray-200">
+                  <div key={configMap.name} className="bg-white rounded-lg p-4 border border-gray-200 dark:border-gray-700 dark:bg-gray-800">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center space-x-2">
                         <FileText className="w-4 h-4 text-green-600" />
-                        <span className="font-medium text-gray-900">{configMap.name}</span>
+                        <span className="font-medium text-gray-900 dark:text-white">{configMap.name}</span>
                         <span className="px-2 py-1 bg-green-100 text-green-800 rounded text-xs">
                           {configMap.namespace}
                         </span>
@@ -370,23 +370,23 @@ export function ConfigMapManager({
                       </div>
                     </div>
 
-                    <div className="text-xs text-gray-500 mb-2">
+                    <div className="text-xs text-gray-500 mb-2 dark:text-gray-400">
                       Created: {new Date(configMap.createdAt).toLocaleDateString()}
                     </div>
 
                     {/* Data Preview */}
                     {Object.keys(configMap.data).length > 0 && (
                       <div className="mb-2">
-                        <div className="text-xs text-gray-600 mb-1">Data ({Object.keys(configMap.data).length} entries):</div>
+                        <div className="text-xs text-gray-600 mb-1 dark:text-gray-400">Data ({Object.keys(configMap.data).length} entries):</div>
                         <div className="space-y-1 max-h-20 overflow-y-auto">
                           {Object.entries(configMap.data).slice(0, 3).map(([key, value]) => (
-                            <div key={key} className="bg-gray-50 px-2 py-1 rounded text-xs">
-                              <span className="font-medium text-gray-700">{key}</span>
-                              <div className="text-gray-600 truncate">{value}</div>
+                            <div key={key} className="bg-gray-50 px-2 py-1 rounded text-xs dark:bg-gray-700">
+                              <span className="font-medium text-gray-700 dark:text-white">{key}</span>
+                              <div className="text-gray-600 truncate dark:text-gray-400">{value}</div>
                             </div>
                           ))}
                           {Object.keys(configMap.data).length > 3 && (
-                            <div className="text-xs text-gray-500 text-center">
+                            <div className="text-xs text-gray-500 text-center dark:text-gray-400">
                               +{Object.keys(configMap.data).length - 3} more entries
                             </div>
                           )}
@@ -397,10 +397,10 @@ export function ConfigMapManager({
                     {/* Labels */}
                     {Object.keys(configMap.labels).length > 0 && (
                       <div className="mb-2">
-                        <div className="text-xs text-gray-600 mb-1">Labels:</div>
+                        <div className="text-xs text-gray-600 mb-1 dark:text-gray-400">Labels:</div>
                         <div className="flex flex-wrap gap-1">
                           {Object.entries(configMap.labels).map(([key, value]) => (
-                            <span key={key} className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs">
+                            <span key={key} className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs dark:bg-blue-700 dark:text-white">
                               {key}: {value}
                             </span>
                           ))}
@@ -426,8 +426,8 @@ export function ConfigMapManager({
                 {configMaps.length === 0 && (
                   <div className="text-center py-8">
                     <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                    <h5 className="text-lg font-medium text-gray-900 mb-2">No ConfigMaps</h5>
-                    <p className="text-sm text-gray-500">
+                    <h5 className="text-lg font-medium text-gray-900 mb-2 dark:text-gray-100">No ConfigMaps</h5>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
                       Create your first ConfigMap to store configuration data
                     </p>
                   </div>
@@ -438,7 +438,7 @@ export function ConfigMapManager({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end p-6 border-t border-gray-200 bg-gray-50">
+        <div className="flex items-center justify-end p-6 border-t border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-900">
           <button
             onClick={onClose}
             className="px-6 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"

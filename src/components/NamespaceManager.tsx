@@ -129,17 +129,17 @@ export function NamespaceManager({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 dark:bg-opacity-80">
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col dark:bg-gray-900">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-purple-600 rounded-lg flex items-center justify-center">
               <Database className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h3 className="text-xl font-semibold text-gray-900">Namespace Manager</h3>
-              <p className="text-sm text-gray-500">Create and manage Kubernetes namespaces</p>
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Namespace Manager</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Create and manage Kubernetes namespaces</p>
             </div>
           </div>
           <button
@@ -155,11 +155,11 @@ export function NamespaceManager({
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 p-6">
             {/* Create New Namespace */}
             <div className="space-y-4">
-              <h4 className="text-lg font-semibold text-gray-900">Create New Namespace</h4>
+              <h4 className="text-lg font-semibold text-gray-900 dark:text-white">Create New Namespace</h4>
 
               {/* Namespace Name */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">
                   Namespace Name *
                 </label>
                 <input
@@ -167,7 +167,7 @@ export function NamespaceManager({
                   value={newNamespace.name}
                   onChange={(e) => handleNamespaceNameChange(e.target.value)}
                   onKeyPress={(e) => handleKeyPress(e, handleCreateNamespace)}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:border-gray-600 dark:bg-gray-700 dark:text-white ${
                     errors.length > 0 ? 'border-red-300' : 'border-gray-300'
                   }`}
                   placeholder="my-namespace"
@@ -186,7 +186,7 @@ export function NamespaceManager({
 
               {/* Labels */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">
                   Labels (Optional)
                 </label>
                 <div className="flex space-x-2 mb-2">
@@ -195,7 +195,7 @@ export function NamespaceManager({
                     value={newLabel.key}
                     onChange={(e) => setNewLabel(prev => ({ ...prev, key: e.target.value }))}
                     onKeyPress={(e) => handleKeyPress(e, addLabel)}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                     placeholder="key"
                   />
                   <input
@@ -203,7 +203,7 @@ export function NamespaceManager({
                     value={newLabel.value}
                     onChange={(e) => setNewLabel(prev => ({ ...prev, value: e.target.value }))}
                     onKeyPress={(e) => handleKeyPress(e, addLabel)}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                     placeholder="value"
                   />
                   <button
@@ -218,13 +218,13 @@ export function NamespaceManager({
                 {Object.entries(newNamespace.labels).length > 0 && (
                   <div className="space-y-1">
                     {Object.entries(newNamespace.labels).map(([key, value]) => (
-                      <div key={key} className="flex items-center justify-between bg-gray-50 px-3 py-2 rounded-lg">
-                        <span className="text-sm text-gray-900">
+                      <div key={key} className="flex items-center justify-between bg-gray-50 px-3 py-2 rounded-lg dark:bg-gray-700">
+                        <span className="text-sm text-gray-900 dark:text-white">
                           <span className="font-medium">{key}</span>: {value}
                         </span>
                         <button
                           onClick={() => removeLabel(key)}
-                          className="text-gray-400 hover:text-red-600"
+                          className="text-gray-400 hover:text-red-600 dark:text-gray-300 dark:hover:text-red-400"
                         >
                           <X className="w-4 h-4" />
                         </button>
@@ -236,7 +236,7 @@ export function NamespaceManager({
 
               {/* Annotations */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">
                   Annotations (Optional)
                 </label>
                 <div className="flex space-x-2 mb-2">
@@ -245,7 +245,7 @@ export function NamespaceManager({
                     value={newAnnotation.key}
                     onChange={(e) => setNewAnnotation(prev => ({ ...prev, key: e.target.value }))}
                     onKeyPress={(e) => handleKeyPress(e, addAnnotation)}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                     placeholder="key"
                   />
                   <input
@@ -253,7 +253,7 @@ export function NamespaceManager({
                     value={newAnnotation.value}
                     onChange={(e) => setNewAnnotation(prev => ({ ...prev, value: e.target.value }))}
                     onKeyPress={(e) => handleKeyPress(e, addAnnotation)}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                     placeholder="value"
                   />
                   <button
@@ -268,13 +268,13 @@ export function NamespaceManager({
                 {Object.entries(newNamespace.annotations).length > 0 && (
                   <div className="space-y-1">
                     {Object.entries(newNamespace.annotations).map(([key, value]) => (
-                      <div key={key} className="flex items-center justify-between bg-gray-50 px-3 py-2 rounded-lg">
-                        <span className="text-sm text-gray-900">
+                      <div key={key} className="flex items-center justify-between bg-gray-50 px-3 py-2 rounded-lg dark:bg-gray-700">
+                        <span className="text-sm text-gray-900 dark:text-white">
                           <span className="font-medium">{key}</span>: {value}
                         </span>
                         <button
                           onClick={() => removeAnnotation(key)}
-                          className="text-gray-400 hover:text-red-600"
+                          className="text-gray-400 hover:text-red-600 dark:text-gray-300 dark:hover:text-red-400"
                         >
                           <X className="w-4 h-4" />
                         </button>
@@ -297,17 +297,17 @@ export function NamespaceManager({
             {/* Existing Namespaces */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h4 className="text-lg font-semibold text-gray-900">Existing Namespaces</h4>
-                <span className="text-sm text-gray-500">{namespaces.length} total</span>
+                <h4 className="text-lg font-semibold text-gray-900 dark:text-white">Existing Namespaces</h4>
+                <span className="text-sm text-gray-500 dark:text-gray-400">{namespaces.length} total</span>
               </div>
 
               <div className="space-y-2 max-h-96 overflow-y-auto">
                 {namespaces.map((namespace) => (
-                  <div key={namespace.name} className="bg-white rounded-lg p-4 border border-gray-200">
+                  <div key={namespace.name} className="bg-white rounded-lg p-4 border border-gray-200 dark:bg-gray-900 dark:border-gray-700">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center space-x-2">
                         <Database className="w-4 h-4 text-purple-600" />
-                        <span className="font-medium text-gray-900">{namespace.name}</span>
+                        <span className="font-medium text-gray-900 dark:text-white">{namespace.name}</span>
                         {isDefaultNamespace(namespace.name) && (
                           <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs">
                             System
@@ -321,7 +321,7 @@ export function NamespaceManager({
                             <div className="flex items-center space-x-2">
                               <button
                                 onClick={() => setDeleteConfirm(null)}
-                                className="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded hover:bg-gray-200"
+                                className="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded hover:bg-gray-200 dark:bg-gray-800 dark:text-white"
                               >
                                 Cancel
                               </button>
@@ -344,14 +344,14 @@ export function NamespaceManager({
                       )}
                     </div>
 
-                    <div className="text-xs text-gray-500 mb-2">
+                    <div className="text-xs text-gray-500 mb-2 dark:text-gray-400">
                       Created: {new Date(namespace.createdAt).toLocaleDateString()}
                     </div>
 
                     {/* Labels */}
                     {Object.keys(namespace.labels).length > 0 && (
                       <div className="mb-2">
-                        <div className="text-xs text-gray-600 mb-1">Labels:</div>
+                        <div className="text-xs text-gray-600 mb-1 dark:text-gray-400">Labels:</div>
                         <div className="flex flex-wrap gap-1">
                           {Object.entries(namespace.labels).map(([key, value]) => (
                             <span key={key} className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs">
@@ -365,10 +365,10 @@ export function NamespaceManager({
                     {/* Annotations */}
                     {Object.keys(namespace.annotations).length > 0 && (
                       <div className="mb-2">
-                        <div className="text-xs text-gray-600 mb-1">Annotations:</div>
+                        <div className="text-xs text-gray-600 mb-1 dark:text-gray-400">Annotations:</div>
                         <div className="flex flex-wrap gap-1">
                           {Object.entries(namespace.annotations).map(([key, value]) => (
-                            <span key={key} className="px-2 py-1 bg-purple-100 text-purple-800 rounded text-xs">
+                            <span key={key} className="px-2 py-1 bg-purple-100 text-purple-800 rounded text-xs dark:bg-purple-900 dark:text-purple-300">
                               {key}: {value}
                             </span>
                           ))}
@@ -378,7 +378,7 @@ export function NamespaceManager({
 
                     {/* Delete confirmation warning */}
                     {deleteConfirm === namespace.name && (
-                      <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-700">
+                      <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-700 dark:bg-red-700 dark:border-red-800 dark:text-red-200">
                         <div className="flex items-center space-x-1 mb-1">
                           <AlertTriangle className="w-3 h-3" />
                           <span className="font-medium">Confirm deletion</span>
@@ -394,8 +394,8 @@ export function NamespaceManager({
                 {namespaces.length === 1 && namespaces[0].name === 'default' && (
                   <div className="text-center py-8">
                     <Database className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                    <h5 className="text-lg font-medium text-gray-900 mb-2">Only Default Namespace</h5>
-                    <p className="text-sm text-gray-500">
+                    <h5 className="text-lg font-medium text-gray-900 mb-2 dark:text-white">Only Default Namespace</h5>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
                       Create custom namespaces to organize your deployments
                     </p>
                   </div>
@@ -406,7 +406,7 @@ export function NamespaceManager({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end p-6 border-t border-gray-200 bg-gray-50">
+        <div className="flex items-center justify-end p-6 border-t border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-900">
           <button
             onClick={onClose}
             className="px-6 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"

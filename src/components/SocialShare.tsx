@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
-import { Share2, Twitter, Facebook, Linkedin, Link, Check, Star, Github, AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Check, Facebook, Github, Link, Linkedin, Moon, Share2, Star, Sun, Twitter } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import useTheme from '../hooks/useTheme';
 
 interface SocialShareProps {
   className?: string;
@@ -16,7 +17,10 @@ export function SocialShare({ className = '' }: SocialShareProps) {
   const [starCount, setStarCount] = useState<number | null>(null);
   const [isLoadingStars, setIsLoadingStars] = useState(true);
   const [apiError, setApiError] = useState<string | null>(null);
-  
+
+  // using custom hook useTheme to get value which I passed in ThemeProvider
+  const { isDarkModeEnabled, toggleDarkModeHandler } = useTheme();
+
   const shareData = {
     title: 'Kube Composer - Free Kubernetes YAML Generator',
     text: 'Just discovered this amazing tool! 🚀 Generate production-ready Kubernetes YAML files in minutes with a visual editor. No more manual YAML writing! Perfect for developers and DevOps teams. #kubernetes #yaml #devops #docker #k8s',
@@ -149,12 +153,17 @@ export function SocialShare({ className = '' }: SocialShareProps) {
 
   return (
     <div className={`flex items-center space-x-1 ${className}`}>
+      {/* Dark Mode Toggle Button */}
+      <button className='p-2 rounded-full bg-gray-800 text-white dark:bg-gray-200 dark:text-gray-800' onClick={toggleDarkModeHandler}>
+        {isDarkModeEnabled ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+      </button>
+
       {/* GitHub star button */}
       <a
         href="https://github.com/same7ammar/kube-composer"
         target="_blank"
         rel="noopener noreferrer"
-        className="group inline-flex items-center space-x-2 px-3 py-2 bg-gray-900 hover:bg-gray-800 text-white rounded-lg transition-all duration-200 text-xs font-medium shadow-md hover:shadow-lg transform hover:scale-105"
+        className="group inline-flex items-center space-x-2 px-3 py-2 bg-gray-900 hover:bg-gray-800 text-white rounded-lg transition-all duration-200 text-xs font-medium shadow-md hover:shadow-lg transform hover:scale-105 dark:bg-gray-700 dark:hover:bg-gray-500"
         title={`Star on GitHub${starCount !== null ? ` (${starCount} stars)` : ''}`}
         aria-label="Star Kube Composer on GitHub"
       >
@@ -167,7 +176,7 @@ export function SocialShare({ className = '' }: SocialShareProps) {
             Star
           </span>
           {!isLoadingStars && starCount !== null && (
-            <span className="bg-gray-700 group-hover:bg-gray-600 px-2 py-0.5 rounded-full text-xs font-bold text-yellow-300 group-hover:text-yellow-200 transition-all duration-200 min-w-[1.5rem] text-center">
+            <span className="bg-gray-700 group-hover:bg-gray-600 px-2 py-0.5 rounded-full text-xs font-bold text-yellow-300 group-hover:text-yellow-200 transition-all duration-200 min-w-[1.5rem] text-center dark:bg-gray-600">
               {formatStarCount(starCount)}
             </span>
           )}
@@ -197,12 +206,12 @@ export function SocialShare({ className = '' }: SocialShareProps) {
       </a>
       {!isPlayground && (
         <>
-          <span className="text-xs font-medium text-gray-600 hidden sm:inline">Share:</span>
+          <span className="text-xs font-medium text-gray-600 hidden sm:inline dark:text-gray-400">Share:</span>
           {/* Native Share (mobile) */}
           {isNativeShareAvailable && (
             <button
               onClick={handleNativeShare}
-              className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200"
+              className="p-1.5 text-gray-500 dark:text-gray-400 dark:hover:text-blue-600 dark:hover:bg-blue-50 rounded-lg transition-colors duration-200"
               title="Share Kube Composer"
               aria-label="Share this tool"
             >
@@ -214,7 +223,7 @@ export function SocialShare({ className = '' }: SocialShareProps) {
             href={shareUrls.twitter}
             target="_blank"
             rel="noopener noreferrer"
-            className="p-1.5 text-gray-500 hover:text-blue-400 hover:bg-blue-50 rounded-lg transition-colors duration-200"
+            className="p-1.5 text-gray-500 dark:text-gray-400 dark:hover:text-blue-400 dark:hover:bg-blue-50 rounded-lg transition-colors duration-200"
             title="Share on Twitter"
             aria-label="Share Kube Composer on Twitter"
           >
@@ -225,7 +234,7 @@ export function SocialShare({ className = '' }: SocialShareProps) {
             href={shareUrls.facebook}
             target="_blank"
             rel="noopener noreferrer"
-            className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200"
+            className="p-1.5 text-gray-500 dark:text-gray-400 dark:hover:text-blue-600 dark:hover:bg-blue-50 rounded-lg transition-colors duration-200"
             title="Share on Facebook"
             aria-label="Share Kube Composer on Facebook"
           >
@@ -236,7 +245,7 @@ export function SocialShare({ className = '' }: SocialShareProps) {
             href={shareUrls.linkedin}
             target="_blank"
             rel="noopener noreferrer"
-            className="p-1.5 text-gray-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors duration-200"
+            className="p-1.5 text-gray-500 dark:text-gray-400 dark:hover:text-blue-700 dark:hover:bg-blue-50 rounded-lg transition-colors duration-200"
             title="Share on LinkedIn"
             aria-label="Share Kube Composer on LinkedIn"
           >
@@ -245,7 +254,7 @@ export function SocialShare({ className = '' }: SocialShareProps) {
           {/* Copy Link */}
           <button
             onClick={handleCopyLink}
-            className="p-1.5 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors duration-200"
+            className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors duration-200"
             title={copied ? 'Link copied!' : 'Copy link'}
             aria-label="Copy link to Kube Composer"
           >

@@ -1,48 +1,49 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
-import { Download, FileText, List, Plus, Menu, X, Database, Settings, Key, PlayCircle, Container as Docker, FolderOpen, GitBranch, Link2, Copy, Trash2, AlertTriangle } from 'lucide-react';
-import { loadConfig, saveConfig, clearConfig } from './utils/localStorage';
-import { DeploymentForm } from './components/DeploymentForm';
-import { DaemonSetForm } from './components/DaemonSetForm';
-import { YamlPreview } from './components/YamlPreview';
-import { ResourceSummary } from './components/ResourceSummary';
-import { DeploymentsList } from './components/DeploymentsList';
-import { DaemonSetsList } from './components/DaemonSetsList';
-import { NamespacesList } from './components/NamespacesList';
+import { AlertTriangle, Copy, Database, Container as Docker, Download, FileText, FolderOpen, GitBranch, Key, Link2, List, Menu, PlayCircle, Plus, Settings, Trash2, X } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ConfigMapsList } from './components/ConfigMapsList';
+import { DaemonSetForm } from './components/DaemonSetForm';
+import { DaemonSetsList } from './components/DaemonSetsList';
+import { DeploymentForm } from './components/DeploymentForm';
+import { DeploymentsList } from './components/DeploymentsList';
+import { NamespacesList } from './components/NamespacesList';
+import { ResourceSummary } from './components/ResourceSummary';
+import { RolesList } from './components/RolesList';
 import { SecretsList } from './components/SecretsList';
 import { ServiceAccountsList } from './components/ServiceAccountsList';
-import { RolesList } from './components/RolesList';
+import { YamlPreview } from './components/YamlPreview';
+import { clearConfig, loadConfig, saveConfig } from './utils/localStorage';
 
-import { VisualPreview } from './components/VisualPreview';
-import { Footer } from './components/Footer';
-import { SocialShare } from './components/SocialShare';
-import { SEOHead } from './components/SEOHead';
-import { NamespaceManager } from './components/NamespaceManager';
 import { ConfigMapManager } from './components/ConfigMapManager';
-import { SecretManager } from './components/SecretManager';
-import { ServiceAccountManager } from './components/ServiceAccountManager';
-import RoleWizardManager from './components/RoleWizardManager';
-import { ProjectSettingsManager } from './components/ProjectSettingsManager';
-import { YouTubePopup } from './components/YouTubePopup';
 import { DockerRunPopup } from './components/DockerRunPopup';
-import { generateMultiDeploymentYaml } from './utils/yamlGenerator';
-import { JobManager, Job } from './components/JobManager';
-import { JobList } from './components/jobs/JobList';
+import { Footer } from './components/Footer';
+import { Job, JobManager } from './components/JobManager';
 import { CronJobList } from './components/jobs/CronJobList';
-import type { DeploymentConfig, DaemonSetConfig, Namespace, ConfigMap, Secret, ServiceAccount, ProjectSettings, JobConfig, CronJobConfig, KubernetesRole, KubernetesClusterRole, RoleBinding } from './types';
+import { JobList } from './components/jobs/JobList';
 import {
-  K8sDeploymentIcon,
-  K8sNamespaceIcon,
   K8sConfigMapIcon,
-  K8sSecretIcon,
-  K8sJobIcon,
   K8sCronJobIcon,
-  K8sStorageIcon,
   K8sDaemonSetIcon,
+  K8sDeploymentIcon,
+  K8sJobIcon,
+  K8sNamespaceIcon,
+  K8sSecretIcon,
   K8sSecurityIcon,
-  K8sServiceAccountIcon
+  K8sServiceAccountIcon,
+  K8sStorageIcon
 } from './components/KubernetesIcons';
+import { NamespaceManager } from './components/NamespaceManager';
+import { ProjectSettingsManager } from './components/ProjectSettingsManager';
 import { RoleBindingManager } from './components/RoleBindingManager';
+import RoleWizardManager from './components/RoleWizardManager';
+import { SecretManager } from './components/SecretManager';
+import { SEOHead } from './components/SEOHead';
+import { ServiceAccountManager } from './components/ServiceAccountManager';
+import { SocialShare } from './components/SocialShare';
+import { VisualPreview } from './components/VisualPreview';
+import { YouTubePopup } from './components/YouTubePopup';
+import useTheme from './hooks/useTheme';
+import type { ConfigMap, CronJobConfig, DaemonSetConfig, DeploymentConfig, JobConfig, KubernetesClusterRole, KubernetesRole, Namespace, ProjectSettings, RoleBinding, Secret, ServiceAccount } from './types';
+import { generateMultiDeploymentYaml } from './utils/yamlGenerator';
 
 // Move this outside the component to avoid breaking the Rules of Hooks
 const isPlayground = typeof window !== 'undefined' && window.location.search.includes('q=playground');
@@ -128,6 +129,9 @@ function App() {
   // Auto-save functionality
   const autoSaveTimeoutRef = useRef<number | null>(null);
   const lastSavedRef = useRef<number>(0);
+
+  // using custom hook useTheme to get value which I passed in ThemeProvider
+  const { isDarkModeEnabled } = useTheme();
 
   // Force save function for immediate saves
   const forceSave = useCallback(() => {
@@ -1189,13 +1193,13 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className={`min-h-screen bg-gray-50 flex flex-col ${isDarkModeEnabled ? 'dark' : ''}`}>
       {/* SEO Head Component */}
       <SEOHead />
       
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
-        <div className="px-4 sm:px-6 lg:px-8 py-4">
+      <header className={`bg-white border-b border-gray-200 sticky top-0 z-50 dark:border-gray-700`}>
+        <div className={`px-4 sm:px-6 lg:px-8 py-4 dark:bg-gray-900`}>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
             {/* Top row: Logo, Title, Menu */}
             <div className="flex items-center space-x-3">
@@ -1218,11 +1222,11 @@ function App() {
                     setShowAllResources(true);
                     setSidebarTab('deployments'); // Reset to default tab
                   }}
-                  className="text-lg sm:text-xl font-semibold text-gray-900 hover:text-blue-600 transition-colors duration-200 text-left"
+                  className={`text-lg sm:text-xl font-semibold text-gray-900 hover:text-blue-600 transition-colors duration-200 text-left dark:text-white`}
                 >
                   Kube Composer
                 </button>
-                <p className="block text-sm text-gray-500">
+                <p className={`block text-sm text-gray-500 dark:text-gray-400`}>
                   {projectSettings.name ? `Project: ${projectSettings.name}` : 'Kubernetes YAML Generator for developers'}
                   {showAllResources && (
                     <span className="inline-block ml-2 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
@@ -1313,7 +1317,7 @@ function App() {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 flex min-h-0 overflow-hidden" role="main">
+      <main className={`flex-1 flex min-h-0 overflow-hidden`} role="main">
         {/* Mobile Sidebar Overlay */}
         {sidebarOpen && (
           <div 
@@ -1326,12 +1330,12 @@ function App() {
         <div className={`
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
           lg:translate-x-0 fixed lg:relative inset-y-0 left-0 z-50 lg:z-auto
-          w-80 lg:w-1/4 xl:w-1/5 bg-white border-r border-gray-200 
+          w-80 lg:w-1/4 xl:w-1/5 bg-white border-r border-gray-200 dark:border-gray-700
           transition-transform duration-300 ease-in-out lg:transition-none
-          flex flex-col min-h-0
+          flex flex-col min-h-0 dark:bg-gray-900
         `}>
           {/* Project Settings Button */}
-          <div className="p-4 border-b border-gray-200 flex-shrink-0">
+          <div className="p-4 border-b border-gray-200 flex-shrink-0 dark:border-gray-700">
             <button
               onClick={() => setShowProjectSettings(true)}
               className="w-full inline-flex items-center justify-center px-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 text-sm font-medium shadow-md hover:shadow-lg transform hover:scale-105"
@@ -1340,7 +1344,7 @@ function App() {
               <span>Project Settings</span>
             </button>
             {Object.keys(projectSettings.globalLabels).length > 0 && (
-              <div className="mt-2 text-xs text-gray-600 text-center">
+              <div className="mt-2 text-xs text-gray-600 dark:text-gray-400 text-center">
                 {Object.keys(projectSettings.globalLabels).length} global label{Object.keys(projectSettings.globalLabels).length !== 1 ? 's' : ''} active
               </div>
             )}
@@ -1665,8 +1669,8 @@ function App() {
                     <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                       <FileText className="w-8 h-8 text-gray-400" />
                     </div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">No Deployments</h3>
-                    <p className="text-sm text-gray-500 mb-4">
+                    <h3 className="text-lg font-medium text-gray-900 mb-2 dark:text-gray-100">No Deployments</h3>
+                    <p className="text-sm text-gray-500 mb-4 dark:text-gray-400">
                       Get started by creating your first Kubernetes deployment
                     </p>
                   </div>
@@ -1702,8 +1706,8 @@ function App() {
                     <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                       <FileText className="w-8 h-8 text-gray-400" />
                     </div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">No DaemonSets</h3>
-                    <p className="text-sm text-gray-500 mb-4">
+                    <h3 className="text-lg font-medium text-gray-900 mb-2 dark:text-gray-100">No DaemonSets</h3>
+                    <p className="text-sm text-gray-500 mb-4 dark:text-gray-400">
                       Get started by creating your first Kubernetes DaemonSet
                     </p>
                   </div>
@@ -1938,8 +1942,8 @@ function App() {
                           <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                             <Link2 className="w-8 h-8 text-gray-400" />
                           </div>
-                          <h3 className="text-lg font-medium text-gray-900 mb-2">No RoleBindings</h3>
-                          <p className="text-sm text-gray-500 mb-4">
+                          <h3 className="text-lg font-medium text-gray-900 mb-2 dark:text-gray-100">No RoleBindings</h3>
+                          <p className="text-sm text-gray-500 mb-4 dark:text-gray-400">
                             Create RoleBindings to manage RBAC permissions for users, groups, and service accounts
                           </p>
                         </div>
@@ -1951,12 +1955,12 @@ function App() {
                               <div
                                 key={i}
                                 onClick={() => setSelectedRoleBindingIndex(i)}
-                                className={`p-2 border rounded-lg cursor-pointer transition-all duration-200 hover:shadow-md hover:bg-blue-50 focus-within:ring-2 focus-within:ring-blue-200 outline-none group
+                                className={`p-2 border rounded-lg cursor-pointer transition-all duration-200 hover:shadow-md  hover:bg-blue-50 focus-within:ring-2 focus-within:ring-blue-200 outline-none group 
                                   ${isSelected
                                     ? rb.isClusterRoleBinding
-                                      ? 'border-blue-500 bg-blue-50 shadow-md'
-                                      : 'border-purple-500 bg-purple-50 shadow-md'
-                                    : 'border-gray-200 bg-white hover:border-blue-300'}
+                                      ? 'border-blue-500 bg-blue-50 shadow-md dark:border-blue-600 dark:bg-blue-600 dark:shadow-blue-600'
+                                      : 'border-purple-500 bg-purple-50 shadow-md dark:border-purple-600 dark:bg-purple-600 dark:shadow-purple-600'
+                                    : 'border-gray-200 bg-white hover:border-blue-300 dark:border-gray-600 dark:bg-gray-700 dark:hover:border-blue-300 dark:hover:bg-gray-600'}
                                 `}
                                 tabIndex={0}
                                 aria-label={`RoleBinding ${rb.name || '(no name)'}`}
@@ -1964,19 +1968,19 @@ function App() {
                                 <div className="flex items-center space-x-2 min-w-0 flex-1 mb-1 justify-between">
                                   <div className="flex items-center space-x-2 min-w-0">
                                     <div className="flex-shrink-0">
-                                      <div className={`w-7 h-7 rounded-full flex items-center justify-center border ${rb.isClusterRoleBinding ? 'bg-blue-100 border-blue-300' : 'bg-purple-100 border-purple-300'}`}>
+                                      <div className={`w-7 h-7 rounded-full flex items-center justify-center border ${rb.isClusterRoleBinding ? 'bg-blue-100 border-blue-300 dark:border-blue-600 dark:bg-blue-600 dark:shadow-blue-600' : 'bg-purple-100 border-purple-300 dark:border-purple-600 dark:bg-purple-600 dark:shadow-purple-600'}`}>
                                         {rb.isClusterRoleBinding ? (
-                                          <Key className="w-4 h-4 text-blue-600" />
+                                          <Key className="w-4 h-4 text-blue-600 dark:text-blue-300" />
                                         ) : (
-                                          <Key className="w-4 h-4 text-purple-600" />
+                                          <Key className="w-4 h-4 text-purple-600 dark:text-purple-300" />
                                         )}
                                       </div>
                                     </div>
                                     <h4
-                                      className="text-base font-bold text-gray-900 truncate group-hover:text-blue-700"
+                                      className="text-base font-bold text-gray-900 truncate group-hover:text-blue-700 dark:text-gray-100 dark:group-hover:text-blue-400"
                                       title={rb.name || '(no name)'}
                                     >
-                                      {rb.name || <span className="italic text-gray-400">(no name)</span>}
+                                      {rb.name || <span className="italic text-gray-400 dark:text-gray-300">(no name)</span>}
                                     </h4>
                                   </div>
                                   <div className="flex items-center space-x-1 flex-shrink-0 ml-2">
@@ -1984,13 +1988,13 @@ function App() {
                                       <div className="flex items-center space-x-1" onClick={e => e.stopPropagation()}>
                                         <button
                                           onClick={e => { e.stopPropagation(); setDeleteRoleBindingConfirm(null); }}
-                                          className="px-1.5 py-0.5 text-[10px] bg-gray-100 text-gray-600 rounded hover:bg-gray-200 transition-colors duration-200"
+                                          className="px-1.5 py-0.5 text-[10px] bg-gray-100 text-gray-600 rounded hover:bg-gray-200 transition-colors duration-200 dark:bg-gray-600 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-gray-300"
                                         >
                                           Cancel
                                         </button>
                                         <button
                                           onClick={e => { e.stopPropagation(); handleDeleteRoleBinding(i); setDeleteRoleBindingConfirm(null); }}
-                                          className="px-1.5 py-0.5 text-[10px] bg-red-600 text-white rounded hover:bg-red-700 transition-colors duration-200 flex items-center space-x-1"
+                                          className="px-1.5 py-0.5 text-[10px] bg-red-600 text-white rounded hover:bg-red-700 transition-colors duration-200 flex items-center space-x-1 dark:bg-red-700 dark:hover:bg-red-800"
                                         >
                                           <AlertTriangle className="w-3 h-3" />
                                           <span>Delete</span>
@@ -2000,7 +2004,7 @@ function App() {
                                       <>
                                         <button
                                           onClick={e => { e.stopPropagation(); handleEditRoleBinding(i); }}
-                                          className="p-1 text-gray-400 hover:text-blue-600 rounded transition-colors duration-200"
+                                          className="p-1 text-gray-400 hover:text-blue-600 rounded transition-colors duration-200 dark:text-gray-300 dark:hover:text-blue-400"
                                           title="Edit RoleBinding"
                                           aria-label="Edit RoleBinding"
                                         >
@@ -2008,7 +2012,7 @@ function App() {
                                         </button>
                                         <button
                                           onClick={e => { e.stopPropagation(); handleDuplicateRoleBinding(i); }}
-                                          className="p-1 text-gray-400 hover:text-green-600 rounded transition-colors duration-200"
+                                          className="p-1 text-gray-400 hover:text-green-600 rounded transition-colors duration-200 dark:text-gray-300 dark:hover:text-green-400"
                                           title="Duplicate RoleBinding"
                                           aria-label="Duplicate RoleBinding"
                                         >
@@ -2016,7 +2020,7 @@ function App() {
                                         </button>
                                         <button
                                           onClick={e => { e.stopPropagation(); setDeleteRoleBindingConfirm(i); }}
-                                          className="p-1 text-gray-400 hover:text-red-600 rounded transition-colors duration-200"
+                                          className="p-1 text-gray-400 hover:text-red-600 rounded transition-colors duration-200 dark:text-gray-300 dark:hover:text-red-400"
                                           title="Delete RoleBinding"
                                           aria-label="Delete RoleBinding"
                                         >
@@ -2027,14 +2031,14 @@ function App() {
                                   </div>
                                 </div>
                                 <div className="pl-9">
-                                  <div className="flex items-center space-x-1 text-[11px] text-gray-500 font-medium mb-0.5">
+                                  <div className="flex items-center space-x-1 text-[11px] text-gray-500 dark:text-gray-300 font-medium mb-0.5">
                                     <span>{rb.isClusterRoleBinding ? 'ClusterRoleBinding' : 'RoleBinding'}</span>
                                     <span>•</span>
                                     <span>{rb.subjects.length} subj</span>
                                   </div>
-                                  <div className="flex items-center space-x-1 text-[11px] text-gray-600 mb-0.5">
+                                  <div className="flex items-center space-x-1 text-[11px] text-gray-600 dark:text-gray-300 mb-0.5">
                                     <span className="truncate" title={`Role: ${rb.roleRef.name} (${rb.roleRef.kind})`}>
-                                      <span className="font-semibold">Role:</span> {rb.roleRef.name} <span className="text-gray-400">({rb.roleRef.kind})</span>
+                                      <span className="font-semibold">Role:</span> {rb.roleRef.name} <span className="text-gray-400 dark:text-gray-300">({rb.roleRef.kind})</span>
                                     </span>
                                     {!rb.isClusterRoleBinding && rb.namespace && <>
                                       <span>•</span>
@@ -2043,16 +2047,16 @@ function App() {
                                   </div>
                                   <div className="flex items-center space-x-1">
                                     {!rb.isClusterRoleBinding && (
-                                      <span className="px-1.5 py-0.5 bg-purple-100 text-purple-800 rounded text-[10px] font-semibold tracking-wide border border-purple-200">{rb.namespace}</span>
+                                      <span className="px-1.5 py-0.5 bg-purple-100 text-purple-800 rounded text-[10px] font-semibold tracking-wide border border-purple-200 dark:bg-purple-600 dark:text-purple-100 ">{rb.namespace}</span>
                                     )}
                                     {rb.isClusterRoleBinding && (
-                                      <span className="px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded text-[10px] font-semibold tracking-wide border border-blue-200">cluster-wide</span>
+                                      <span className="px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded text-[10px] font-semibold tracking-wide border border-blue-200 dark:bg-blue-600 dark:text-blue-100">cluster-wide</span>
                                     )}
                                   </div>
                                 </div>
                                 {/* Delete confirmation warning */}
                                 {deleteRoleBindingConfirm === i && (
-                                  <div className="mt-1 p-1 bg-red-50 border border-red-200 rounded text-[10px] text-red-700">
+                                  <div className="mt-1 p-1 bg-red-50 border border-red-200 rounded text-[10px] text-red-700 dark:bg-red-600 dark:text-red-100">
                                     <div className="flex items-center space-x-1 mb-1">
                                       <AlertTriangle className="w-3 h-3" />
                                       <span className="font-medium">Are you sure?</span>
@@ -2076,11 +2080,11 @@ function App() {
         {/* Right Content - Preview */}
         <div className="flex-1 flex flex-col min-w-0 min-h-0">
           {/* Preview Content with Sticky Header */}
-          <div className="flex-1 min-h-0 overflow-y-auto bg-gray-50">
-            <div className="sticky top-0 z-10 bg-white border-b border-gray-200 p-4">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
+          <div className="flex-1 min-h-0 overflow-y-auto bg-gray-50 dark:bg-gray-900">
+            <div className="sticky top-0 z-10 bg-white border-b border-gray-200 p-4 dark:bg-gray-900 dark:border-gray-700">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0 ">
                 <div className="flex items-center w-full">
-                  <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+                  <h2 className="text-lg font-semibold text-gray-900 flex items-center dark:text-white">
                     Preview
                     {previewMode === 'yaml' && deployments.length > 1 && (
                       <span className="ml-2 text-sm font-normal text-gray-500">
@@ -2089,37 +2093,37 @@ function App() {
                     )}
                   </h2>
                   {/* Resource Stats Row - now directly next to Preview */}
-                  <div className="hidden md:flex items-center space-x-4 ml-6 px-4 py-1 bg-gray-50 border border-gray-200 rounded-lg shadow-sm">
-                    <div className="flex items-center space-x-1 text-sm text-gray-700 font-medium">
+                  <div className="hidden md:flex items-center space-x-4 ml-6 px-4 py-1 bg-gray-50 border border-gray-200 rounded-lg shadow-sm dark:bg-gray-900">
+                    <div className="flex items-center space-x-1 text-sm text-gray-700 font-medium dark:text-gray-200">
                       <FileText className="w-5 h-5 text-blue-500" />
                       <span className="font-bold">{deployments.length}</span>
-                      <span className="text-gray-500">deployment{deployments.length !== 1 ? 's' : ''}</span>
+                      <span className="text-gray-500 dark:text-gray-300">deployment{deployments.length !== 1 ? 's' : ''}</span>
                     </div>
-                    <div className="flex items-center space-x-1 text-sm text-gray-700 font-medium">
+                    <div className="flex items-center space-x-1 text-sm text-gray-700 font-medium dark:text-gray-200">
                       <K8sDaemonSetIcon className="w-5 h-5 text-indigo-500" />
                       <span className="font-bold">{daemonSets.length}</span>
-                      <span className="text-gray-500">daemonset{daemonSets.length !== 1 ? 's' : ''}</span>
+                      <span className="text-gray-500 dark:text-gray-300">daemonset{daemonSets.length !== 1 ? 's' : ''}</span>
                     </div>
-                    <div className="flex items-center space-x-1 text-sm text-gray-700 font-medium">
+                    <div className="flex items-center space-x-1 text-sm text-gray-700 font-medium dark:text-gray-200">
                       <Database className="w-5 h-5 text-purple-500" />
                       <span className="font-bold">{namespaces.length}</span>
-                      <span className="text-gray-500">namespace{namespaces.length !== 1 ? 's' : ''}</span>
+                      <span className="text-gray-500 dark:text-gray-300">namespace{namespaces.length !== 1 ? 's' : ''}</span>
                     </div>
-                    <div className="flex items-center space-x-1 text-sm text-gray-700 font-medium">
+                    <div className="flex items-center space-x-1 text-sm text-gray-700 font-medium dark:text-gray-200">
                       <Settings className="w-5 h-5 text-green-500" />
                       <span className="font-bold">{configMaps.length}</span>
-                      <span className="text-gray-500">configmap{configMaps.length !== 1 ? 's' : ''}</span>
+                      <span className="text-gray-500 dark:text-gray-300">configmap{configMaps.length !== 1 ? 's' : ''}</span>
                     </div>
-                    <div className="flex items-center space-x-1 text-sm text-gray-700 font-medium">
+                    <div className="flex items-center space-x-1 text-sm text-gray-700 font-medium dark:text-gray-200">
                       <Key className="w-5 h-5 text-orange-500" />
                       <span className="font-bold">{secrets.length}</span>
-                      <span className="text-gray-500">secret{secrets.length !== 1 ? 's' : ''}</span>
+                      <span className="text-gray-500 dark:text-gray-300">secret{secrets.length !== 1 ? 's' : ''}</span>
                     </div>
 
-                    <div className="flex items-center space-x-1 text-sm text-gray-700 font-medium">
+                    <div className="flex items-center space-x-1 text-sm text-gray-700 font-medium dark:text-gray-200">
                       <K8sJobIcon className="w-5 h-5 text-pink-500" />
                       <span className="font-bold">{jobs.filter(j => j.type === 'job' || j.type === 'cronjob').length}</span>
-                      <span className="text-gray-500">job{jobs.filter(j => j.type === 'job' || j.type === 'cronjob').length !== 1 ? 's' : ''}</span>
+                      <span className="text-gray-500 dark:text-gray-300">job{jobs.filter(j => j.type === 'job' || j.type === 'cronjob').length !== 1 ? 's' : ''}</span>
                     </div>
                   </div>
                 </div>
@@ -2133,8 +2137,8 @@ function App() {
                           onClick={() => setPreviewMode(mode.id)}
                           className={`${
                             previewMode === mode.id
-                              ? 'bg-blue-100 text-blue-700'
-                              : 'text-gray-500 hover:text-gray-700'
+                              ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-100'
+                              : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
                           } px-2 sm:px-3 py-2 rounded-lg text-xs sm:text-sm font-medium flex items-center space-x-1 transition-colors duration-200`}
                         >
                           <Icon className="w-4 h-4" />
@@ -2146,7 +2150,7 @@ function App() {
                 </div>
               </div>
             </div>
-            <div className="p-4 sm:p-6 pb-8">
+            <div className="p-4 sm:p-6 pb-8 ">
               {previewMode === 'flow' && <VisualPreview deployments={deployments} daemonSets={daemonSets} namespaces={namespaces} configMaps={configMaps} secrets={secrets} serviceAccounts={serviceAccounts} roles={roles} clusterRoles={clusterRoles} jobs={jobs} containerRef={containerRef} filterType={getFilterType()} roleBindings={roleBindings} />}
               {previewMode === 'summary' && <ResourceSummary deployments={deployments} daemonSets={daemonSets} namespaces={namespaces} configMaps={configMaps} secrets={secrets} serviceAccounts={serviceAccounts} roles={roles} clusterRoles={clusterRoles} jobs={jobs} />}
               {previewMode === 'yaml' && <YamlPreview yaml={generatedYaml} />}
@@ -2222,7 +2226,7 @@ function App() {
               <button
                 type="button"
                 onClick={() => setShowForm(false)}
-                className="px-6 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                className="px-6 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 dark:bg-gray-700 dark:hover:bg-gray-500"
               >
                 Cancel
               </button>

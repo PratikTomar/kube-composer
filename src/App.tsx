@@ -1238,7 +1238,7 @@ function App() {
             </div>
             {/* Mobile: Social + Actions grouped and centered, Desktop: inline */}
             <div className="flex flex-col items-center w-full sm:hidden">
-              <div className="w-full max-w-sm bg-gray-50 rounded-xl py-2 px-2 shadow-sm mt-2">
+              <div className="w-full max-w-sm bg-gray-50 rounded-xl py-2 px-2 shadow-sm mt-2 dark:bg-gray-800">
                 <div className="flex items-center justify-center space-x-2 mb-2">
                   <SocialShare />
                 </div>
@@ -1952,10 +1952,10 @@ function App() {
                           {roleBindings.map((rb, i) => {
                             const isSelected = selectedRoleBindingIndex === i;
                             return (
-                              <div
+                              <button
                                 key={i}
                                 onClick={() => setSelectedRoleBindingIndex(i)}
-                                className={`p-2 border rounded-lg cursor-pointer transition-all duration-200 hover:shadow-md  hover:bg-blue-50 focus-within:ring-2 focus-within:ring-blue-200 outline-none group 
+                                className={`p-2 border rounded-lg w-full text-left cursor-pointer transition-all duration-200 hover:shadow-md  hover:bg-blue-50 focus-within:ring-2 focus-within:ring-blue-200 outline-none group 
                                   ${isSelected
                                     ? rb.isClusterRoleBinding
                                       ? 'border-blue-500 bg-blue-50 shadow-md dark:border-blue-600 dark:bg-blue-600 dark:shadow-blue-600'
@@ -2064,7 +2064,7 @@ function App() {
                                     <div>This action cannot be undone.</div>
                                   </div>
                                 )}
-                              </div>
+                              </button>
                             );
                           })}
                         </div>

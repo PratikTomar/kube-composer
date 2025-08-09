@@ -61,7 +61,7 @@ export function DeploymentsList({
         const summary = getDeploymentSummary(deployment);
         
         return (
-          <div
+          <button
             key={index}
             className={`p-3 rounded-lg border cursor-pointer transition-all duration-200 text-left w-full ${
               selectedIndex === index
@@ -170,7 +170,7 @@ export function DeploymentsList({
                 </div>
               </div>
             )}
-          </div>
+          </button>
         );
       })}
     </div>

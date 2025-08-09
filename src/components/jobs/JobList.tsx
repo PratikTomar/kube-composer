@@ -43,9 +43,9 @@ export const JobList: React.FC<JobListProps> = ({ jobs, onDelete, onEdit, onView
         <div className="text-center text-gray-400 py-8 dark:text-gray-600">No Jobs found.</div>
       )}
       {jobs.map((job, index) => (
-        <div
+        <button
           key={`${job.name}-${job.namespace}-${index}`}
-          className={`p-3 rounded-lg border cursor-pointer transition-all duration-200 ${
+          className={`p-3 rounded-lg border cursor-pointer transition-all w-full text-left duration-200 ${
             selectedIndex === index
               ? 'bg-pink-50 border-pink-200 ring-1 ring-pink-200 dark:bg-pink-700 dark:border-pink-800 dark:ring-pink-800'
               : 'bg-white border-gray-200 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700'
@@ -129,7 +129,7 @@ export const JobList: React.FC<JobListProps> = ({ jobs, onDelete, onEdit, onView
               <div>This action cannot be undone.</div>
             </div>
           )}
-        </div>
+        </button>
       ))}
     </div>
   );

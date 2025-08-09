@@ -64,10 +64,10 @@ export function RolesList({
   return (
     <div className="space-y-2 p-4">
       {roles.map((role, index) => (
-        <div
+        <button
           key={index}
           onClick={() => onSelect(index)}
-          className={`p-3 border rounded-lg cursor-pointer transition-all duration-200 hover:shadow-md ${
+          className={`p-3 border rounded-lg cursor-pointer transition-all w-full text-left duration-200 hover:shadow-md ${
             selectedIndex === index
               ? 'border-purple-300 bg-purple-50 shadow-sm dark:border-purple-800 dark:bg-purple-700 dark:shadow-sm'
               : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:hover:border-gray-500 dark:hover:bg-gray-600'
@@ -170,7 +170,7 @@ export function RolesList({
               <div>This action cannot be undone.</div>
             </div>
           )}
-        </div>
+        </button>
       ))}
     </div>
   );

@@ -64,9 +64,9 @@ export function ConfigMapsList({
   return (
     <div className="space-y-1 p-4">
       {configMaps.map((configMap, index) => (
-        <div
+        <button
           key={configMap.name}
-          className={`p-3 rounded-lg border cursor-pointer transition-all duration-200 ${
+          className={`p-3 rounded-lg border cursor-pointer transition-all w-full text-left duration-200 ${
             selectedIndex === index
               ? 'bg-green-50 border-green-200 ring-1 ring-green-200 dark:bg-green-700 dark:border-green-800 dark:ring-green-800'
               : 'bg-white border-gray-200 hover:bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600'
@@ -199,7 +199,7 @@ export function ConfigMapsList({
               </div>
             </div>
           )}
-        </div>
+        </button>
       ))}
     </div>
   );

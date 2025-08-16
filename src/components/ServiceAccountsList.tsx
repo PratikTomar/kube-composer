@@ -65,9 +65,9 @@ export function ServiceAccountsList({
   return (
     <div className="space-y-3 p-4">
       {serviceAccounts.map((serviceAccount, index) => (
-        <div
+        <button
           key={`${serviceAccount.namespace}-${serviceAccount.name}`}
-          className={`p-3 rounded-lg border cursor-pointer transition-all duration-200 ${
+          className={`p-3 rounded-lg border cursor-pointer transition-all w-full text-left duration-200 ${
             selectedIndex === index
               ? 'bg-cyan-50 border-cyan-200 ring-1 ring-cyan-200 dark:bg-cyan-700 dark:border-cyan-600 dark:ring-cyan-600'
               : 'bg-white border-gray-200 hover:bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600'
@@ -233,7 +233,7 @@ export function ServiceAccountsList({
               </div>
             </div>
           )}
-        </div>
+        </button>
       ))}
     </div>
   );

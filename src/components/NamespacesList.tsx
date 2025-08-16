@@ -61,7 +61,7 @@ export function NamespacesList({
   return (
     <div className="space-y-1 p-4">
       {namespaces.map((namespace, index) => (
-        <div
+        <button
           key={namespace.name}
           className={`p-3 rounded-lg border cursor-pointer transition-all duration-200 ${
             selectedIndex === index
@@ -200,7 +200,7 @@ export function NamespacesList({
               </div>
             </div>
           )}
-        </div>
+        </button>
       ))}
 
       {namespaces.length === 0 && (

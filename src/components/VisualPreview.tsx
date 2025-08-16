@@ -1759,9 +1759,9 @@ export function VisualPreview({
           )}
         </svg>
         {flowNodes.map(node => (
-          <div
+          <button
             key={node.id}
-            className={`absolute w-48 p-3 rounded-lg border-2 shadow-lg select-none cursor-pointer ${
+            className={`absolute w-48 p-3 text-left rounded-lg border-2 shadow-lg select-none cursor-pointer ${
               node.colorClass || getStatusColor(node.status)
             }`}
             style={{
@@ -1876,7 +1876,7 @@ export function VisualPreview({
                 )}
               </div>
             )}
-          </div>
+          </button>
         ))}
       </div>
       {/* YAML Modal */}

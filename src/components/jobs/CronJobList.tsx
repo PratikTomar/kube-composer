@@ -43,9 +43,9 @@ export const CronJobList: React.FC<CronJobListProps> = ({ cronjobs, onDelete, on
         <div className="text-center text-gray-400 py-8 dark:text-gray-300">No CronJobs found.</div>
       )}
       {cronjobs.map((cronjob, index) => (
-        <div
+        <button
           key={`${cronjob.name}-${cronjob.namespace}-${index}`}
-          className={`p-3 rounded-lg border cursor-pointer transition-all duration-200 ${
+          className={`p-3 rounded-lg border cursor-pointer transition-all w-full text-left duration-200 ${
             selectedIndex === index
               ? 'bg-yellow-50 border-yellow-200 ring-1 ring-yellow-200 dark:bg-yellow-700 dark:border-yellow-800 dark:ring-yellow-800'
               : 'bg-white border-gray-200 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700'
@@ -129,7 +129,7 @@ export const CronJobList: React.FC<CronJobListProps> = ({ cronjobs, onDelete, on
               <div>This action cannot be undone.</div>
             </div>
           )}
-        </div>
+        </button>
       ))}
     </div>
   );

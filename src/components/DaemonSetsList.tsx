@@ -74,9 +74,9 @@ export function DaemonSetsList({
       {daemonSets.map((daemonSet, index) => {
         const summary = getDaemonSetSummary(daemonSet);
         return (
-          <div
+          <button
             key={index}
-            className={`p-3 rounded-lg border cursor-pointer transition-all duration-200 ${
+            className={`p-3 rounded-lg w-full text-left border cursor-pointer transition-all duration-200 ${
               selectedDaemonSet === index
                 ? 'bg-blue-50 border-blue-200 ring-1 ring-blue-200 dark:bg-blue-900 dark:border-blue-800 dark:ring-blue-800'
                 : 'bg-white border-gray-200 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700'
@@ -181,7 +181,7 @@ export function DaemonSetsList({
                 </div>
               </div>
             )}
-          </div>
+          </button>
         );
       })}
     </div>

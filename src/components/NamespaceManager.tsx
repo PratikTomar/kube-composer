@@ -1,5 +1,6 @@
+import { AlertTriangle, Database, Plus, Trash2, X } from 'lucide-react';
 import React, { useState } from 'react';
-import { Plus, X, Database, Trash2, AlertTriangle } from 'lucide-react';
+import useClickOutside from '../hooks/useClickOutside';
 import type { Namespace } from '../types';
 
 interface NamespaceManagerProps {
@@ -24,6 +25,8 @@ export function NamespaceManager({
   const [newAnnotation, setNewAnnotation] = useState({ key: '', value: '' });
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [errors, setErrors] = useState<string[]>([]);
+
+  const modalRef = useClickOutside(onClose);
 
   const validateNamespaceName = (name: string): string[] => {
     const errors: string[] = [];
@@ -129,7 +132,9 @@ export function NamespaceManager({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 dark:bg-opacity-80">
+    <>
+    <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4' ref={modalRef}></div>
+      <dialog  className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 dark:bg-opacity-80">
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col dark:bg-gray-900">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
@@ -415,6 +420,8 @@ export function NamespaceManager({
           </button>
         </div>
       </div>
-    </div>
+    </dialog>
+    </>
+
   );
 }

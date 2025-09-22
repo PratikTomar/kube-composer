@@ -292,7 +292,8 @@ export function DeploymentForm({ config, onChange, availableNamespaces, availabl
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">
-              Application Name *
+              Application Name
+              <span className='text-sm text-red-500' > * </span>
             </label>
             <input
               type="text"
@@ -436,7 +437,8 @@ export function DeploymentForm({ config, onChange, availableNamespaces, availabl
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">
-                    Container Name *
+                    Container Name
+                    <span className='text-sm text-red-500' > * </span>
                   </label>
                   <input
                     type="text"
@@ -449,7 +451,8 @@ export function DeploymentForm({ config, onChange, availableNamespaces, availabl
                 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">
-                    Container Image *
+                    Container Image
+                    <span className='text-sm text-red-500' > * </span>
                   </label>
                   <input
                     type="text"
@@ -571,7 +574,8 @@ export function DeploymentForm({ config, onChange, availableNamespaces, availabl
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-3">
                           <div>
                             <label className="block text-xs font-medium text-gray-600 mb-1 dark:text-gray-400">
-                              Variable Name *
+                              Variable Name
+                              <span className='text-sm text-red-500' > * </span>
                             </label>
                             <input
                               type="text"
